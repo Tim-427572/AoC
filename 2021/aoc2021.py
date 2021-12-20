@@ -2166,6 +2166,8 @@ def _day19():
     print(f"Part 2 - The distance between {max_pair[0]} and {max_pair[1]} is {max_distance}")
 
 
+
+
 def _day20_orig(real_data=False, steps=2):
     """
     Fixed up version of the code that I used to solve the puzzle when it unlocked.
@@ -2201,7 +2203,7 @@ def _day20_orig(real_data=False, steps=2):
         l.append(list(map(int,list(line))))
     image = np.array(l)
     # Solution code.
-    t=np.array([[2**8,2**7,2**6],[2**5,2**4,2**3],[2**2,2**1,2**0]])  # multiply by this and sum to translate binary array to int.
+    t=np.array([[2**8,2**7,2**6],[2**5,2**4,2**3],[2**2,2**1,2**0]], dtype=np.int32)  # multiply by this and sum to translate binary array to int.
     image = np.pad(image, 1, 'constant', constant_values=0)  # Initial padding.
     #image = np.pad(image, steps+5, 'constant', constant_values=0)  # The image can grow  outward by the number of steps.
     s_time = time.time()
@@ -2263,17 +2265,18 @@ def _day20(real_data=False, steps=2):
         puzzle = list(get_input(20, '\n', None, False))
     # Massage the data to get a 0's and 1 arrays instead of # and .
     enhancement = puzzle.pop(0)
-    f=puzzle.pop(0)
+    puzzle.pop(0)  # Remove the empty line.
     enhancement = np.array(list(enhancement))
     enhancement[enhancement=="."]=0
     enhancement[enhancement=="#"]=1
     enhancement = np.asarray(enhancement, dtype=np.int8)
     l=[]
+    image = np.empty((0,len(puzzle[0])),dtype=np.str)
     for line in puzzle:
-        line = line.replace(".","0")
-        line = line.replace("#","1")
-        l.append(list(map(int,list(line))))
-    image = np.array(l)
+        image = np.append(image, [list(line)], axis=0)
+    image[image=="."]=0  # Replace . with 0 and # with 1.
+    image[image=="#"]=1
+    image = np.asarray(image, dtype=np.int32)  # cast it back to an integer numpy array.
 
     # Solution code.
     t=np.array([[2**8, 2**7, 2**6],[2**5, 2**4, 2**3],[2**2, 2**1, 2**0]])  # multiply by this and sum to translate binary array to int.
@@ -2288,7 +2291,6 @@ def _day20(real_data=False, steps=2):
         patches = stride_tricks.as_strided(image, shape=shape, strides=stride)
         enhancement_index = np.sum(patches*t, axis=(2,3))  # Sum the patch to get the enhancement index value.
         image = np.take(enhancement, enhancement_index)  # Take the value from enhancement based on the index in the new enhancement_index array
-    sys.stdout.flush()
     #output = np.empty(image.shape,dtype="str")
     #output[:]="."
     #output[np.where(image==1)]="#"
