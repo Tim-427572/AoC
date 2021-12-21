@@ -2299,7 +2299,110 @@ def _day20(real_data=False, steps=2):
     print(f"After {steps} enhancements the number of lit pixels is {np.count_nonzero(image)}")
 
 
-def go(day=20):
+class deterministic_die:
+    def __init__(self):
+        self.counter = 0
+        self.value = 0
+        self.result = []
+        self.move = 0
+    
+    def roll(self):
+        self.result = []
+        self.move = 0
+        for i in range(3):
+            self.value += 1
+            if self.value > 100:
+                self.value = 1
+            self.result.append(self.value)
+            self.move += self.value
+            self.counter += 1
+
+
+# I'd seen this memoization mentioned in some of the solution threads related to
+# searching the large data sets, if this was going to be solvable with brute force
+# I needed to be speeded up somehow. Python 3.9 has @cache but not 2.
+# https://www.geeksforgeeks.org/memoization-1d-2d-and-3d/
+# https://docs.python.org/3.6/library/functools.html
+# https://realpython.com/lru-cache-python/
+from functools import lru_cache
+#@lru_cache(maxsize=None)
+def score_search(position_1, score_1, position_2, score_2):
+    win_count = [0,0]
+    for roll_1 in itertools.product([1,2,3],repeat=3):
+        for roll_2 in itertools.product([1,2,3],repeat=3):
+            next_position_1 = position_1 + sum(roll_1)
+            next_position_1 = ((next_position_1  - 1) % 10 + 1)  # Wrap at 10 
+            next_score_1 = next_position_1 + score_1
+
+            next_position_2 = position_2 + sum(roll_2)
+            next_position_2 = ((next_position_2  - 1) % 10 + 1)
+            next_score_2 = next_position_2 + score_2
+            # See who won?
+            if next_score_1 >= 21:
+                win_count[0]+=1
+                break  # Player 1 won, break from the inner loop.
+            if next_score_2 >= 21:
+                win_count[1]+=1
+                continue
+            # No one has won yet, begin recursion!
+            next_win_count = score_search(next_position_1, next_score_1, next_position_2, next_score_2)
+            # Add up all the recursive wins
+            win_count = [a+b for a,b in zip(win_count, next_win_count)]
+            #print(win_count)
+    return win_count
+
+
+def _day21(real_data=False):
+    """
+    Wasted time making a cool die class thinking maybe P2 would increase the players
+    or change the number of dice, but no....
+    """
+    puzzle = [
+
+    ]
+    players = {1: {"position":4, "score":0},
+               2: {"position":8, "score":0}}
+    if real_data:
+        players = {1: {"position":1, "score":0},
+                   2: {"position":5, "score":0}}
+    die = deterministic_die()
+    stop = False
+    while not stop:
+        #print(players)
+        for i in range(1,3):
+            die.roll()
+            #print(die.result)
+            players[i]["position"] += die.move
+            if players[i]["position"] > 10:
+                players[i]["position"] =((players[i]["position"] - 1) % 10 + 1)
+            players[i]["score"] += players[i]["position"]
+            if players[i]["score"] >=1000:
+                stop = True
+                break
+    #print(players)
+    #print(die.counter)
+    scores = []
+    for k,v in players.items():
+        scores.append(v["score"])
+    print("Part 1")
+    print(f" The player had {min(scores)} points and the die was rolled {die.counter} times")
+    print(f" The answer is {min(scores)*die.counter}")
+    # Part 2 using pretty much nothing of part 1.
+    print("Part 2")
+    s_time = time.time()
+    # Using @lru_cache requires the arguments to be hashable, weird things happen when I pass it values directly from the dictionary.
+    if real_data:
+        total_wins = score_search(1, 0, 5, 0)
+    else:
+        #total_wins = score_search(copy.copy(players[1]["position"]), 0, copy.copy(players[2]["position"]), 0)
+        total_wins = score_search(4, 0, 8, 0)
+    #print(total_wins)
+    print(" ",score_search.cache_info())
+    print(f" The player that wins more won {max(total_wins)} times")
+    print(f" That just took {time.time()-s_time:0.3f}s")
+
+
+def go(day=21):
     switch = {
         1:  _day1,
         2:  _day2,
@@ -2321,5 +2424,6 @@ def go(day=20):
         18: _day18,
         19: _day19,
         20: _day20,
+        21: _day21,
     }
     return switch.get(day, "Invalid day")()

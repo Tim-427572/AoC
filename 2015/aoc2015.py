@@ -925,6 +925,95 @@ def _day21():
     print(f"Part 1 - The cheapest winning fight was {min(cost_of_winning_fights)}")
     print(f"Part 2 - The most expensive losing fight was {max(cost_of_losing_fights)}")
 
+
+class Computer:
+    def __init__(self, **kwargs):
+        self.registers = {"a":0, "b":0}
+        self.instructions={}
+        self.ip=0
+        self.load(kwargs.get("puzzle",[]))
+
+
+    def load(self, puzzle):
+        for ip, line in enumerate(puzzle):
+            opcode = line.split(" ")[0]
+            variable = line.replace(f"{opcode} ", "")
+            self.instructions[ip] = [opcode,variable]
+
+    def run(self):
+        while self.instructions.get(self.ip, False):
+            opcode, variable = self.instructions[self.ip]
+            #print(f"IP={self.ip} OP={opcode} {variable}")
+            if opcode == "hlf":
+                self.registers[variable] //= 2
+            elif opcode == "tpl":
+                self.registers[variable] *= 3
+            elif opcode == "inc":
+                self.registers[variable] += 1
+            elif opcode == "jmp":
+                self.ip += int(variable)
+                continue
+            elif opcode == "jie":
+                register, offset = variable.split(", ")
+                if self.registers[register] % 2 == 0:
+                    self.ip += int(offset)
+                    continue
+            elif opcode == "jio":
+                register, offset = variable.split(", ")
+                if self.registers[register] == 1 :
+                    self.ip += int(offset)
+                    continue
+            else:
+                raise Exception(f"Unknown opcode {opcode} at {self.ip}")
+            #print(self.registers)
+            self.ip+=1
+
+
+def _day23():
+    """
+    """
+    puzzle = [ "inc a", "jio a, +2", "tpl a", "inc a"]
+    puzzle = get_input(23, "\n", None)
+    computer = Computer(puzzle=puzzle)
+    computer.run()
+    print("Part 1")
+    for register, value in computer.registers.items():
+        print(f" Register {register} is {value}")
+    computer = Computer(puzzle=puzzle)
+    computer.registers["a"]=1
+    computer.run()
+    print("Part 2")
+    for register, value in computer.registers.items():
+        print(f" Register {register} is {value}")
+
+
+def _knapSack(W, wt, val, n): 
+    knapsack = [[0 for x in range(W + 1)] for x in range(n + 1)] 
+   
+    # Build table K[][] in bottom up manner 
+    for i in range(n + 1): 
+        for w in range(W + 1): 
+            if i == 0 or w == 0: 
+                knapsack[i][w] = 0
+            elif wt[i-1] <= w: 
+                knapsack[i][w] = max(val[i-1] + knapsack[i-1][w-wt[i-1]], knapsack[i-1][w]) 
+            else: 
+                knapsack[i][w] = knapsack[i-1][w] 
+   
+    return knapsack[n][W] 
+   
+
+def _day24():
+    """
+    """
+    # Driver code 
+    val = [60, 100, 120] 
+    wt = [10, 20, 30] 
+    W = 50
+    n = 1
+    print(_knapSack(W, wt, val, n)) 
+
+
 def go(day):
     switch = {
         1:  _day1,
@@ -948,6 +1037,9 @@ def go(day):
         19: _day19,
         20: _day20,
         21: _day21,
+        22: _,
+        23: _day23,
+        24: _day24,
     }
     return switch.get(day, "Invalid day")()
 
