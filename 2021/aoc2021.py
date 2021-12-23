@@ -2408,6 +2408,7 @@ def _day22_p1(real_data=False):
     if real_data:
         puzzle = get_input(22, '\n', None)
     reactor = np.zeros((101,101,101))
+    start_time = time.time()
     for line in puzzle:
         direction, coordinates = line.split(" ")
         coordinates = coordinates.split(",")
@@ -2423,10 +2424,14 @@ def _day22_p1(real_data=False):
         value = 1 if direction == "on" else 0
         reactor[cubiod[0][0]:cubiod[0][1],cubiod[1][0]:cubiod[1][1],cubiod[2][0]:cubiod[2][1]] = value
     print(f"The number of lit cubes is {np.count_nonzero(reactor)}")
+    print(f"Calculation time: {time.time()-start_time:0.4f}")
 
 
 
 class Borg:
+    """
+    A class to hold information about each cube.
+    """
     def __init__(self, near_point, far_point, sign):
         self.near_point = near_point
         self.far_point = far_point
@@ -2476,32 +2481,45 @@ def _day22_p2(real_data=False):
     if real_data:
         puzzle = get_input(22, '\n', None)
     # Puzzle parsing and solution.
-    borg_cubes = []
-    init_cubes = []
+    borg_cubes = []  # list of all of the borg objects.
     on_count = 0
+    start_time = time.time()
     for line in puzzle:
-        #print(line)
+        # Puzzle data parsing, taking advantage of the fact the ranges are always
+        # in increasing direction in the data set.
         on_off, coordinates = line.split(" ")
         on_off = 1 if on_off == "on" else -1
         coordinates = coordinates.split(",")
         near_corner = [0,0,0]
         far_corner = [0,0,0]
+
+        # Split the data up into the near corner of the cuboid and the far one.
         for index, dim in enumerate(coordinates):
             near_corner[index] = int(dim.split("=")[1].split("..")[0])
             far_corner[index] = int(dim.split("=")[1].split("..")[1])
+        # Create a new cube to track the changes (turn on/off)
         new_borg = Borg(near_corner, far_corner, on_off)
+
+        # Iterate over all the existing cubes looking for ones that overlap this new sube.
         overlapping_cubes = []
         for i, borg in enumerate(borg_cubes):
             if borg.check_overlap(new_borg) is True:
+                # Two cubes overlap which means you have one full cube and one cube with a missing part.
+                # In the list of all cubes store 3 things, the original cube, the new cube, a cube used to 
+                # "subtract" the overlap.
                 overlapping_cubes.append(borg.overlapping(new_borg))
         borg_cubes.extend(overlapping_cubes)
+        # Only append the new cube if it is one that turns things on.
+        # The new off cube is effectively the "subtract" cubes from the above overlap check.
         if on_off == 1:
             borg_cubes.append(new_borg)
             on_count += 1
+    # Done with the work. Walk through and sum up the cube volumes.
     cube_count = 0
     for b in borg_cubes:
         cube_count += b.cubes
     print(f"The initialization cube count is {cube_count}")
+    print(f"Calculation time: {time.time()-start_time:0.4f}")
 
 
 def go(day=21):
