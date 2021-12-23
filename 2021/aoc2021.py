@@ -2522,7 +2522,168 @@ def _day22_p2(real_data=False):
     print(f"Calculation time: {time.time()-start_time:0.4f}")
 
 
-def go(day=21):
+def _day22(real_data=True):
+    _day22_p1(real_data)
+    _day22_p2(real_data)
+
+
+def _map_update(map_str, position_1, position_2):
+    """
+    Helper function to update the map.
+    """
+    new_map = list(map_str)
+    new_map[position_1] = map_str[position_2]
+    new_map[position_2] = map_str[position_1]
+    return "".join(new_map)
+
+
+def _move(map_str):
+    # #############  Encoding for each spot on the map.
+    # #...........#   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+    # ###C#A#B#D###         11,   12,   13,   14
+    #   #D#C#B#A#           15,   16,   17,   18
+    #   #D#B#A#C#           19,   20,   21,   22
+    #   #C#A#D#B#           23,   24,   25,   26
+    #   #########",
+    cost = {"A":1, "B":10, "C":100, "D":1000}
+    destination_dict = {
+        "A": (11, 15, 19, 23),
+        "B": (12, 16, 20, 24),
+        "C": (13, 17, 21, 25),
+        "D": (14, 18, 22, 26) }
+    outside_room = {11:2, 12:4, 13:6, 14:8}
+    never_stop = {2, 4, 6, 8}
+    # Move from the entrance towards the bottom of the room if there are empty spaces and destination.
+    for entrance in outside_room.keys():
+        c = map_str[entrance]
+        if c != "." and entrance in destination_dict[c]:
+            if all(map_str[x] in [".", c] for x in destination_dict[c]):
+                for location in reversed(destination_dict[c]):
+                    if map_str[location] == ".":
+                        move_cost = cost[c] * ((location-entrance) // 4)
+                        yield _map_update(map_str, entrance, location), move_cost, "e->b"
+                        return
+    # Move from the bottom of the room to the entrance if it is empty and this is not the destination room.
+    for amphipod in ["A", "B", "C", "D"]:
+        entrance = destination_dict[amphipod][0]
+        if map_str[entrance] == "." and\
+           any(map_str[x] not in [".", amphipod] for x in destination_dict[amphipod]):
+            for location in destination_dict[amphipod]:
+                if map_str[location] != ".":
+                    move_cost = cost[amphipod] * ((location-entrance) // 4)
+                    yield _map_update(map_str, entrance, location), move_cost, "b->e"
+                    return
+    # From the hallway to the entrance if room is ready and no amphipod blocking
+    for h in range(11):
+        if map_str[h] == ".":
+            continue
+        amphipod = map_str[h]
+        destination = destination_dict[amphipod][0]
+        if map_str[destination] != "." or\
+           any(map_str[x] not in (".", amphipod) for x in destination_dict[amphipod]):
+            continue
+        o = outside_room[destination]
+        if o > h and all(map_str[x] == "." for x in range(h+1, o)):
+            move_cost = cost[amphipod] * (o-h+1)
+            yield _map_update(map_str, h, destination), move_cost, "h->e"
+            return
+        elif o < h and all(map_str[x] == "." for x in range(o,h)):
+            move_cost = cost[amphipod] * (h-o+1)
+            yield _map_update(map_str, h, destination), move_cost, "h->e"
+            return
+
+    # Entrance to hallway if no amphipod blocking, skip the spots in front of the rooms.
+    for entrance in outside_room.keys():
+        if map_str[entrance] == ".":  # No one waiting at the entrance.
+            continue
+        amphipod = map_str[entrance]
+        if entrance in destination_dict[amphipod] and \
+           all(map_str[x] in (".", amphipod) for x in destination_dict[amphipod]):
+            continue
+        outside = outside_room[entrance]
+        for hall in range(outside - 1, -1, -1):
+            if hall in never_stop:
+                continue
+            if map_str[hall] != ".":
+                break
+            move_cost = cost[amphipod] * (outside - hall + 1)
+            yield _map_update(map_str, entrance, hall), move_cost, "e->h left"
+        for hall in range(outside + 1, 11):
+            if hall in never_stop:
+                continue
+            if map_str[hall] != ".":
+                break
+            move_cost = cost[amphipod] * (hall - outside + 1)
+            yield _map_update(map_str, entrance, hall), move_cost, "e->h right"
+
+
+def _print_map(map_str):
+    print(map_str[:11])
+    print("  "  + " ".join(list(map_str[11:15])))
+    print("  "  + " ".join(list(map_str[15:19])))
+    print("  "  + " ".join(list(map_str[19:23])))
+    print("  "  + " ".join(list(map_str[23:27])))
+
+def _day23():
+    from collections import deque
+    puzzle = [
+        "#############",
+        "#...........#",
+        "###B#C#B#D###",
+        "  #D#C#B#A#",
+        "  #D#B#A#C#",
+        "  #A#D#C#A#",
+        "  #########"]
+    if True:  # My puzzle
+        puzzle = [
+            "#############",  # Encoding for each spot on the map.
+            "#...........#",  # 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+            "###C#A#B#D###",  #       11,   12,   13,   14
+            "  #D#C#B#A#",    #       15,   16,   17,   18
+            "  #D#B#A#C#",    #       19,   20,   21,   22
+            "  #C#A#D#B#",    #       23,   24,   25,   26
+            "  #########"]
+
+    cost = {"A":1, "B":10, "C":100, "D":1000}
+    never_stop = {2, 4, 6, 8}
+
+    # Puzzle data manipulation
+    puzzle.pop(0)
+    puzzle.pop(-1)
+    map_str = puzzle.pop(0).strip("#")
+    for line in puzzle:
+        line=line.strip()
+        map_str += line.replace("#","")
+
+    states = {map_str: (0,None)}
+    queue = deque([map_str])
+    # _print_map(map_str)
+    start_time = time.time()
+    print("Starting game move generation")
+    while queue:
+        state = queue.popleft()
+        cost, previous = states[state]
+        for next, next_cost, move_type in _move(state):
+            if next in states and states[next][0] <= cost + next_cost:
+                continue
+            # print(move_type)
+            # _print_map(next)
+            # foo=input()
+            states[next] = (cost + next_cost, state)
+            queue.append(next)
+    print("Done generating game moves, walk the path through the moves.") 
+    #return states
+    finish = "...........ABCDABCDABCDABCD"
+    path = []
+    state = finish
+    while state:
+        path.append((state, states[state][0]))
+        state = states[state][1]
+    print(f"The lowest score winning game is {states[finish][0]}")
+    print(f"That took {time.time()-start_time:0.4f}s")
+
+
+def go(day=23):
     switch = {
         1:  _day1,
         2:  _day2,
@@ -2545,5 +2706,7 @@ def go(day=21):
         19: _day19,
         20: _day20,
         21: _day21,
+        22: _day22,
+        23: _day23,
     }
     return switch.get(day, "Invalid day")()
