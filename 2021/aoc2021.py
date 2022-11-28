@@ -11,6 +11,7 @@ import copy
 import sys
 from collections import defaultdict
 import itertools
+from functools import lru_cache
 
 # Advent of Code
 # Never did spend the time to work out how to get oAuth to work so this code expects you to
@@ -2324,7 +2325,7 @@ class deterministic_die:
 # https://www.geeksforgeeks.org/memoization-1d-2d-and-3d/
 # https://docs.python.org/3.6/library/functools.html
 # https://realpython.com/lru-cache-python/
-from functools import lru_cache
+# from functools import lru_cache
 @lru_cache(maxsize=None)
 def score_search(position_1, score_1, position_2, score_2):
     win_count = [0,0]
@@ -2683,7 +2684,210 @@ def _day23():
     print(f"That took {time.time()-start_time:0.4f}s")
 
 
-def go(day=23):
+def _check_puzzle_set(puzzle):
+    start = puzzle.pop(0)
+    command.append(start[0])
+    register.append(start[1])
+    other_register.append("")
+    while True:
+        if puzzle[0][0] == "inp":
+            break
+        step = puzzle.pop(0)
+        command.append(step[0])
+        register.append(step[1])
+        if len(step) == 3:
+            if step[2] in "wxyz":
+                other_register.append(step[2])
+            else:
+                value.append(int(step[2]))
+        else:
+            other_register.append("")
+    string=""
+    for i in value:
+        string += f"{i: 3d} "
+    print(string)    
+    while len(puzzle) > 0:
+        c_command = []
+        c_register = []
+        c_other_register = []
+        value = []
+        inp = 0
+        while True:
+            if len(puzzle) == 0:
+                break
+            if puzzle[0][0] == "inp":
+                inp += 1
+            if inp > 1:
+                break
+            step = puzzle.pop(0)
+            c_command.append(step[0])
+            c_register.append(step[1])
+            if len(step) == 3:
+                if step[2] in "wxyz":
+                    c_other_register.append(step[2])
+                else:
+                    value.append(int(step[2]))
+            else:
+                c_other_register.append("")
+        string=""
+        for i in value:
+            string += f"{i: 3d} "
+        print(string)
+        if command != c_command or register != c_register or other_register != c_other_register:
+            print("mismatch")
+            print(command)
+            print(c_command)
+            print(register)
+            print(c_register)
+            print()
+
+
+@lru_cache(maxsize=None)
+def _process(w, z, values):
+    # w does not matter, it is the input
+    x = z  # x does not matter
+    x %= values[1]
+    n_z = z // values[2]
+    x += values[3]
+    x = 0 if x == w else 1
+    y = values[6]  # y does not matter
+    y = (x * y) + 1
+    n_z = n_z * y
+    y = w + values[9]
+    y = y * x
+    n_z += y
+    return n_z
+import multiprocessing as mp
+import asyncio
+from concurrent.futures import ProcessPoolExecutor
+alu_program = [(0x0, 0x1a, 0x1, 0xd, 0x0, 0x0, 0x19, 0x1, 0x0, 0x8),
+               (0x0, 0x1a, 0x1, 0xc, 0x0, 0x0, 0x19, 0x1, 0x0, 0xd),
+               (0x0, 0x1a, 0x1, 0xc, 0x0, 0x0, 0x19, 0x1, 0x0, 0x8),
+               (0x0, 0x1a, 0x1, 0xa, 0x0, 0x0, 0x19, 0x1, 0x0, 0xa),
+               (0x0, 0x1a, 0x1a, -0xb, 0x0, 0x0, 0x19, 0x1, 0x0, 0xc),
+               (0x0, 0x1a, 0x1a, -0xd, 0x0, 0x0, 0x19, 0x1, 0x0, 0x1),
+               (0x0, 0x1a, 0x1, 0xf, 0x0, 0x0, 0x19, 0x1, 0x0, 0xd),
+               (0x0, 0x1a, 0x1, 0xa, 0x0, 0x0, 0x19, 0x1, 0x0, 0x5),
+               (0x0, 0x1a, 0x1a, -0x2, 0x0, 0x0, 0x19, 0x1, 0x0, 0xa),
+               (0x0, 0x1a, 0x1a, -0x6, 0x0, 0x0, 0x19, 0x1, 0x0, 0x3),
+               (0x0, 0x1a, 0x1, 0xe, 0x0, 0x0, 0x19, 0x1, 0x0, 0x2),
+               (0x0, 0x1a, 0x1a, 0x0, 0x0, 0x0, 0x19, 0x1, 0x0, 0x2),
+               (0x0, 0x1a, 0x1a, -0xf, 0x0, 0x0, 0x19, 0x1, 0x0, 0xc),
+               (0x0, 0x1a, 0x1a, -0x4, 0x0, 0x0, 0x19, 0x1, 0x0, 0x7)]
+step = -1000000
+def _check(number):
+    global alu_program, step
+    stop = number + step
+    print(f"C {number}")
+    while number > stop:
+        s_number = str(number) + "32111"
+        z=0
+        if "0" in s_number:
+            number -= 1
+            continue
+        for i, digit in enumerate(s_number):
+            z = _process(int(digit), z, alu_program[i])
+        if z == 0:
+            print(f"!!!!!!!!One number is {number}?!!!!!!")
+            return
+        number -= 1
+        #print(number)
+
+    #time.sleep(1)
+    #print(f"Processed to {stop}")
+    return True
+
+async def c_thread(loop):
+    print('entering async_thread')
+    global step
+    executor = ProcessPoolExecutor(max_workers=7)
+    await asyncio.gather(*(loop.run_in_executor(executor, _check, number) for number in range(999999999,111111111,step)))
+    return
+
+
+def _day24():
+    global alu_program
+    puzzle = list(get_input(24, "\n", lambda a: a.split()))
+    #print(puzzle)
+    command = []
+    register = []
+    other_register = []
+    value = []
+    # Code to test that every step is the same sequence.
+    #alu_program = []
+    values = []
+    while len(puzzle) > 0:
+        if puzzle[0][0] == "inp" and len(values) != 0:
+            alu_program.append(tuple(values))
+            values = []
+        step = puzzle.pop(0)
+        if len(step) == 3 and step[2] not in "wxyz":
+            values.append(int(step[2]))
+    alu_program.append(tuple(values))
+
+    number = 99999999999999
+    number = 99999982149545
+    number = 99999883398441
+    number = 99999456148972
+
+
+def find(z, digit, d):
+    global alu_program
+    if digit <= 0:
+        raise Exception(d)
+        return d
+    print(f"checking digit {digit} for {z} - {d}")
+    for w in range(9,0,-1):
+        for n_z in range(100000):
+            # process(w,z)
+            if _process(w, n_z, alu_program[digit]) == z:
+                d.setdefault(digit,{})
+                d[digit][w]=n_z
+                break
+        find(n_z, digit-1, d)
+        #d = d[:-1]
+    return d
+
+
+def _day25():
+    """
+    Sea Cucumbers.
+    """
+    puzzle = [ "v...>>.vv>", ".vv>>.vv..", ">>.>v>...v", ">>v>>.>.v.", "v>v.vv.v..", ">.>>..v...", ".vv..>.>v.", "v.v..>>v.v", "....v..v.>"]
+    sea_floor = []
+    for line in puzzle:
+        sea_floor.append(list(line))
+    sea_floor = get_input(25, '\n', list)
+    sea_floor = np.array(sea_floor, dtype=np.str)
+    # print(np.array2string(sea_floor).replace("'","").replace("["," ").replace("]",""))
+    step=1
+    while True:
+        prev_floor = np.copy(sea_floor)
+        next_floor = np.full(sea_floor.shape, ".", dtype=np.str)
+        for cucumber, direction in [(">",1), ("v",0)]:
+            move_floor  = np.full(sea_floor.shape, False, dtype=np.bool)
+            stuck_floor = np.full(sea_floor.shape, False, dtype=np.bool)
+            shifted = np.roll(sea_floor, -1, axis=direction)
+            for point in zip(*np.where(sea_floor==cucumber)):
+                if shifted[point] == ".":
+                    move_floor[point] = True
+                else:
+                    stuck_floor[point] = True
+            move_floor = np.roll(move_floor, 1, axis=direction)
+            next_floor[np.where(move_floor)] = cucumber
+            next_floor[np.where(stuck_floor)] = cucumber
+            sea_floor[sea_floor==cucumber]="."
+            sea_floor[next_floor==cucumber]=cucumber
+        # print(f"Step: {step}")
+        # print(np.array2string(next_floor).replace("'","").replace("["," ").replace("]",""))
+        if np.array_equal(sea_floor, prev_floor): # or step == 10:
+            print(f"Stopped moving at step {step}")
+            break
+        step += 1
+
+
+
+def go(day=25):
     switch = {
         1:  _day1,
         2:  _day2,
@@ -2708,5 +2912,15 @@ def go(day=23):
         21: _day21,
         22: _day22,
         23: _day23,
+        25: _day25,
     }
     return switch.get(day, "Invalid day")()
+
+
+import concurrent.futures
+import time
+
+
+#if __name__ == "__main__":
+#    loop = asyncio.get_event_loop()
+#    loop.run_until_complete(c_thread(loop))
