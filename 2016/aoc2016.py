@@ -22,7 +22,7 @@ from functools import lru_cache
 # Constants
 _code_path = r'c:\AoC'
 _offline = False
-_year = 2022
+_year = 2016
 
 
 def _check_internet(host="8.8.8.8", port=53, timeout=2):
@@ -38,13 +38,14 @@ def _check_internet(host="8.8.8.8", port=53, timeout=2):
         return False
 
 
-def _pull_puzzle_input(day, seperator, cast):
+def _pull_puzzle_input(day, seperator, cast, example=False):
     """
     Pull the puzzle data from the AOC website.
 
-    :param day: (int,str) the AoC day puzzle input to fetch or an example puzzle string
+    :param day: (int,?) the AoC day puzzle input to fetch or example puzzle string.
     :param seperator: (str) A string separator to pass into str.split when consuming the puzzle data.
     :param cast: (None,type) A Python function often a type cast (int, str, lambda) to be run against each data element.
+    :param example: (bool) When true treat day as example puzzle data.
 
     :return: tuple of the data.
     """
@@ -53,7 +54,7 @@ def _pull_puzzle_input(day, seperator, cast):
     if _offline:
         with open(_code_path + r"\{}\day{}.txt".format(_year, day)) as file_handler:
             data_list = file_handler.read().split(seperator)
-    elif type(day) is str:  # An example string
+    elif example:
         data_list = day.split(seperator)
     else:
         if not path.exists(_code_path + "/session.txt"):
@@ -84,13 +85,13 @@ def _pull_puzzle_input(day, seperator, cast):
 
 
 # Cache the data in a pickle file.
-def get_input(day, seperator, cast, override=False):
+def get_input(day, seperator, cast, override=False, example=False):
     """
     Helper function for the daily puzzle information.
     If the puzzle data does not exist it attempts to pull it from the website.
     Caches the puzzle data into a pickle file so that re-runs don't have the performance
     penalty of fetching from the Advent Of Code website.
-    :param day: (int, str) the AoC day puzzle input to fetch or a string of the puzzle example.
+    :param day: (int) the AoC day puzzle input to fetch.
     :param seperator: (str) A string separator to pass into str.split when consuming the puzzle data.
     :param cast: (None,type) A Python function often a type cast (int, str, lambda) to be run against each data element.
                              None - do not apply a function/cast to the data.
@@ -103,44 +104,113 @@ def get_input(day, seperator, cast, override=False):
         puzzle_dict = pickle.load(open(_code_path + r'\{}\input.p'.format(_year), 'rb'))
     else:  # No pickle file, will need to make a new one.
         puzzle_dict = {}
-
-    puzzle_input = puzzle_dict.get(day, None)
-
-    if puzzle_input is None or override is True:
-        puzzle_input = _pull_puzzle_input(day, seperator, cast)
-        if type(day) is int:  # only save the full puzzle data to the pickle file.
-            puzzle_dict[day] = puzzle_input
-            pickle.dump(puzzle_dict, open(_code_path + r'\{}\input.p'.format(_year), 'wb'))
+    if override:
+        try:
+            puzzle_dict.pop(day)
+        except Exception:
+            pass
+    try:
+        puzzle_input = puzzle_dict[day]
+    except Exception:
+        puzzle_input = _pull_puzzle_input(day, seperator, cast, example)
+        puzzle_dict[day] = puzzle_input
+        pickle.dump(puzzle_dict, open(_code_path + r'\{}\input.p'.format(_year), 'wb'))
     return puzzle_input
 
 
 def _day1():
     """
-    How many calories does an elf carry
     """
-    day = "1000\n2000\n3000\n\n4000\n\n5000\n6000\n\n7000\n8000\n9000\n\n10000"
-    day = 1
-    puzzle = get_input(day, '\n', None)
-    elves = []
-    cal = 0
-    for val in puzzle:
-        if val == "":
-            elves.append(cal)
-            cal=0
+    day = "R5, L5, R5, R3"
+    day = "R2, R2, R2"
+    day = "R8, R4, R4, R8"
+    instructions = get_input(day, ', ', None, example=True)
+    instructions = get_input(1, ', ', None)
+    right = {(0,1):(1,0), (1,0):(0,-1), (0,-1):(-1,0), (-1,0):(0,1)}
+    left = {(0,1):(-1,0), (-1,0):(0,-1), (0,-1):(1,0), (1,0):(0,1)}
+    decode = {(0,1):"North", (1,0):"East", (0,-1):"South", (-1,0):"West"}
+    current_direction = np.array((0,1))
+    position = np.array((0,0))
+    intersections = {(0,0):None}
+    found = False
+    for instruction in instructions:
+        instruction = instruction.strip()
+        steps = int(instruction[1:])
+        old_dir = current_direction
+        if instruction[0] == "R":
+            current_direction = np.array(right[tuple(current_direction)])
+        elif instruction[0] == "L":
+            current_direction = np.array(left[tuple(current_direction)])
         else:
-            cal += int(val)
-    elves.append(cal)  # Last elf (might not be a \n after the last calorie data point)
-    elves.sort(reverse=True)
-    print(f"Single most calories {elves[0]}")
-    three = sum(elves[:3])
-    print(f"Total of the top three elves {three}")
+            raise Exception(f"What should we do about {instruction[0]}")
+        for step in range(steps):
+            position += current_direction
+            if tuple(position) in intersections.keys() and found is False:
+                print(f"First location visited twice is {position} and is {abs(position).sum()} blocks away")
+                found = True
+            else:
+                intersections[tuple(position)]=None
+        #print(f"{instruction} {decode[tuple(old_dir)]}->{decode[tuple(current_direction)]} {position}")
+    print(f"You are now {abs(position).sum()} blocks away")
+            
+def _day2():
+    example = """ULL
+RRDDD
+LURDL
+UUUUD"""
+    instructions = get_input(example, "\n", None, example=True)
+    instructions = get_input(2, "\n", None, example=False)
+    move = {"U":(-1,0), "D":(1,0), "L":(0,-1), "R":(0,1)}
+    # Part 1 keypad and start position
+    position = np.array((1,1))
+    keypad = np.array([[1,2,3,0,0],[4,5,6,0,0],[7,8,9,0,0],[0,0,0,0,0],[0,0,0,0,0]])
+    # Part 2 keypad and start position
+    #position = np.array((2,0))
+    #keypad = np.array([[0,0,1,0,0],[0,2,3,4,0],[5,6,7,8,9],[0,"A","B","C",0],[0,0,"D",0,0]])
+    valid = []
+    for i in range(5):
+        for j in range(5):
+            if keypad[(i,j)] not in ["0", 0]:
+                valid.append((i,j))
+    code = ""
+    for instruction in instructions:
+        for letter in instruction:
+            new_position = position + np.array(move[letter])
+            if tuple(new_position) in valid:
+                position = new_position
+        code += f"{keypad[tuple(position)]}"
+        #print(f"{letter} {tuple(position)} {keypad[tuple(position)]}")
+    print(f"The code is {code}")
 
+def go(day=25):
+    switch = {
+        1:  _day1,
+        2:  _day2,
+        # 3:  _day3,
+        # 4:  _day4,
+        # 5:  _day5,
+        # 6:  _day6,
+        # 7:  _day7,
+        # 8:  _day8,
+        # 9:  _day9,
+        # 10: _day10,
+        # 11: _day11,
+        # 12: _day12,
+        # 13: _day13,
+        # 14: _day14,
+        # 15: _day15,
+        # 16: _day16,
+        # 17: _day17,
+        # 18: _day18,
+        # 19: _day19,
+        # 20: _day20,
+        # 21: _day21,
+        # 22: _day22,
+        # 23: _day23,
+        # 25: _day25,
+    }
+    return switch.get(day, "Invalid day")()
 
-def go(day=1):
-    try:
-        return eval("_day{}".format(day))
-    except Exception as e:
-        print(e)
 
 import concurrent.futures
 import time
