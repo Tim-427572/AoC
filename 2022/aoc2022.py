@@ -144,6 +144,7 @@ def _day1_eval():
     print(f"Single most calories {elves[0]}")
     print(f"Total of the top three elves {sum(elves[:3])}")
 
+
 def _day2():
     """
     """
