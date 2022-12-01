@@ -118,7 +118,7 @@ def _day1():
     """
     How many calories does an elf carry
     """
-    day = "1000\n2000\n3000\n\n4000\n\n5000\n6000\n\n7000\n8000\n9000\n\n10000"
+    day = "1000\n2000\n3000\n\n4000\n\n5000\n6000\n\n7000\n8000\n9000\n\n10000\n"
     day = 1
     puzzle = get_input(day, '\n', None)
     elves = []
@@ -132,8 +132,25 @@ def _day1():
     elves.append(cal)  # Last elf (might not be a \n after the last calorie data point)
     elves.sort(reverse=True)
     print(f"Single most calories {elves[0]}")
-    three = sum(elves[:3])
-    print(f"Total of the top three elves {three}")
+    print(f"Total of the top three elves {sum(elves[:3])}")
+
+def _day1_eval():
+    day = "1000\n2000\n3000\n\n4000\n\n5000\n6000\n\n7000\n8000\n9000\n\n10000\n"
+    day = 1
+    puzzle = list(get_input(day, '\n\n', None, True))
+    puzzle[-1]=puzzle[-1].strip('\n')  # Formatting fix
+    elves = [eval(x.replace("\n",'+')) for x in puzzle]
+    elves.sort(reverse=True)
+    print(f"Single most calories {elves[0]}")
+    print(f"Total of the top three elves {sum(elves[:3])}")
+
+def _day2():
+    """
+    """
+    day = ""
+    # day = 2
+    puzzle = get_input(day, '\n', None)
+    print(puzzle)
 
 
 def go(day=1):
