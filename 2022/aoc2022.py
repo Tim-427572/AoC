@@ -146,7 +146,7 @@ def _day1_eval():
     print(f"Total of the top three elves {sum(elves[:3])}")
 
 
-def _day2():
+def _day2_orig():
     """
     Rock Paper Scissors
     """
@@ -181,6 +181,19 @@ def _day2():
             me = lose[elf]
         total_score += score[me]
     print(f"Part 2 total score {total_score}")
+
+
+def _day2():
+    """
+    Rock, Paper, Scissors with Elves!
+    """
+    day = "A Y\nB X\nC Z"
+    day = 2
+    puzzle = get_input(day, '\n', None)
+    p1_dict=  {"B X":1, "C Y":2, "A Z":3, "A X":4, "B Y":5, "C Z":6, "C X":7, "A Y":8, "B Z":9}
+    p2_dict = {"B X":1, "C X":2, "A X":3, "A Y":4, "B Y":5, "C Y":6, "C Z":7, "A Z":8, "B Z":9}
+    print(f"Part 1 total score {sum([p1_dict[move] for move in puzzle])}")
+    print(f"Part 2 total score {sum([p2_dict[move] for move in puzzle])}")
 
 
 def go(day=1):
