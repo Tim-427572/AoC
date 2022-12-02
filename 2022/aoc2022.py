@@ -134,6 +134,7 @@ def _day1():
     print(f"Single most calories {elves[0]}")
     print(f"Total of the top three elves {sum(elves[:3])}")
 
+
 def _day1_eval():
     day = "1000\n2000\n3000\n\n4000\n\n5000\n6000\n\n7000\n8000\n9000\n\n10000\n"
     day = 1
@@ -147,11 +148,39 @@ def _day1_eval():
 
 def _day2():
     """
+    Rock Paper Scissors
     """
-    day = ""
-    # day = 2
+    day = "A Y\nB X\nC Z"
+    day = 2
     puzzle = get_input(day, '\n', None)
-    print(puzzle)
+    score = {"X":1, "Y":2, "Z":3}
+    win =  {"A":"Y", "B":"Z", "C":"X"}  # What to have to win
+    lose = {"A":"Z", "B":"X", "C":"Y"}  # What to pick to lose
+    draw = {"A":"X", "B":"Y", "C":"Z"}  # Lookup for a draw
+    total_score = 0
+    for move in puzzle:
+        elf, me = move.split(" ")
+        if win[elf] == me:
+            total_score += 6
+        elif draw[elf] == me:
+            total_score += 3
+        else:
+            total_score += 0
+        total_score += score[me]
+    print(f"Part 1 total score {total_score}")
+    total_score = 0
+    for move in puzzle:
+        elf, result = move.split(" ")
+        if result == "Z":  # Win
+            me = win[elf]
+            total_score += 6
+        elif result == "Y":  # Draw
+            me = draw[elf]
+            total_score += 3
+        else:
+            me = lose[elf]
+        total_score += score[me]
+    print(f"Part 2 total score {total_score}")
 
 
 def go(day=1):
