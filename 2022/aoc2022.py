@@ -196,6 +196,33 @@ def _day2():
     print(f"Part 2 total score {sum([p2_dict[move] for move in puzzle])}")
 
 
+def _day3():
+    """
+    What's in your rucksack?!?
+    """
+    import string
+    day = "vJrwpWtwJgWrhcsFMMfFFhFp\njqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\nPmmdzqPrVvPwwTWBwg\nwMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\nttgJtRGJQctTZtZT\nCrZsJsPPZsGzwwsLwLmpwMDw"
+    day = 3
+    puzzle = get_input(day, '\n', None)
+    # Make a string of all lower and upper case letter to use to get the score for each letter.
+    scoring_guide = " " + string.ascii_lowercase + string.ascii_uppercase
+    score = 0
+    for rucksack in puzzle:
+        half = len(rucksack) // 2
+        compartments = set(rucksack[:half]).intersection(set(rucksack[half:]))
+        if len(compartments) != 1:
+            raise Exception("Part 1; What? {compartments}")
+        score += scoring_guide.find(compartments.pop())
+    print(f"Part 1 priorities sum is {score}")
+    score = 0
+    for i in range(0, len(puzzle), 3):
+        group = set(puzzle[i]).intersection(set(puzzle[i + 1]).intersection(set(puzzle[i + 2])))
+        if len(group) != 1:
+            raise Exception(f"Part 2; What? {group}")
+        score += scoring_guide.find(group.pop())
+    print(f"Part 2 priorities sum is {score}")
+
+
 def go(day=1):
     try:
         return eval("_day{}".format(day))
