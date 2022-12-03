@@ -1,17 +1,18 @@
-import socket
-import requests
-import pickle
-import numpy as np
-from os import path
-import statistics
+import re
+import sys
 import math
 import time
-import re
 import copy
-import sys
-from collections import defaultdict
+import pickle
+import socket
+import string
+import requests
 import itertools
+import statistics
+import numpy as np
+from os import path
 from functools import lru_cache
+from collections import defaultdict
 
 # Advent of Code
 # Never did spend the time to work out how to get oAuth to work so this code expects you to
@@ -200,7 +201,6 @@ def _day3():
     """
     What's in your rucksack?!?
     """
-    import string
     day = "vJrwpWtwJgWrhcsFMMfFFhFp\njqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\nPmmdzqPrVvPwwTWBwg\nwMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\nttgJtRGJQctTZtZT\nCrZsJsPPZsGzwwsLwLmpwMDw"
     day = 3
     puzzle = get_input(day, '\n', None)
@@ -209,14 +209,14 @@ def _day3():
     score = 0
     for rucksack in puzzle:
         half = len(rucksack) // 2
-        compartments = set(rucksack[:half]).intersection(set(rucksack[half:]))
+        compartments = set.intersection(set(rucksack[:half]), set(rucksack[half:]))
         if len(compartments) != 1:
             raise Exception("Part 1; What? {compartments}")
         score += scoring_guide.find(compartments.pop())
     print(f"Part 1 priorities sum is {score}")
     score = 0
-    for i in range(0, len(puzzle), 3):
-        group = set(puzzle[i]).intersection(set(puzzle[i + 1]).intersection(set(puzzle[i + 2])))
+    for one, two, three in zip(*[iter(puzzle)]*3):
+        group = set.intersection(set(one), set(two), set(three))
         if len(group) != 1:
             raise Exception(f"Part 2; What? {group}")
         score += scoring_guide.find(group.pop())
