@@ -223,6 +223,28 @@ def _day3():
     print(f"Part 2 priorities sum is {score}")
 
 
+def _day4():
+    """
+    Jungle clear-cutting elves.
+    """
+    day ="2-4,6-8\n2-3,4-5\n5-7,7-9\n2-8,3-7\n6-6,4-6\n2-6,4-8"
+    day = 4
+    puzzle = get_input(day, '\n', None)
+    p1_score = p2_score = 0
+    for pair in puzzle:
+        first, second = pair.split(",")
+        first_start, first_end = map(int, first.split('-'))
+        second_start, second_end = map(int, second.split('-'))
+        first_set = set(range(first_start, first_end + 1))
+        second_set = set(range(second_start, second_end + 1))
+        if first_set.issubset(second_set) or second_set.issubset(first_set):
+            p1_score += 1
+        if len(first_set.intersection(second_set)):
+            p2_score+=1
+    print(f"Part 1 {p1_score} assignment pairs fully contian the other")
+    print(f"Part 2 {p2_score} assignments overlap")
+
+
 def go(day=1):
     try:
         return eval("_day{}".format(day))
