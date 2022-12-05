@@ -252,7 +252,7 @@ def _day5():
     day = "    [D]    \n[N] [C]    \n[Z] [M] [P]\n 1   2   3 \n\nmove 1 from 2 to 1\nmove 3 from 1 to 3\nmove 2 from 2 to 1\nmove 1 from 1 to 2"
     day = 5
     puzzle = get_input(day, "\n", None)
-    # Get the number of stacks
+    # Get the number of stacks to make processing the table easier.
     stack_numbers = []
     for line in puzzle:
         if line.startswith(" 1 "):
@@ -262,26 +262,29 @@ def _day5():
                     stack_numbers.append(char)
             break
     p1_stacks_dict = {}
-    loading = True
     for line in puzzle:
-        if line.startswith(" 1 "):
-            loading = False
+        if not line:
+            continue
+        elif line.startswith(" 1 "):
+            # This is the line with the stack numbers, done loading now. Create a copy for part 2.
             p2_stacks_dict = copy.deepcopy(p1_stacks_dict)
-            print(p1_stacks_dict)
-        elif loading:  # Note: index 0 is the bottom of the stack of crates.
+        elif "move" in line:  # This is a stack movement line
+            temp = []
+            directions = line.split(" ")
+            number_of_crates = -1 * int(directions[1])
+            # Part 1 crates are reversed because they get picked 1 by 1.
+            p1_stacks_dict[directions[5]] += reversed(p1_stacks_dict[directions[3]][number_of_crates:])
+            del p1_stacks_dict[directions[3]][number_of_crates:]
+            # Part 2 crates order is not reversed.
+            p2_stacks_dict[directions[5]] += p2_stacks_dict[directions[3]][number_of_crates:]
+            del p2_stacks_dict[directions[3]][number_of_crates:]            
+        else:  # Note: index 0 is the bottom of the stack of crates.
             crates = [" "] + list(zip(*[iter(line + " ")] * 4))  # Pad because the stacks are 1's based numbering.
             for stack in stack_numbers:
                 if crates[int(stack)][1] != " ":
                     p1_stacks_dict.setdefault(stack, [])
                     p1_stacks_dict[stack].insert(0, crates[int(stack)][1])
-        elif loading is False and "move" in line:
-            temp = []
-            directions = line.split(" ")
-            number_of_crates = -1 * int(directions[1])
-            p1_stacks_dict[directions[5]] += reversed(p1_stacks_dict[directions[3]][number_of_crates:])
-            del p1_stacks_dict[directions[3]][number_of_crates:]
-            p2_stacks_dict[directions[5]] += p2_stacks_dict[directions[3]][number_of_crates:]
-            del p2_stacks_dict[directions[3]][number_of_crates:]
+
     p1_answer = p2_answer = ""
     for stack in stack_numbers:
         p1_answer += p1_stacks_dict[stack][-1]
