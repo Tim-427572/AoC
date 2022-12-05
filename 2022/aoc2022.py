@@ -239,13 +239,58 @@ def _day4():
         second_set = set(range(second_start, second_end + 1))
         if first_set.issubset(second_set) or second_set.issubset(first_set):
             p1_score += 1
-        if len(first_set.intersection(second_set)):
-            p2_score+=1
+        if first_set.intersection(second_set):
+            p2_score += 1
     print(f"Part 1 {p1_score} assignment pairs fully contian the other")
     print(f"Part 2 {p2_score} assignments overlap")
 
 
-def go(day=1):
+def _day5():
+    """
+    Well at least it wasn't one of those three tower colored ring puzzles.
+    """
+    day = "    [D]    \n[N] [C]    \n[Z] [M] [P]\n 1   2   3 \n\nmove 1 from 2 to 1\nmove 3 from 1 to 3\nmove 2 from 2 to 1\nmove 1 from 1 to 2"
+    day = 5
+    puzzle = get_input(day, "\n", None)
+    # Get the number of stacks
+    stack_numbers = []
+    for line in puzzle:
+        if line.startswith(" 1 "):
+            stacks = line.strip().split(" ")
+            for char in stacks:
+                if char:
+                    stack_numbers.append(char)
+            break
+    p1_stacks_dict = {}
+    loading = True
+    for line in puzzle:
+        if line.startswith(" 1 "):
+            loading = False
+            p2_stacks_dict = copy.deepcopy(p1_stacks_dict)
+            print(p1_stacks_dict)
+        elif loading:  # Note: index 0 is the bottom of the stack of crates.
+            crates = [" "] + list(zip(*[iter(line + " ")] * 4))  # Pad because the stacks are 1's based numbering.
+            for stack in stack_numbers:
+                if crates[int(stack)][1] != " ":
+                    p1_stacks_dict.setdefault(stack, [])
+                    p1_stacks_dict[stack].insert(0, crates[int(stack)][1])
+        elif loading is False and "move" in line:
+            temp = []
+            directions = line.split(" ")
+            number_of_crates = -1 * int(directions[1])
+            p1_stacks_dict[directions[5]] += reversed(p1_stacks_dict[directions[3]][number_of_crates:])
+            del p1_stacks_dict[directions[3]][number_of_crates:]
+            p2_stacks_dict[directions[5]] += p2_stacks_dict[directions[3]][number_of_crates:]
+            del p2_stacks_dict[directions[3]][number_of_crates:]
+    p1_answer = p2_answer = ""
+    for stack in stack_numbers:
+        p1_answer += p1_stacks_dict[stack][-1]
+        p2_answer += p2_stacks_dict[stack][-1]
+    print(f"Part 1 top of stacks is {p1_answer}")
+    print(f"Part 2 top of stacks is {p2_answer}")
+
+
+def go(day=5):
     try:
         return eval("_day{}".format(day))
     except Exception as e:
