@@ -261,6 +261,7 @@ def _day5():
                 if char:
                     stack_numbers.append(char)
             break
+
     p1_stacks_dict = {}
     for line in puzzle:
         if not line:
@@ -293,7 +294,23 @@ def _day5():
     print(f"Part 2 top of stacks is {p2_answer}")
 
 
-def go(day=5):
+def _day6():
+    """
+    Communication system.
+    """
+    # day = """mjqjpqmgbljsphdztnvjfqwrcgsmlb"""
+    # day = "bvwbjplbgvbhsrlpgdmjqwftvncz"
+    # day = "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"
+    day = 6
+    puzzle = get_input(day, "\n", None)[0]
+    for length in [4, 14]:
+        for i in range(len(puzzle) + 1 - length):
+            if len(set(puzzle[i:i+length])) == length:
+                print(f"Unique {length} character pattern {puzzle[i:i+length]} located at {i + length} ")
+                break
+
+
+def go(day=6):
     try:
         return eval("_day{}".format(day))
     except Exception as e:
