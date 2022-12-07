@@ -5,7 +5,9 @@ from os import path
 from functools import reduce
 import itertools
 import random
-
+import socket
+import string
+import requests
 # The Value from the session cookie used to make the webaccess.
 # You could hardcode this with your value or set it at the interactive prompt.
 # This is because I am lazy and didn't want to figure out how to scrape the cookie or work with the OAuth.
@@ -15,13 +17,27 @@ _work = True
 _offline = False
 _year = 2015
 
+def _check_internet(host="8.8.8.8", port=53, timeout=2):
+    """
+    Attempt to check for the firewall by connecting to Google's DNS.
+    """
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+        return True
+    except socket.error as ex:
+        # print(ex)
+        return False
+
+
 def _pull_puzzle_input(day, seperator, cast):
     """
     Pull the puzzle data from the AOC website.
 
-    :param day: integer day value
-    :param seperator: string the data seperator for the data
-    :param cast: function to call on each item in the list
+    :param day: (int,str) the AoC day puzzle input to fetch or an example puzzle string
+    :param seperator: (str,None) A string separator to pass into str.split when consuming the puzzle data.
+        If None or "" don't try and split the puzzle input.
+    :param cast: (None,type) A Python function often a type cast (int, str, lambda) to be run against each data element.
 
     :return: tuple of the data.
     """
@@ -30,23 +46,26 @@ def _pull_puzzle_input(day, seperator, cast):
     if _offline:
         with open(_code_path + r"\{}\day{}.txt".format(_year, day)) as file_handler:
             data_list = file_handler.read().split(seperator)
+    elif type(day) is str:  # An example string
+        data_list = day.split(seperator)
     else:
         if not path.exists(_code_path + "/session.txt"):
             raise Exception("Using the web browser get the session cookie value\nand put it as a string in {}".format(_code_path + "\session.txt"))  # noqa: W605
         with open(_code_path + "/session.txt", 'r') as session_file:
             session = session_file.read()
-        if _work:
+        # Check to see if behind the firewall.
+        if _check_internet():
+            proxy_dict = {}
+        else:
             proxy_dict = {'http': 'proxy-dmz.intel.com:911',
                           'https': 'proxy-dmz.intel.com:912'}
-        else:
-            proxy_dict = {}
         header = {'Cookie': 'session={:s}'.format(session.rstrip('\n'))}
         with requests.Session() as session:
-            resp = session.get('https://adventofcode.com/{}/day/{}/input'.format(_year, day), headers = header, proxies = proxy_dict)
+            resp = session.get('https://adventofcode.com/{}/day/{}/input'.format(_year, day), headers = header, proxies = proxy_dict)  # noqa: E251
             text = resp.text.strip("\n")
             if resp.ok:
-                if seperator is None:
-                    return resp.text
+                if seperator in [None, ""]:
+                    data_list = [resp.text]
                 else:
                     data_list = resp.text.split(seperator)
             else:
@@ -67,23 +86,27 @@ def get_input(day, seperator, cast, override=False):
     If the puzzle data does not exist it attempts to pull it from the website.
     Caches the puzzle data into a pickle file so that re-runs don't have the performance
     penalty of fetching from the Advent Of Code website.
+    :param day: (int, str) the AoC day puzzle input to fetch or a string of the puzzle example.
+    :param seperator: (str) A string separator to pass into str.split when consuming the puzzle data.
+    :param cast: (None,type) A Python function often a type cast (int, str, lambda) to be run against each data element.
+                             None - do not apply a function/cast to the data.
+    :param override: (bool) True = Fetch the data again instead of using the cached copy.
+
+    :return: tuple containing the puzzle data
     """
     global _code_path
     if path.exists(_code_path + r'\{}\input.p'.format(_year)):
         puzzle_dict = pickle.load(open(_code_path + r'\{}\input.p'.format(_year), 'rb'))
     else:  # No pickle file, will need to make a new one.
         puzzle_dict = {}
-    if override:
-        try:
-            puzzle_dict.pop(day)
-        except Exception:
-            pass
-    try:
-        puzzle_input = puzzle_dict[day]
-    except Exception:
+
+    puzzle_input = puzzle_dict.get(day, None)
+
+    if puzzle_input is None or override is True:
         puzzle_input = _pull_puzzle_input(day, seperator, cast)
-        puzzle_dict[day] = puzzle_input
-        pickle.dump(puzzle_dict, open(_code_path + r'\{}\input.p'.format(_year), 'wb'))
+        if type(day) is int:  # only save the full puzzle data to the pickle file.
+            puzzle_dict[day] = puzzle_input
+            pickle.dump(puzzle_dict, open(_code_path + r'\{}\input.p'.format(_year), 'wb'))
     return puzzle_input
 
 
@@ -313,9 +336,8 @@ def _day8():
     santa = r'""\n"abc"\n"aaa\"aaa"\n"\x27"'  # Test input
     santa = _pull_puzzle_input(8, ' ', None)[0]
     santa = santa.replace(r'"\n"', '""')
-    print("Part 1")
     code_len = sum(map(len, santa))
-    print(" code length: {}".format(code_len))
+    print("Part 1")
     # Time to brute force count the characters 
     string_values = 0
     index = 0
@@ -332,8 +354,20 @@ def _day8():
                     raise Exception("index: {}".format(index))
             string_values += 1
         index += 1
+    print(" code length: {}".format(code_len))
     print(" string values: {}".format(string_values))
     print(" answer: {}".format(code_len - string_values))
+    print("Part 2")
+    # Just used VIM
+    open_quotes = 300 * 6 # Open close quotes turns into 6 char
+    backslash = 645 * 2
+    single_quotes = 229 * 2
+    characters = 4728
+    string_values = open_quotes + backslash + single_quotes + characters
+    print(" string values: {}".format(string_values))
+    print(" code length: {}".format(code_len))
+    print(" answer: {}".format(string_values - 6202))
+
 
 def _day9():
     distances = get_input(9, '\n', lambda a:(a.split(" ")[0], a.split(" ")[2], int(a.split(" ")[4])))
@@ -586,8 +620,49 @@ def _day14():
     print(f"Part 2 {winner[0]} won with {winner[1]} points")
 
 
-def _day15():
-    foo=1
+def _day15(part2=False):
+    day = "Butterscotch: capacity -1, durability -2, flavor 6, texture 3, calories 8\nCinnamon: capacity 2, durability 3, flavor -2, texture -1, calories 3"
+    day = 15
+    ingredients = get_input(day, "\n", None)
+    ingredients_dict = {}
+    properties_set = set()
+    for item in ingredients:
+        name, values = item.split(":")
+        value_dict = {}
+        value_list = values.strip().split(',')
+        for value in value_list:
+            properties, num = value.strip().split(" ")
+            value_dict[properties] = int(num)
+            properties_set.add(properties)
+        ingredients_dict[name] = value_dict
+    ingredients_list = list(ingredients_dict.keys())
+    max_score = 0
+    tsp_range = range(0,101)
+    #print(ingredients_dict)
+    for amounts in itertools.product(*[tsp_range]*len(ingredients_dict.keys())):
+        if sum(amounts) != 100:
+            continue
+        #print(amounts)
+        score = 1
+        cal = 0
+        for i in range(len(amounts)):
+            cal += (ingredients_dict[ingredients_list[i]]["calories"] * amounts[i])
+        if cal != 500 and part2:
+            continue
+        for p in properties_set:
+            cal = 0
+            if p == "calories":
+                continue
+            p_score = 0
+            for i in range(len(amounts)):
+                p_score += (ingredients_dict[ingredients_list[i]][p] * amounts[i])
+            p_score = max(0, p_score)
+            if p_score == 0:
+                score = 0
+                break
+            score *= p_score
+        max_score = max(max_score, score)
+    print(max_score)
 
 _position_dict = {"children": 0*8,
                  "cats": 1*8,
@@ -1014,32 +1089,9 @@ def _day24():
     print(_knapSack(W, wt, val, n)) 
 
 
-def go(day):
-    switch = {
-        1:  _day1,
-        2:  _day2,
-        3:  _day3,
-        4:  _day4,
-        5:  _day5,
-        6:  _day6,
-        7:  _day7,
-        8:  _day8,
-        9:  _day9,
-        10: _day10,
-        11: _day11,
-        12: _day12,
-        13: _day13,
-        14: _day14,
-        15: _day15,
-        16: _day16,
-        17: _day17,
-        18: _day18,
-        19: _day19,
-        20: _day20,
-        21: _day21,
-        22: _,
-        23: _day23,
-        24: _day24,
-    }
-    return switch.get(day, "Invalid day")()
+def go(day=6):
+    try:
+        return eval("_day{}".format(day))
+    except Exception as e:
+        print(e)
 

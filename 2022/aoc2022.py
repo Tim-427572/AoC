@@ -44,7 +44,8 @@ def _pull_puzzle_input(day, seperator, cast):
     Pull the puzzle data from the AOC website.
 
     :param day: (int,str) the AoC day puzzle input to fetch or an example puzzle string
-    :param seperator: (str) A string separator to pass into str.split when consuming the puzzle data.
+    :param seperator: (str,None) A string separator to pass into str.split when consuming the puzzle data.
+        If None or "" don't try and split the puzzle input.
     :param cast: (None,type) A Python function often a type cast (int, str, lambda) to be run against each data element.
 
     :return: tuple of the data.
@@ -72,7 +73,10 @@ def _pull_puzzle_input(day, seperator, cast):
             resp = session.get('https://adventofcode.com/{}/day/{}/input'.format(_year, day), headers = header, proxies = proxy_dict)  # noqa: E251
             text = resp.text.strip("\n")
             if resp.ok:
-                data_list = resp.text.split(seperator)
+                if seperator in [None, ""]:
+                    data_list = [resp.text]
+                else:
+                    data_list = resp.text.split(seperator)
             else:
                 print("Warning website error")
                 return ()
@@ -294,6 +298,13 @@ def _day5():
     print(f"Part 2 top of stacks is {p2_answer}")
 
 
+def _start_of_packet(message, length):
+    for i in range(length, len(message)):
+        start = i - length
+        if len(set(message[start:i])) == length:
+            return i
+
+
 def _day6():
     """
     Communication system.
@@ -302,12 +313,78 @@ def _day6():
     # day = "bvwbjplbgvbhsrlpgdmjqwftvncz"
     # day = "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"
     day = 6
-    puzzle = get_input(day, "\n", None)[0]
+    puzzle = get_input(day, "", None, True)[0]
     for length in [4, 14]:
         for i in range(len(puzzle) + 1 - length):
             if len(set(puzzle[i:i+length])) == length:
                 print(f"Unique {length} character pattern {puzzle[i:i+length]} located at {i + length} ")
                 break
+
+
+def get_size(folder, drive_dict, folders_dict):
+    """
+    Recursive function to calculate the size of the folder and sub-folders.
+    """
+    total_size = 0
+    file_dict = drive_dict[folder].get("files", {})
+    for file, size in file_dict.items():
+        total_size += size
+    sub_folders = drive_dict[folder].get("sub-folders", set())
+    for sub_folder in sub_folders:
+        total_size += get_size(sub_folder, drive_dict, folders_dict)
+    folders_dict.setdefault(folder, total_size)
+    return total_size
+
+
+def _day7():
+    """
+    Duplicate file names, what a pain...
+    """
+    day = 7
+    puzzle = get_input(day, '\n', None)
+    current_dir = "/."
+    drive_dict = {"/.": {}}
+
+    # Parsing
+    ls = False
+    for line in puzzle:
+        if line.startswith("$ cd"):
+            if ls:  # ls command is complete.
+                drive_dict[current_dir]["files"] = folder
+                folder = {}
+                ls = False
+            name = line.split(" ")[-1]
+            if name == "..":  # Up to parent.
+                current_dir = drive_dict[current_dir][".."]
+            elif name == "/":  # Change to the root folder.
+                current_dir = "/."
+            else:
+                new_name = current_dir + "/" + name  # Full file path (to handle duplicate folder names)
+                drive_dict.setdefault(new_name, {})
+                drive_dict[new_name][".."] = current_dir
+                current_dir = new_name
+        elif line.startswith("$ ls"):
+            folder = {}
+            ls = True
+        elif line.startswith("dir"):
+            folder_name = line.split(" ")[-1]
+            drive_dict[current_dir].setdefault("sub-folders",set())
+            drive_dict[current_dir]["sub-folders"].add(current_dir + "/" + folder_name)
+        else:
+            size, f_name = line.split(" ")
+            folder[f_name] = int(size)
+    if folder != {}:  # Just in case ls was the last command.
+        drive_dict[current_dir]["files"] = folder
+
+    folders_dict = {}
+    get_size('/.', drive_dict, folders_dict)
+    sizes = np.array(list(folders_dict.values()))
+    sizes[sizes > 100000] = 0
+    print(f"Part 1 the total size is {sum(sizes)}")
+    need_to_free = 30000000 - (70000000 - folders_dict["/."])
+    sizes = np.array(list(folders_dict.values()))
+    sizes[sizes < need_to_free] = 70000000
+    print(f"Part 2 Need to free {need_to_free} and the smallest folder to delete is {min(sizes)}")
 
 
 def go(day=6):
