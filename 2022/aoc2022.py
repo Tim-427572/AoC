@@ -376,15 +376,165 @@ def _day7():
     if folder != {}:  # Just in case ls was the last command.
         drive_dict[current_dir]["files"] = folder
 
+    # The actual solution.
     folders_dict = {}
     get_size('/.', drive_dict, folders_dict)
     sizes = np.array(list(folders_dict.values()))
+    need_to_free = 30000000 - (70000000 - folders_dict["/."])
+    smallest_to_delete = sizes[sizes > need_to_free].min()
     sizes[sizes > 100000] = 0
     print(f"Part 1 the total size is {sum(sizes)}")
-    need_to_free = 30000000 - (70000000 - folders_dict["/."])
-    sizes = np.array(list(folders_dict.values()))
-    sizes[sizes < need_to_free] = 70000000
-    print(f"Part 2 Need to free {need_to_free} and the smallest folder to delete is {min(sizes)}")
+    print(f"Part 2 Need to free {need_to_free} and the smallest folder to delete is {smallest_to_delete}")
+
+
+def _day8(example=True):
+    """
+    """
+    day = "30373\n25512\n65332\n33549\n35390"
+    day = 8
+    puzzle = get_input(day, '\n', list, True)
+    n=np.array(puzzle, int)
+    v_tree = set()
+    max_score = 0
+    for i in range(len(n)):
+        for j in range(len(n[i])):
+            # Boundry checks, tree at the edge is visible for part 1 and not interesting for part 2.
+            if i == 0 or i == len(n[i])-1:
+                v_tree.add((i,j))
+                continue
+            if j == 0 or j == len(n[:,i])-1:
+                v_tree.add((i,j))
+                continue
+            tree_count = 0
+            score = 1
+
+            # left
+            l = np.flip(n[i][:j])
+            # part 1
+            if len(l[l>=n[i][j]]) == 0:
+                v_tree.add((i,j))
+            # part 2
+            for x in l:
+                if x < n[i][j]:
+                    tree_count+=1
+                elif x >= n[i][j]:
+                    tree_count+=1
+                    break
+            score *= tree_count
+            tree_count = 0
+                
+            # right
+            l = n[i][j+1:]
+            if len(l[l>=n[i][j]]) == 0:
+                v_tree.add((i,j))
+            for x in l:
+                if x < n[i][j]:
+                    tree_count+=1
+                elif x >= n[i][j]:
+                    tree_count+=1
+                    break
+            score *= tree_count
+            tree_count = 0
+            # up 
+            l = np.flip(n[:i,j])
+            if len(l[l>=n[i][j]]) == 0:
+                v_tree.add((i,j))
+            for x in l:
+                if x < n[i][j]:
+                    tree_count+=1
+                elif x >= n[i][j]:
+                    tree_count+=1
+                    break
+            score *= tree_count
+            tree_count = 0
+
+            # down
+            l = n[i+1:,j]
+            if len(l[l>=n[i][j]]) == 0:
+                v_tree.add((i,j))
+            for x in l:
+                if x < n[i][j]:
+                    tree_count+=1
+                elif x >= n[i][j]:
+                    tree_count+=1
+                    break
+            score *= tree_count
+            max_score = max(max_score, score)                
+    print(f"Part 1 the number of visable trees is {len(v_tree)}")
+    print(f"Part 2 the highest possible scenic score is {max_score}")
+
+
+def _day8_a():
+    """
+    """
+    day = "30373\n25512\n65332\n33549\n35390"
+    day = 8
+    puzzle = get_input(day, '\n', list)
+    n=np.array(puzzle, int)
+    v_tree = set()
+    max_score = 0
+    for i in range(len(n)):
+        for j in range(len(n[i])):
+            # Boundry checks, tree at the edge is visible for part 1 and 0 for part 2 because of the scoring system.
+            if i == 0 or i == len(n[i])-1:
+                v_tree.add((i,j))
+                continue
+            if j == 0 or j == len(n[:,i])-1:
+                v_tree.add((i,j))
+                continue
+            if (i,j) in v_tree:  # We already have seen this tree?
+                print(f"({i},{j})")
+                continue
+            score = 1
+
+            # left
+            tree_count = 0
+            l = np.flip(n[i][:j])
+            w = np.where(l>=n[i][j])[0]
+            if w.size == 0:
+                v_tree.add((i,j))  # Tree is visible for part 1
+                tree_count += j  # Number of trees it can see for part 2
+            else:
+                tree_count += w[0] + 1
+            score *= tree_count
+                
+            # right
+            tree_count = 0
+            l = n[i][j+1:]
+            w = np.where(l>=n[i][j])[0]
+            if w.size == 0:
+                v_tree.add((i,j))
+                tree_count += len(n[i]) - j - 1
+            else:
+                tree_count += w[0] + 1
+            score *= tree_count
+            tree_count = 0
+
+            # up 
+            l = np.flip(n[:i,j])
+            w = np.where(l>=n[i][j])[0]
+            if w.size == 0:
+                v_tree.add((i,j))
+                tree_count += i
+            else:
+                tree_count += w[0] + 1
+            score *= tree_count
+            tree_count = 0
+
+            # down
+            l = n[i+1:,j]
+            w = np.where(l>=n[i][j])[0]
+            if w.size == 0:
+                v_tree.add((i,j))
+                tree_count += len(n[:,j]) - i - 1
+            else:
+                tree_count += w[0] + 1
+            score *= tree_count
+            #print(f"({i},{j}) {n[i][j]} {l} {w} {tree_count}")
+            max_score = max(max_score, score)                
+    print(f"Part 1 the number of visable trees is {len(v_tree)}")
+    print(f"Part 2 the highest possible scenic score is {max_score}")    
+    return n
 
 
 def go(day=6):
