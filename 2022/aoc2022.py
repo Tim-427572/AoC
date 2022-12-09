@@ -534,8 +534,78 @@ def _day8_a():
             max_score = max(max_score, score)                
     print(f"Part 1 the number of visable trees is {len(v_tree)}")
     print(f"Part 2 the highest possible scenic score is {max_score}")    
-    return n
+    #return n
 
+def move_a_knot(h, t):
+    """
+    Function to update the tail position given the head has moved by one step.
+    """
+    # Using a manhattan distance calc to decide if we need to move.
+    if abs(h[0] - t[0]) + abs(h[1] - t[1]) >= 2:
+        if h[1] == t[1]:  # Vertical Move
+            t[0] += (h[0] - t[0]) / abs(h[0] - t[0])  # I just want +1 or -1
+        elif h[0] == t[0]:  # Horizontal Move
+            t[1] += (h[1] - t[1]) / abs(h[1] - t[1])
+        elif abs(h[0] - t[0])+abs(h[1] - t[1]) > 2:  # Diagonal move
+            if h[0] < t[0] and h[1] < t[1]: # up left
+                t += [-1, -1]
+            elif h[0] < t[0] and h[1] > t[1]: #up right
+                t += [-1, 1]
+            elif h[0] > t[0] and h[1] < t[1]: # down left
+                t += [1, -1]
+            else:
+                t += [1, 1]
+    return t
+
+
+def plot(position_set):
+        """
+        Quick function to print out the position set in a more readible form.
+        """
+        adj = np.array([0,0])
+        size = np.array([0,0])
+        for i in position_set:
+            adj[0] = min(adj[0], i[0])
+            adj[1] = min(adj[1], i[1])
+            size[0] = max(size[0], i[0])
+            size[1] = max(size[1], i[1])
+        g = np.full(tuple(size+abs(adj)+[2,2])," ",str)
+        for i in position_set:
+            adj_p = i + abs(adj)
+            g[tuple(adj_p)] = "#"
+        g=np.flip(g,0)
+        for i in range(len(g[:,0])):
+            print("".join(g[i]))
+
+
+def _day9(example=False):
+    """
+    Rope physics!
+    """
+    if example:
+        day = "R 4\nU 4\nL 3\nD 1\nR 4\nD 1\nL 5\nR 2"
+        day = "R 5\nU 8\nL 8\nD 3\nR 17\nD 10\nL 25\nU 20"
+    else:
+        day = 9
+    puzzle = get_input(day, '\n', lambda x:x.split(" "))
+    dir_dict = {"U": np.array([ 1,  0]),
+                "D": np.array([-1,  0]),
+                "R": np.array([ 0,  1]),
+                "L": np.array([ 0, -1])}
+    for number_of_knots in [2, 10]:
+        position_set = set()
+        knots = []
+        for i in range(number_of_knots):
+            knots.append(np.array([0,0]))
+        for direction, motion in puzzle:
+            for j in range(int(motion)):
+                knots[0] += dir_dict[direction]  # Head is the first in the list.
+                for i in range(1, number_of_knots):
+                    knots[i] = move_a_knot(knots[i-1], knots[i])
+                position_set.add(tuple(knots[-1]))  # Tail is the last in the list.
+        print(f"For {number_of_knots} knots the tail visits {len(position_set)} locations")
+        # Debug code to see the visited positions.
+        # plot(position_set)
 
 def go(day=6):
     try:
