@@ -536,27 +536,6 @@ def _day8_a():
     print(f"Part 2 the highest possible scenic score is {max_score}")    
     #return n
 
-def move_a_knot(h, t):
-    """
-    Function to update the tail position given the head has moved by one step.
-    """
-    # Using a manhattan distance calc to decide if we need to move.
-    if abs(h[0] - t[0]) + abs(h[1] - t[1]) >= 2:
-        if h[1] == t[1]:  # Vertical Move
-            t[0] += (h[0] - t[0]) / abs(h[0] - t[0])  # I just want +1 or -1
-        elif h[0] == t[0]:  # Horizontal Move
-            t[1] += (h[1] - t[1]) / abs(h[1] - t[1])
-        elif abs(h[0] - t[0])+abs(h[1] - t[1]) > 2:  # Diagonal move
-            if h[0] < t[0] and h[1] < t[1]: # up left
-                t += [-1, -1]
-            elif h[0] < t[0] and h[1] > t[1]: #up right
-                t += [-1, 1]
-            elif h[0] > t[0] and h[1] < t[1]: # down left
-                t += [1, -1]
-            else:
-                t += [1, 1]
-    return t
-
 
 def plot(position_set):
         """
@@ -578,7 +557,23 @@ def plot(position_set):
             print("".join(g[i]))
 
 
-def _day9(example=False):
+def move_a_knot(h, t):
+    """
+    Function to update the tail position given the head has moved by one step.
+    """
+    diff = h - t # Using a manhattan distance calc to decide if we need to move.
+    diff_sign = np.sign(diff)
+    if np.absolute(diff).sum() >= 2:
+        if diff[1] == 0:  # Vertical Move
+            t[0] += diff_sign[0]
+        elif diff[0] == 0:  # Horizontal Move
+            t[1] += diff_sign[1]
+        elif np.absolute(diff).sum() > 2:  # Diagonal Move.
+            t += diff_sign
+    return t
+
+
+def _day9(example=False, reload=False):
     """
     Rope physics!
     """
@@ -587,7 +582,7 @@ def _day9(example=False):
         day = "R 5\nU 8\nL 8\nD 3\nR 17\nD 10\nL 25\nU 20"
     else:
         day = 9
-    puzzle = get_input(day, '\n', lambda x:x.split(" "))
+    puzzle = get_input(day, '\n', lambda x:(x.split()[0], int(x.split()[1])), reload)
     dir_dict = {"U": np.array([ 1,  0]),
                 "D": np.array([-1,  0]),
                 "R": np.array([ 0,  1]),
@@ -595,10 +590,10 @@ def _day9(example=False):
     for number_of_knots in [2, 10]:
         position_set = set()
         knots = []
-        for i in range(number_of_knots):
+        for _ in itertools.repeat(None, number_of_knots):
             knots.append(np.array([0,0]))
         for direction, motion in puzzle:
-            for j in range(int(motion)):
+            for _ in itertools.repeat(None, motion):
                 knots[0] += dir_dict[direction]  # Head is the first in the list.
                 for i in range(1, number_of_knots):
                     knots[i] = move_a_knot(knots[i-1], knots[i])
