@@ -561,15 +561,17 @@ def move_a_knot(h, t):
     """
     Function to update the tail position given the head has moved by one step.
     """
-    diff = h - t # Using a manhattan distance calc to decide if we need to move.
-    diff_sign = np.sign(diff)
-    if np.absolute(diff).sum() >= 2:
-        if diff[1] == 0:  # Vertical Move
+    diff = h - t
+    diff_sign = np.sign(diff)  # -1 or 1 depending on the result of h - t
+    # Using a manhattan distance calc to decide if we need to move.
+    manhattan_diff = np.absolute(diff).sum()
+    if manhattan_diff > 2:  # Diagonal move required.
+        t += diff_sign
+    elif manhattan_diff == 2:
+        if diff[1] == 0:  # Vertical move required
             t[0] += diff_sign[0]
-        elif diff[0] == 0:  # Horizontal Move
+        elif diff[0] == 0:  # Horizontal move required
             t[1] += diff_sign[1]
-        elif np.absolute(diff).sum() > 2:  # Diagonal Move.
-            t += diff_sign
     return t
 
 
@@ -587,20 +589,68 @@ def _day9(example=False, reload=False):
                 "D": np.array([-1,  0]),
                 "R": np.array([ 0,  1]),
                 "L": np.array([ 0, -1])}
-    for number_of_knots in [2, 10]:
-        position_set = set()
-        knots = []
-        for _ in itertools.repeat(None, number_of_knots):
-            knots.append(np.array([0,0]))
-        for direction, motion in puzzle:
-            for _ in itertools.repeat(None, motion):
-                knots[0] += dir_dict[direction]  # Head is the first in the list.
-                for i in range(1, number_of_knots):
-                    knots[i] = move_a_knot(knots[i-1], knots[i])
-                position_set.add(tuple(knots[-1]))  # Tail is the last in the list.
-        print(f"For {number_of_knots} knots the tail visits {len(position_set)} locations")
+    p1_position_set = set()
+    p2_position_set = set()
+    knots = []
+    number_of_knots = 10
+    for _ in itertools.repeat(None, number_of_knots):
+        knots.append(np.array([0,0]))
+    for direction, motion in puzzle:
+        for _ in itertools.repeat(None, motion):
+            knots[0] += dir_dict[direction]  # Head is the first in the list.
+            for i in range(1, len(knots)):
+                knots[i] = move_a_knot(knots[i - 1], knots[i])
+            p1_position_set.add(tuple(knots[1]))  # Part 1 tail is just behind the head
+            p2_position_set.add(tuple(knots[-1]))  # Part 2 tail is the last in the list.
+    print(f"For part 1 the tail visits {len(p1_position_set)} locations")
+    print(f"For part 2 the tail visits {len(p2_position_set)} locations")
         # Debug code to see the visited positions.
         # plot(position_set)
+
+
+def _day10(example=False, reload=False):
+    """
+    CRT monitor simulation.
+    """
+    if example:
+        day = ""
+    else:
+        day = 10
+    puzzle = get_input(day, '\n', None,reload)
+    monitor = np.full((6,40)," ")
+    horz = 0
+    vert = 0
+    x = 1
+    cycle = 1
+    strength = 0
+    value = 0
+    ip = 0
+    while ip < len(puzzle):
+        if cycle in [20,60,100,140,180,220]:
+            strength += (x * cycle)
+        if cycle in [41, 81, 121, 161, 201]:
+            vert += 1
+            horz = 0
+        # CRT update during
+        if horz in [x - 1, x, x + 1]:
+            monitor[vert][horz] = "#"
+        horz += 1
+        # After
+        if value != 0:  # 2nd cycle of a addx command.
+            x += value
+            value = 0
+        else:  # Check to see if the command was addx.
+            command = puzzle[ip]
+            if command.startswith("addx"):
+                value = int(command.split()[1])
+            ip += 1  # Move the instruction pointer.
+        cycle += 1  # End of the cycle.
+
+    print(f"Part 1 sum of six signal strengths is {strength}")
+    print("")
+    for i in range(len(monitor[:,0])):
+        print("".join(monitor[i]))
+
 
 def go(day=6):
     try:
@@ -608,10 +658,3 @@ def go(day=6):
     except Exception as e:
         print(e)
 
-import concurrent.futures
-import time
-
-
-#if __name__ == "__main__":
-#    loop = asyncio.get_event_loop()
-#    loop.run_until_complete(c_thread(loop))
