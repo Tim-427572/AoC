@@ -608,26 +608,19 @@ def _day9(example=False, reload=False):
         # plot(position_set)
 
 
-def _day10(example=False, reload=False):
+def _day10(reload=False):
     """
     CRT monitor simulation.
     """
-    if example:
-        day = ""
-    else:
-        day = 10
-    puzzle = get_input(day, '\n', None,reload)
+    puzzle = get_input(10, '\n', None, reload)
     monitor = np.full((6,40)," ")
-    horz = 0
-    vert = 0
-    x = 1
-    cycle = 1
-    strength = 0
-    value = 0
-    ip = 0
+    x = cycle = 1
+    ip = horz = vert = strength = value = 0
     while ip < len(puzzle):
+        # Special cycles for part 1.
         if cycle in [20,60,100,140,180,220]:
             strength += (x * cycle)
+        # Cycle when the CRT scans to the next line.
         if cycle in [41, 81, 121, 161, 201]:
             vert += 1
             horz = 0
@@ -635,7 +628,7 @@ def _day10(example=False, reload=False):
         if horz in [x - 1, x, x + 1]:
             monitor[vert][horz] = "#"
         horz += 1
-        # After
+        # End of cycle?
         if value != 0:  # 2nd cycle of a addx command.
             x += value
             value = 0
@@ -650,6 +643,150 @@ def _day10(example=False, reload=False):
     print("")
     for i in range(len(monitor[:,0])):
         print("".join(monitor[i]))
+
+
+
+def _day11(example=False, part=1, reload=False):
+    """
+    Stupid Monkeys
+    """
+    from sympy.ntheory import factorint
+    if example:
+        day = """Monkey 0:
+  Starting items: 79, 98
+  Operation: new = old * 19
+  Test: divisible by 23
+    If true: throw to monkey 2
+    If false: throw to monkey 3
+
+Monkey 1:
+  Starting items: 54, 65, 75, 74
+  Operation: new = old + 6
+  Test: divisible by 19
+    If true: throw to monkey 2
+    If false: throw to monkey 0
+
+Monkey 2:
+  Starting items: 79, 60, 97
+  Operation: new = old * old
+  Test: divisible by 13
+    If true: throw to monkey 1
+    If false: throw to monkey 3
+
+Monkey 3:
+  Starting items: 74
+  Operation: new = old + 3
+  Test: divisible by 17
+    If true: throw to monkey 0
+    If false: throw to monkey 1"""
+    else:
+        day = 11
+    puzzle = get_input(day, '\n', None, reload)
+    monkey_dict = {}
+    current_monkey = None
+    for line in puzzle:
+        if line.startswith("Monkey"):
+            num = int(line.strip(":").split()[1])
+            if num in monkey_dict:
+                raise Exception()
+            else:
+                monkey_dict[num]={"inspect":0}
+                current_monkey = num
+        elif line.lstrip().startswith("Starting"):
+            monkey_dict[current_monkey]["items"] = list(map(int, line.split(":")[1].split(',')))
+        elif line.lstrip().startswith("Operation"):
+            if line.split(" ")[-1] == "old":
+                monkey_dict[current_monkey]["operation"] = "** 2"  # hack
+            else:
+                monkey_dict[current_monkey]["operation"] = line.split("=")[1].strip().replace("old","").strip()
+        elif line.lstrip().startswith("Test"):
+            monkey_dict[current_monkey]["test"] = int(line.split("by")[1].strip())
+        elif line.lstrip().startswith("If true"):
+            monkey_dict[current_monkey]["true"] = int(line.split("monkey")[1].strip())
+        elif line.lstrip().startswith("If false"):
+            monkey_dict[current_monkey]["false"] = int(line.split("monkey")[1].strip())
+    # for k,v in monkey_dict.items():
+    #     print(f"M{k} - {v}")
+    monkey_list = sorted(monkey_dict.keys())
+    rounds = 20
+    if part == 2:  # just multiply together to get a common multiple of the test divisions and "keep your worry levels manageable"
+        modifier = 1
+        for monkey in monkey_list:
+            modifier *= monkey_dict[monkey]["test"]
+        rounds = 10000
+    for r in range(rounds):
+        for monkey in monkey_list:
+            while len(monkey_dict[monkey]["items"]) > 0:
+                monkey_dict[monkey]["inspect"] += 1
+                item = monkey_dict[monkey]["items"].pop(0)
+                new_worry = eval(str(item) + monkey_dict[monkey]["operation"])
+                if part == 1:
+                    new_worry //= 3
+                else:
+                    new_worry %= modifier
+                if new_worry % monkey_dict[monkey]["test"] == 0:
+                    monkey_dict[monkey_dict[monkey]["true"]]["items"].append(new_worry)
+                else:
+                    monkey_dict[monkey_dict[monkey]["false"]]["items"].append(new_worry)
+                # for k,v in monkey_dict.items():
+                #     print(k,v)
+    # Get the final answer.
+    monkey_activity = []
+    for m, d in monkey_dict.items():
+        monkey_activity.append(d["inspect"])
+    monkey_activity.sort(reverse=True)
+    print(f"The monkey buisness was {monkey_activity[0] * monkey_activity[1]}")
+
+
+def bfs(graph, start, end):
+    moves_list = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+    queue = [(start, 0)]
+    visited = set()
+    low_score = 41 * 145
+
+    while len(queue) > 0:
+        (position, score) = queue.pop(0)
+        if position == end:
+            if score < low_score:
+                low_score = score
+            continue
+        if position in visited:
+            continue
+        visited.add(position)
+        for move in moves_list:
+            next_position = tuple(np.array(position)+move)
+            curr_height = graph[position]
+            next_height = graph[next_position]
+            if curr_height + 1 >= next_height:
+                queue.append((next_position, score + 1))
+    return low_score
+
+
+def _day12(example=False, reload=False):
+    from skimage.graph import route_through_array
+    if example:
+        day = """Sabqponm\nabcryxxl\naccszExk\nacctuvwj\nabdefghi"""
+    else:
+        day = 12
+    puzzle = get_input(day, "\n", None, reload)
+    # Graph, padded with 101 to make the testing easier.
+    graph = np.full((len(puzzle)+2,len(puzzle[0])+2),101,int)
+    for i in range(len(puzzle)):
+        for j in range(len(puzzle[i])):
+            shift_pos = tuple([i + 1, j + 1])
+            if puzzle[i][j]=="S":
+                graph[shift_pos] = 1
+                start = shift_pos
+            elif puzzle[i][j] =="E":
+                graph[shift_pos] = 26
+                end = shift_pos
+            else:
+                graph[shift_pos] = ord(puzzle[i][j]) - 0x60
+    min_score = bfs(graph, start, end)
+    print(f'Part 1 the shortest path from "S" to "E" is {min_score} steps')
+    for start in np.argwhere(graph == 1):
+        min_score = min(min_score, bfs(graph, tuple(start), end))
+    print(f'Part 2 the shortest path from any "a" to "E" is {min_score} steps')
 
 
 def go(day=6):
