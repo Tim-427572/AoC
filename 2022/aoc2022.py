@@ -341,7 +341,7 @@ def _day7():
     Duplicate file names, what a pain...
     """
     day = 7
-    puzzle = get_input(day, '\n', None)
+    puzzle = get_input(day, '\n', None, True)
     current_dir = "/."
     drive_dict = {"/.": {}}
 
@@ -371,6 +371,7 @@ def _day7():
             drive_dict[current_dir].setdefault("sub-folders",set())
             drive_dict[current_dir]["sub-folders"].add(current_dir + "/" + folder_name)
         else:
+            print(line)
             size, f_name = line.split(" ")
             folder[f_name] = int(size)
     if folder != {}:  # Just in case ls was the last command.
@@ -383,6 +384,7 @@ def _day7():
     need_to_free = 30000000 - (70000000 - folders_dict["/."])
     smallest_to_delete = sizes[sizes > need_to_free].min()
     sizes[sizes > 100000] = 0
+    print(sizes)
     print(f"Part 1 the total size is {sum(sizes)}")
     print(f"Part 2 Need to free {need_to_free} and the smallest folder to delete is {smallest_to_delete}")
 
@@ -593,6 +595,7 @@ def _day9(example=False, reload=False):
     p2_position_set = set()
     knots = []
     number_of_knots = 10
+    p2 = 0
     for _ in itertools.repeat(None, number_of_knots):
         knots.append(np.array([0,0]))
     for direction, motion in puzzle:
@@ -602,8 +605,10 @@ def _day9(example=False, reload=False):
                 knots[i] = move_a_knot(knots[i - 1], knots[i])
             p1_position_set.add(tuple(knots[1]))  # Part 1 tail is just behind the head
             p2_position_set.add(tuple(knots[-1]))  # Part 2 tail is the last in the list.
+            p2 += 1
     print(f"For part 1 the tail visits {len(p1_position_set)} locations")
     print(f"For part 2 the tail visits {len(p2_position_set)} locations")
+    print(p2)
         # Debug code to see the visited positions.
         # plot(position_set)
 
@@ -763,14 +768,16 @@ def bfs(graph, start, end):
 
 
 def _day12(example=False, reload=False):
-    from skimage.graph import route_through_array
+    """
+    Walking up the hill, step by step.
+    """
     if example:
         day = """Sabqponm\nabcryxxl\naccszExk\nacctuvwj\nabdefghi"""
     else:
         day = 12
     puzzle = get_input(day, "\n", None, reload)
     # Graph, padded with 101 to make the testing easier.
-    graph = np.full((len(puzzle)+2,len(puzzle[0])+2),101,int)
+    graph = np.full((len(puzzle) + 2,len(puzzle[0]) + 2), 101, int)
     for i in range(len(puzzle)):
         for j in range(len(puzzle[i])):
             shift_pos = tuple([i + 1, j + 1])
@@ -784,12 +791,80 @@ def _day12(example=False, reload=False):
                 graph[shift_pos] = ord(puzzle[i][j]) - 0x60
     min_score = bfs(graph, start, end)
     print(f'Part 1 the shortest path from "S" to "E" is {min_score} steps')
+    print(len(np.argwhere(graph ==1)))
     for start in np.argwhere(graph == 1):
         min_score = min(min_score, bfs(graph, tuple(start), end))
     print(f'Part 2 the shortest path from any "a" to "E" is {min_score} steps')
 
 
-def go(day=6):
+def packet_compare(left, right):
+    """
+    Compare two packets.
+    -1 if order is correct left, right
+     1 if order is not correct
+     0 if they are identical.
+    """
+    result = 0
+    for i in range(max(len(left),len(right))):
+        # Deal with list that ends early.
+        l = left[i] if i < len(left) else None
+        r = right[i] if i < len(right) else None
+        # Checks to deal with list vs list or list vs int
+        if type(l) == int and type(r) == list:
+            result = pair_check([l], r)
+        elif type(l) == list and type(r) == int:
+            result = pair_check(l, [r])
+        elif type(l) == list and type(r) == list:
+            result = pair_check(l, r)
+        elif r is None:  # Right ended first order incorrect
+            result = 1
+        elif l is None:  # Left ended first, order correct
+            result = -1
+        elif l < r:  # Left less than right, order correct
+            result = -1
+        elif l > r:  # Right less than left, order incorrect
+            result = 1
+        # Made a decision, stop checking.
+        if result != 0:
+            break
+    return result
+
+
+def _day13(example=False, reload=False):
+    """
+    Communication packets and sorting!
+    """
+    import functools
+    if example:
+        day = """[1,1,3,1,1]\n[1,1,5,1,1]\n\n[[1],[2,3,4]]\n[[1],4]\n\n[9]\n[[8,7,6]]\n\n[[4,4],4,4]\n[[4,4],4,4,4]\n\n[7,7,7,7]\n[7,7,7]\n\n[]\n[3]\n\n[[[]]]\n[[]]\n\n[1,[2,[3,[4,[5,6,7]]]],8,9]\n[1,[2,[3,[4,[5,6,0]]]],8,9]"""
+    else:
+        day = 13
+    puzzle = get_input(day, "\n", None, reload)
+    # Parse the puzzle input, eval to the rescue again.
+    packets = []
+    for line in puzzle:
+        if line == "":
+            continue
+        packets.append(eval(line))
+    # Part 1, check pairs of packets.
+    score = 0
+    index = 1
+    for left, right in zip(*[iter(packets)]*2):
+        if pair_check(left, right) == -1:
+            score += index
+        index += 1
+    print(f"Part 1 sum of indices is {score}")
+    # Part 2 add the divider packets, sort and then find their locations.
+    packets.append([[2]])
+    packets.append([[6]])
+    sorted_packets = sorted(packets, key=functools.cmp_to_key(pair_check))
+    i1 = sorted_packets.index([[2]]) + 1
+    i2 = sorted_packets.index([[6]]) + 1
+    print(f"Part 2 divider packet index multiplication is {i1*i2}")
+
+
+def go(day=6, time=False):
+
     try:
         return eval("_day{}".format(day))
     except Exception as e:
