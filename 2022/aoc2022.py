@@ -3,15 +3,16 @@ import sys
 import math
 import time
 import copy
+import curses
 import pickle
 import socket
 import string
 import requests
+import functools
 import itertools
 import statistics
 import numpy as np
 from os import path
-from functools import lru_cache
 from collections import defaultdict
 
 # Advent of Code
@@ -613,7 +614,7 @@ def _day9(example=False, reload=False):
         # plot(position_set)
 
 
-def _day10(reload=False):
+def _day10_old(reload=False):
     """
     CRT monitor simulation.
     """
@@ -650,6 +651,76 @@ def _day10(reload=False):
         print("".join(monitor[i]))
 
 
+def _day10_viz(stdscr, puzzle):
+    """
+    CRT monitor simulation.
+    """
+    #puzzle = get_input(10, '\n', None, reload)
+    stdscr.keypad(True)
+    curses.curs_set(0)
+    curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+    curses.init_pair(2, 8, curses.COLOR_BLACK)
+    stdscr.clear()
+    stdscr.addstr(1, 0, "Press any key to begin")
+    stdscr.getch()
+    stdscr.refresh()
+    stdscr.clear()
+    monitor = np.full((6,41)," ")
+    x = cycle = 1
+    ip = horz = vert = strength = value = 0
+    while ip < len(puzzle):
+        # Draw the 3 characters around x
+        for i in [-1,0,1]:
+            if monitor[vert][x+i] != "#":  # Don't overwrite the green #
+                try:
+                    stdscr.addch(vert, x+i, '\u2592', curses.color_pair(2))
+                except:
+                    foo=1
+        # Draw a dot for the current raster point
+        stdscr.addch(vert, horz, chr(0xB7), curses.color_pair(1))
+        # Show the screen.
+        stdscr.refresh()
+        time.sleep(0.05)
+        # Clear the 3 characters around x and clear the dot.
+        stdscr.addch(vert, horz, " ", curses.color_pair(1))
+        for i in [-1,0,1]:
+            if monitor[vert][x+i] != "#":
+                try:
+                    stdscr.addch(vert, x+i, " ", curses.color_pair(1))
+                except:
+                    foo=1  # offscreen
+        # Special cycles for part 1.
+        if cycle in [20,60,100,140,180,220]:
+            strength += (x * cycle)
+        # Cycle when the CRT scans to the next line.
+        if cycle in [41, 81, 121, 161, 201]:
+            vert += 1
+            horz = 0
+        # CRT update during
+        if horz in [x - 1, x, x + 1]:
+            # Draw a green # at the correct spot.
+            stdscr.addstr(vert, horz, "#", curses.color_pair(1))
+            monitor[vert][horz] = "#"
+        horz += 1
+        # End of cycle?
+        if value != 0:  # 2nd cycle of a addx command.
+            x += value
+            value = 0
+        else:  # Check to see if the command was addx.
+            command = puzzle[ip]
+            if command.startswith("addx"):
+                value = int(command.split()[1])
+            ip += 1  # Move the instruction pointer.
+        cycle += 1  # End of the cycle.
+
+    stdscr.addstr(vert + 2, 0, "Press any key to exit")
+    stdscr.refresh()
+    stdscr.getch()
+
+
+def _day10(reload=False):
+    puzzle = get_input(10, '\n', None, reload)
+    curses.wrapper(_day10_viz, puzzle)
 
 def _day11(example=False, part=1, reload=False):
     """
@@ -805,7 +876,7 @@ def packet_compare(left, right):
      0 if they are identical.
     """
     result = 0
-    for i in range(max(len(left),len(right))):
+    for i in range(max(len(left), len(right))):
         # Deal with list that ends early.
         l = left[i] if i < len(left) else None
         r = right[i] if i < len(right) else None
@@ -834,7 +905,6 @@ def _day13(example=False, reload=False):
     """
     Communication packets and sorting!
     """
-    import functools
     if example:
         day = """[1,1,3,1,1]\n[1,1,5,1,1]\n\n[[1],[2,3,4]]\n[[1],4]\n\n[9]\n[[8,7,6]]\n\n[[4,4],4,4]\n[[4,4],4,4,4]\n\n[7,7,7,7]\n[7,7,7]\n\n[]\n[3]\n\n[[[]]]\n[[]]\n\n[1,[2,[3,[4,[5,6,7]]]],8,9]\n[1,[2,[3,[4,[5,6,0]]]],8,9]"""
     else:
@@ -857,7 +927,7 @@ def _day13(example=False, reload=False):
     # Part 2 add the divider packets, sort and then find their locations.
     packets.append([[2]])
     packets.append([[6]])
-    sorted_packets = sorted(packets, key=functools.cmp_to_key(pair_check))
+    sorted_packets = sorted(packets, key=functools.cmp_to_key(packet_compare))
     i1 = sorted_packets.index([[2]]) + 1
     i2 = sorted_packets.index([[6]]) + 1
     print(f"Part 2 divider packet index multiplication is {i1*i2}")
