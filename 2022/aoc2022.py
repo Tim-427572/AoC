@@ -660,11 +660,11 @@ def _day10_viz(stdscr, puzzle):
     curses.curs_set(0)
     curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(2, 8, curses.COLOR_BLACK)
-    stdscr.clear()
+    stdscr.erase()
     stdscr.addstr(1, 0, "Press any key to begin")
     stdscr.getch()
     stdscr.refresh()
-    stdscr.clear()
+    stdscr.erase()
     monitor = np.full((6,41)," ")
     x = cycle = 1
     ip = horz = vert = strength = value = 0
@@ -931,6 +931,66 @@ def _day13(example=False, reload=False):
     i1 = sorted_packets.index([[2]]) + 1
     i2 = sorted_packets.index([[6]]) + 1
     print(f"Part 2 divider packet index multiplication is {i1*i2}")
+
+
+def _day14(part=1, example=False, reload=False):
+    """
+    """
+    if example:
+        day = """498,4 -> 498,6 -> 496,6\n503,4 -> 502,4 -> 502,9 -> 494,9"""
+    else:
+        day = 14
+    puzzle = get_input(day, "\n", None, reload)
+    line_list = []
+    # Not super happy with this parsing....
+    for line in puzzle:
+        coords = line.split(" -> ")
+        prev = list(map(int, coords[0].split(",")))
+        prev.reverse()
+        for i in range(1, len(coords)):
+            c = list(map(int, coords[i].split(",")))
+            c.reverse()
+            line_list.append([prev, c])
+            prev  = c
+    max_y = max_x = 0
+    for i in line_list:
+        for j in i:
+            max_y = max(j[0], max_y)
+            max_x = max(j[1], max_x)
+    # print(max_x, max_y)  # This was more useful in the example puzzle.
+    cave = np.full((max_y+5, 1001), " ", str)  # Hack, because the worse case is the sand forming a triangle with 45 degree angles at the base.
+    if part == 2:
+        cave[max_y + 2, :]="#"  # Insert the floor for part 2.
+    # Fill in the rocks.
+    for s,e in line_list:
+        y = sorted([s[0], e[0]])
+        x = sorted([s[1], e[1]])
+        cave[y[0]:y[1] + 1, x[0]:x[1] + 1] = "#"
+
+    sand = np.array([0, 500])
+    sand_counter = 0
+    while True:
+        next_sand = sand + [1, 0]
+        if next_sand[0] > max_y + 3:
+            print("The Abyss!")
+            break
+        if cave[tuple(next_sand)] == "#":  # Rock or sand below
+            if cave[next_sand[0],next_sand[1] - 1] == "#" and cave[next_sand[0], next_sand[1] + 1] == "#":  # Stop
+                cave[tuple(sand)]="#"
+                sand_counter += 1
+                if sand[0] == 0 and sand[1] == 500:  # Part 2 stop check.
+                    print("Stopped the sand at the source")
+                    break
+                next_sand = np.array([0, 500])  # Reset for the next piece of sand.
+            elif cave[next_sand[0], next_sand[1] - 1] != "#":  # Clear to the left
+                next_sand += [0, -1]
+            elif cave[next_sand[0], next_sand[1] + 1] != "#":  # Clear to the right
+                next_sand += [0, 1]
+        sand = next_sand  # Sand moved down/diagonal.
+        # Debug print for example
+        # for r in range(10):
+        #     print("".join(cave[r][494:506]))
+    print(f"{sand_counter} grains of sand have fallen")
 
 
 def go(day=6, time=False):
