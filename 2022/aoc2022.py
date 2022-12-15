@@ -935,6 +935,7 @@ def _day13(example=False, reload=False):
 
 def _day14(part=1, example=False, reload=False):
     """
+    Like grains of sand through the hourglass so are the days of our lives....
     """
     if example:
         day = """498,4 -> 498,6 -> 496,6\n503,4 -> 502,4 -> 502,9 -> 494,9"""
@@ -992,6 +993,143 @@ def _day14(part=1, example=False, reload=False):
         #     print("".join(cave[r][494:506]))
     print(f"{sand_counter} grains of sand have fallen")
 
+
+def _day15(example=False, reload=False):
+    """
+    Brute force for part 1 and don't look back....
+    """
+    day = 15 if example is False else ("Sensor at x=2, y=18: closest beacon is at x=-2, y=15\n"
+                                       "Sensor at x=9, y=16: closest beacon is at x=10, y=16\n"
+                                       "Sensor at x=13, y=2: closest beacon is at x=15, y=3\n"
+                                       "Sensor at x=12, y=14: closest beacon is at x=10, y=16\n"
+                                       "Sensor at x=10, y=20: closest beacon is at x=10, y=16\n"
+                                       "Sensor at x=14, y=17: closest beacon is at x=10, y=16\n"
+                                       "Sensor at x=8, y=7: closest beacon is at x=2, y=10\n"
+                                       "Sensor at x=2, y=0: closest beacon is at x=2, y=10\n"
+                                       "Sensor at x=0, y=11: closest beacon is at x=2, y=10\n"
+                                       "Sensor at x=20, y=14: closest beacon is at x=25, y=17\n"
+                                       "Sensor at x=17, y=20: closest beacon is at x=21, y=22\n"
+                                       "Sensor at x=16, y=7: closest beacon is at x=15, y=3\n"
+                                       "Sensor at x=14, y=3: closest beacon is at x=15, y=3\n"
+                                       "Sensor at x=20, y=1: closest beacon is at x=15, y=3")
+    puzzle = get_input(day, "\n", None, reload)
+    s_d = {}
+    max_x = 0
+    min_x = 10000
+    for line in puzzle:
+        sx = int(line.split(',')[0].split("=")[1])
+        sy = int(line.split(':')[0].split("y")[1].strip("="))
+        bx = int(line.split("is at")[1].split(",")[0].split("=")[1])
+        by = int(line.split("=")[-1])
+        s = tuple([sx,sy])
+        b=tuple([bx,by])
+        m=abs(s[0]-b[0])+abs(s[1]-b[1])
+        #print(line, s, b)
+        if s in s_d.keys():
+            raise Exception(f"Duplicate {s}")
+        s_d[s] = {"b":b, "m":m}
+        max_x = max(max_x, s[0]+m)
+        min_x = min(min_x, s[0]-m)
+    print(min_x, max_x)
+    y = 10 if example else 2000000
+    to_check = []
+    for s,b in s_d.items():
+        if abs(s[1]-y) <= b['m']:
+            to_check.append(s)
+    positions = set()
+    for x in range(min_x, max_x+1):
+        #for s,b in s_d.items():
+        for s in to_check:
+            m = abs(s[0]-x)+abs(s[1]-y)
+            if s_d[s]['b'] == tuple([x,y]):
+                continue
+            if m <= s_d[s]["m"]:
+                #print(x)
+                positions.add(tuple([x,y]))
+    print(len(positions))
+
+
+def _day15_p2(example=False, reload=False):
+    """
+    Solution for part 2, still probably some optimization that can be done but manhattan geomertry is annoying.
+    """
+    day = 15 if example is False else ("Sensor at x=2, y=18: closest beacon is at x=-2, y=15\n"
+                                       "Sensor at x=9, y=16: closest beacon is at x=10, y=16\n"
+                                       "Sensor at x=13, y=2: closest beacon is at x=15, y=3\n"
+                                       "Sensor at x=12, y=14: closest beacon is at x=10, y=16\n"
+                                       "Sensor at x=10, y=20: closest beacon is at x=10, y=16\n"
+                                       "Sensor at x=14, y=17: closest beacon is at x=10, y=16\n"
+                                       "Sensor at x=8, y=7: closest beacon is at x=2, y=10\n"
+                                       "Sensor at x=2, y=0: closest beacon is at x=2, y=10\n"
+                                       "Sensor at x=0, y=11: closest beacon is at x=2, y=10\n"
+                                       "Sensor at x=20, y=14: closest beacon is at x=25, y=17\n"
+                                       "Sensor at x=17, y=20: closest beacon is at x=21, y=22\n"
+                                       "Sensor at x=16, y=7: closest beacon is at x=15, y=3\n"
+                                       "Sensor at x=14, y=3: closest beacon is at x=15, y=3\n"
+                                       "Sensor at x=20, y=1: closest beacon is at x=15, y=3")
+    puzzle = get_input(day, "\n", None, reload)
+    sensor_dict = {}
+    no_b = set()
+    if example:
+        max_i = 20
+    else:
+        max_i = 4000000
+    for line in puzzle:
+        sx = int(line.split(',')[0].split("=")[1])
+        sy = int(line.split(':')[0].split("y")[1].strip("="))
+        bx = int(line.split("is at")[1].split(",")[0].split("=")[1])
+        by = int(line.split("=")[-1])
+        s = tuple([sx, sy])
+        b = tuple([bx, by])
+        m = manhattan(s, b)
+        if s in sensor_dict.keys():
+            raise Exception(f"Duplicate {s}")
+        sensor_dict[s] = m
+
+    # Search all pairs of sensors for ones where there is a gap between their coverage just big enough for one becon.
+    points_to_check = set()
+    lines = []
+    for a, b in itertools.combinations(sensor_dict.keys(), 2):
+        a_to_b_manhattan = manhattan(a,b)
+        d = a_to_b_manhattan - sensor_dict[a] - sensor_dict[b] 
+        this_edge = set()
+        if d == 2:
+            ax,ay = a
+            bx,by=b
+            #print(f"{a} [{sensor_dict[a]}] -> {b} [{sensor_dict[b]}] d={d} m={m}")
+            for dx in range(sensor_dict[a] + 2):  # +1 to the sensor range (+1 for python range non-inclusive)
+                if by < ay and bx > ax:  # up right
+                    x = ax + dx
+                    y = ay - (sensor_dict[a] + 1 - dx)
+                elif by < ay and bx < ax:  # up left
+                    x = ax - dx
+                    y = ay - (sensor_dict[a] + 1 - dx)
+                elif by > ay and bx < ax:  # down left
+                    x = ax - dx
+                    y = ay + (sensor_dict[a] + 1 - dx)
+                else:  # down right
+                    x = ax + dx
+                    y = ay + (sensor_dict[a] + 1 - dx)
+                this_edge.add(tuple([x,y]))
+            lines.append(this_edge)
+
+    # There should be two edges which overlap at the senor point.
+    # Use intersection to reduce the number of points to check.
+    points_to_check = set()
+    for one, two in itertools.combinations(lines, 2):
+        points_to_check = points_to_check.union(set.intersection(one, two))
+    print(f"Checking {len(points_to_check)} points")
+    # Verify the point is correct by testing against all the sensor coverages
+    for point in points_to_check:
+        found = True
+        for sensor, s_manhattan in sensor_dict.items():
+            if manhattan(point, sensor) <= s_manhattan:
+                found = False
+                break
+        if found is True:
+            print(point)
+            break
+    print(f"Part2 frequency is {(point[0]*4000000)+point[1]}")
 
 def go(day=6, time=False):
 
