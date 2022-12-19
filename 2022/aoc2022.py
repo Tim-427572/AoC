@@ -15,6 +15,7 @@ import numpy as np
 from os import path
 from collections import defaultdict
 
+
 # Advent of Code
 # Never did spend the time to work out how to get oAuth to work so this code expects you to
 # manually copy over your session cookie value.
@@ -120,7 +121,7 @@ def get_input(day, seperator, cast, override=False):
     return puzzle_input
 
 
-def _day1():
+def day1():
     """
     How many calories does an elf carry
     """
@@ -141,7 +142,7 @@ def _day1():
     print(f"Total of the top three elves {sum(elves[:3])}")
 
 
-def _day1_eval():
+def day1_eval():
     day = "1000\n2000\n3000\n\n4000\n\n5000\n6000\n\n7000\n8000\n9000\n\n10000\n"
     day = 1
     puzzle = list(get_input(day, '\n\n', None, True))
@@ -152,7 +153,7 @@ def _day1_eval():
     print(f"Total of the top three elves {sum(elves[:3])}")
 
 
-def _day2_orig():
+def day2_orig():
     """
     Rock Paper Scissors
     """
@@ -189,7 +190,7 @@ def _day2_orig():
     print(f"Part 2 total score {total_score}")
 
 
-def _day2():
+def day2():
     """
     Rock, Paper, Scissors with Elves!
     """
@@ -202,7 +203,7 @@ def _day2():
     print(f"Part 2 total score {sum([p2_dict[move] for move in puzzle])}")
 
 
-def _day3():
+def day3():
     """
     What's in your rucksack?!?
     """
@@ -228,7 +229,7 @@ def _day3():
     print(f"Part 2 priorities sum is {score}")
 
 
-def _day4():
+def day4():
     """
     Jungle clear-cutting elves.
     """
@@ -250,7 +251,7 @@ def _day4():
     print(f"Part 2 {p2_score} assignments overlap")
 
 
-def _day5():
+def day5():
     """
     Well at least it wasn't one of those three tower colored ring puzzles.
     """
@@ -306,7 +307,7 @@ def _start_of_packet(message, length):
             return i
 
 
-def _day6():
+def day6():
     """
     Communication system.
     """
@@ -337,7 +338,7 @@ def get_size(folder, drive_dict, folders_dict):
     return total_size
 
 
-def _day7():
+def day7():
     """
     Duplicate file names, what a pain...
     """
@@ -390,7 +391,7 @@ def _day7():
     print(f"Part 2 Need to free {need_to_free} and the smallest folder to delete is {smallest_to_delete}")
 
 
-def _day8(example=True):
+def day8(example=True):
     """
     """
     day = "30373\n25512\n65332\n33549\n35390"
@@ -467,7 +468,7 @@ def _day8(example=True):
     print(f"Part 2 the highest possible scenic score is {max_score}")
 
 
-def _day8_a():
+def day8_a():
     """
     """
     day = "30373\n25512\n65332\n33549\n35390"
@@ -578,7 +579,7 @@ def move_a_knot(h, t):
     return t
 
 
-def _day9(example=False, reload=False):
+def day9(example=False, reload=False):
     """
     Rope physics!
     """
@@ -614,7 +615,7 @@ def _day9(example=False, reload=False):
         # plot(position_set)
 
 
-def _day10_old(reload=False):
+def day10_old(reload=False):
     """
     CRT monitor simulation.
     """
@@ -651,7 +652,7 @@ def _day10_old(reload=False):
         print("".join(monitor[i]))
 
 
-def _day10_viz(stdscr, puzzle):
+def day10_viz(stdscr, puzzle):
     """
     CRT monitor simulation.
     """
@@ -718,11 +719,11 @@ def _day10_viz(stdscr, puzzle):
     stdscr.getch()
 
 
-def _day10(reload=False):
+def day10(reload=False):
     puzzle = get_input(10, '\n', None, reload)
-    curses.wrapper(_day10_viz, puzzle)
+    curses.wrapper(day10_viz, puzzle)
 
-def _day11(example=False, part=1, reload=False):
+def day11(example=False, part=1, reload=False):
     """
     Stupid Monkeys
     """
@@ -838,7 +839,7 @@ def bfs(graph, start, end):
     return low_score
 
 
-def _day12(example=False, reload=False):
+def day12(example=False, reload=False):
     """
     Walking up the hill, step by step.
     """
@@ -901,7 +902,7 @@ def packet_compare(left, right):
     return result
 
 
-def _day13(example=False, reload=False):
+def day13(example=False, reload=False):
     """
     Communication packets and sorting!
     """
@@ -933,7 +934,7 @@ def _day13(example=False, reload=False):
     print(f"Part 2 divider packet index multiplication is {i1*i2}")
 
 
-def _day14(part=1, example=False, reload=False):
+def day14(part=1, example=False, reload=False):
     """
     Like grains of sand through the hourglass so are the days of our lives....
     """
@@ -994,7 +995,7 @@ def _day14(part=1, example=False, reload=False):
     print(f"{sand_counter} grains of sand have fallen")
 
 
-def _day15(example=False, reload=False):
+def day15(example=False, reload=False):
     """
     Brute force for part 1 and don't look back....
     """
@@ -1049,7 +1050,7 @@ def _day15(example=False, reload=False):
     print(len(positions))
 
 
-def _day15_p2(example=False, reload=False):
+def day15_p2(example=False, reload=False):
     """
     Solution for part 2, still probably some optimization that can be done but manhattan geomertry is annoying.
     """
@@ -1131,10 +1132,453 @@ def _day15_p2(example=False, reload=False):
             break
     print(f"Part2 frequency is {(point[0]*4000000)+point[1]}")
 
+
+def valve_dfs(valves, valve, remaining_time, on, pressure, pressures):
+    pressures[on] = max(pressures.get(on, 0), pressure)
+    for k,v in valves.items():
+        new_time = remaining_time - valves[valve]['distance'][k] - 1
+        if v['one_hot'] & on or new_time < 0 or v['rate'] == 0:
+            continue
+        valve_dfs(valves, k, new_time, on | v['one_hot'], pressure + new_time * v['rate'], pressures)
+    return pressure
+
+
+
+def day16(example=False, reload=False):
+    """
+    """
+    day = 16
+    if example:
+        day = ("Valve AA has flow rate=0; tunnels lead to valves DD, II, BB\n"
+               "Valve BB has flow rate=13; tunnels lead to valves CC, AA\n"
+               "Valve CC has flow rate=2; tunnels lead to valves DD, BB\n"
+               "Valve DD has flow rate=20; tunnels lead to valves CC, AA, EE\n"
+               "Valve EE has flow rate=3; tunnels lead to valves FF, DD\n"
+               "Valve FF has flow rate=0; tunnels lead to valves EE, GG\n"
+               "Valve GG has flow rate=0; tunnels lead to valves FF, HH\n"
+               "Valve HH has flow rate=22; tunnel leads to valve GG\n"
+               "Valve II has flow rate=0; tunnels lead to valves AA, JJ\n"
+               "Valve JJ has flow rate=21; tunnel leads to valve II")
+    puzzle = get_input(day, '\n', None, reload)
+    valves = {}
+    distance = {}
+    valve_one_hot = 1  # Need a hashable way to track which valves were on.
+    for line in puzzle:
+        name = line.split(" ")[1]
+        rate = int(line.split(";")[0].split("=")[1])
+        paths = line.split("valve")[1]
+        paths = paths.lstrip("s ")
+        paths = paths.split(", ")
+        if name in valves:
+            raise Exception(f"{name} was a duplicate in {valves}")
+        valves[name] = {"rate":rate, "paths":paths, "distance":{}, "one_hot":valve_one_hot}
+        valve_one_hot = valve_one_hot << 1
+    # Calculate the distance between the vales.
+    for name, valve in valves.items():
+        valve['distance'] = dict.fromkeys(valves.keys(), 1e6)
+        for p in valve['paths']:
+            valve['distance'][p] = 1
+    for i in valves.keys():
+        for j in valves.keys():
+            for k in valves.keys():
+                valves[j]['distance'][k] = min(valves[j]['distance'][k], valves[j]['distance'][i]+valves[i]['distance'][k])
+    #print(valves)
+    pressures = {}
+    valve_dfs(valves, "AA", 30, 0, 0, pressures)
+    print(f"Part 1 maximum pressure release {max(pressures.values())}")
+    pressures = {}
+    visited = valve_dfs(valves, "AA", 26, 0, 0, pressures)
+    max_pressure = 0
+    for me, my_pressure in pressures.items():
+        for ele, ele_pressure in pressures.items():
+            if me & ele == 0:  # No overlapping valves
+                max_pressure = max(max_pressure, my_pressure + ele_pressure)
+    print(f"Part 2 maximum pressure working together is {max_pressure}")
+
+
+class Special_Tuple(tuple):
+    def __add__(self, other):
+        return Special_Tuple(x + y for x, y in zip(self, other))
+
+
+def push(board, shape, move):
+    new_shape = []
+    for rock in shape:
+        this_rock = rock + move
+        if this_rock[0] in [0, 8]:
+            return shape  # moved past the edge, abort the move
+        else:
+            new_shape.append(rock + move)
+    if move != [0,-1]:  # Air push
+        if set(new_shape).isdisjoint(board) is False: # Cant push sideways)
+            return shape
+    return new_shape
+        
+        
+def draw_b(board, this_shape):
+    viz = np.full((20,8)," ")
+    for i in board:
+        viz[tuple(reversed(i))]="#"
+    for i in this_shape:
+        viz[tuple(reversed(i))]="#"
+    for y in range(19,-1,-1):
+        print("".join(viz[y]))
+        
+
+
+def _draw_top(board, max_y):
+    viz = np.full((21,8), " ")
+    this_y = max_y
+    for i in range(20):
+        for rock in board:
+            if rock[1] == this_y:
+                viz[(i, rock[0])] = "#"
+        this_y -= 1
+    for y in range(20):
+        print("".join(viz[y]))
+
+
+def day17(example=False, reload=False):
+    day = 17
+    if example:
+        day = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
+    pushes = get_input(day, "\n", list, reload)[0]
+    shapes = [
+        [(3,0), (4,0), (5,0), (6,0)],  # horz. line
+        [(4,2), (3,1), (4,1), (5,1), (4,0)],  # +
+        [(5,2), (5,1), (3,0), (4,0), (5,0)],  # L
+        [(3,3), (3,2), (3,1), (3,0)],  # vert. line
+        [(3,1), (4,1), (3,0), (4,0)],
+        ]
+    for i in range(len(shapes)):
+        for j in range(len(shapes[i])):
+            shapes[i][j] = Special_Tuple(shapes[i][j])
+    decode = {"<":[-1,0], ">":[1,0]}
+    for i in range(len(pushes)):
+        pushes[i] = decode[pushes[i]]
+
+    push_index = 0
+    board = set([(1,0),(2,0),(3,0),(4,0),(5,0),(6,0),(7,0)])
+    down = [0,-1]
+    max_y = 0
+    shape_no = 1
+    shape_index = 0
+    keep_size = 40
+    cycles = {}
+    for shape in itertools.cycle(shapes):
+        #if shape_no == 2023:
+        if shape_no == 1000000000000+1:
+            break
+        
+        if max_y > keep_size:
+            for x in range(1,8):
+                for y in range(4):
+                    board.discard(tuple([x,max_y-keep_size-y]))
+
+        this_shape = []
+        for rock in shape:
+            this_shape.append(rock + [0, max_y + 4])
+        #print(this_shape)
+        while True:
+            # Air moves it
+                #input()            
+            new_shape = push(board, this_shape, pushes[push_index%len(pushes)])
+            push_index += 1
+            if set(new_shape).isdisjoint(board) is False:
+                board = set.union(set(this_shape), board)
+                max_y = max(max_y, max(list(zip(*board))[1]))
+                break
+            #draw_b(board, this_shape)
+            #print(f"push {shape_no}")
+            #input()
+            # Falls
+            this_shape = new_shape
+            new_shape = push(board, this_shape, [0,-1])
+            if set(new_shape).isdisjoint(board) is False:
+                board = set.union(set(this_shape), board)
+                max_y = max(max_y, max(list(zip(*board))[1]))
+                break
+            this_shape = new_shape
+        #_draw_top(set.union(board, set(new_shape)), max_y)
+        print(f"shape:{shape_no}, max:{max_y} cycle={len(shapes)*len(pushes)} board_size:{len(board)} ")
+        if tuple(sorted(board)) in cycles.keys():
+            print(f"repeat of {cycles[board]}")
+            raise Exception()
+        else:
+            cycles[tuple(sorted(board))] = shape_no
+        #draw_b(board, this_shape)
+        #print(f"shape:{shape_no}  {shape_no % len(shapes)} {push_index % len(pushes)} board size:{len(board)}")
+
+        #input()
+        shape_no +=1
+        shape_index += 1
+    print(shape_no, max_y)
+
+
+def draw_b2(board, this_shape):
+    viz = np.full((40,8)," ")
+    for i in board:
+        viz[tuple(reversed(i))]="#"
+    for i in this_shape:
+        viz[tuple(reversed(i))]="#"
+    for y in range(40):
+        print("".join(viz[y]))
+
+
+def air(board, shape, move):
+    new_shape = set()
+    for rock in shape:
+        this_rock = rock + move
+        if this_rock[0] in [0, 8]:
+            return shape  # moved past the edge, abort the move
+        else:
+            new_shape.add(rock + move)
+    if new_shape.isdisjoint(board) is False: # Cant push sideways)
+        return shape
+    else:
+        return new_shape
+
+
+def mov_board(board, move=-1):
+    new_board = set()
+    for rock in board:
+        new_board.add(rock + [0,move])
+    return new_board
+
+
+def day17_p2(example=False, reload=False):
+    day = 17
+    if example:
+        day = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
+    pushes = get_input(day, "\n", list, reload)[0]
+    shapes = [
+        [1, set([Special_Tuple((3,0)), Special_Tuple((4,0)), Special_Tuple((5,0)), Special_Tuple((6,0))])],  # horz. line
+        [3, set([Special_Tuple((4,2)), Special_Tuple((3,1)), Special_Tuple((4,1)), Special_Tuple((5,1)), Special_Tuple((4,0))])],  # +
+        [3, set([Special_Tuple((5,0)), Special_Tuple((5,1)), Special_Tuple((3,2)), Special_Tuple((4,2)), Special_Tuple((5,2))])],  # L
+        [4, set([Special_Tuple((3,3)), Special_Tuple((3,2)), Special_Tuple((3,1)), Special_Tuple((3,0))])],  # vert. line
+        [2, set([Special_Tuple((3,1)), Special_Tuple((4,1)), Special_Tuple((3,0)), Special_Tuple((4,0))])],
+        ]
+
+    decode = {"<":[-1,0], ">":[1,0]}
+    for i in range(len(pushes)):
+        pushes[i] = decode[pushes[i]]
+
+    board = set([Special_Tuple((1,0)),
+                 Special_Tuple((2,0)),
+                 Special_Tuple((3,0)),
+                 Special_Tuple((4,0)),
+                 Special_Tuple((5,0)),
+                 Special_Tuple((6,0)),
+                 Special_Tuple((7,0))])
+
+    shape_no = 0
+    push_index = 0
+    max_y = 0
+    cycles = {}
+    tower = 1000000000000
+    finish = tower
+    found = False
+    cycle_hight = None
+    no_of_cycles = None
+
+    for this_shape in itertools.cycle(shapes):
+        # Erase the bottom of the board to speed the set checks.
+        for y in range(40, max(list(zip(*board))[1])+1):
+            max_y += 1
+            for x in range(8):
+                board.discard((x,y))
+
+        if shape_no == finish:
+            break
+         
+        size, shape = this_shape
+
+        min_y = min(list(zip(*board))[1])  # Correction for when the piece drops below the top of the tower.
+        min_y = min(min_y, 0)
+        if min_y != 0:
+            board = mov_board(board, abs(min_y))
+
+        # Logic to look for the cyclic nature of the puzzle.
+        if shape_no % len(shapes) == 0:
+            t_board = tuple(board)
+            if t_board in cycles.keys() and found is False:
+                #draw_b2(board, set())
+                print(f"Duplicate [{shape_no}, {max_y+max(list(zip(*board))[1])}] with {cycles[t_board]}")
+                cycle_shape_count = shape_no - cycles[t_board][0]
+                cycle_height = max_y+max(list(zip(*board))[1]) - cycles[t_board][1]
+                print(f" Cycle repeats every {cycle_shape_count} shapes and grows by {cycle_height}")
+                finish = shape_no + (tower-shape_no) % cycle_shape_count
+                print(f" Continue to shape {finish} to get the remainder height")
+                no_of_cycles = (tower-finish)//cycle_shape_count
+                found = True
+            else:
+                cycles[t_board] = [shape_no, max_y+max(list(zip(*board))[1])]
+
+        # Move board down to fit the new shape
+        board = mov_board(board, size + 3)
+
+        while True:
+            # Air moves it
+            shape = air(board, shape, pushes[push_index%len(pushes)])
+            push_index += 1
+
+            # Shape falls (really the board moved up)
+            new_board = mov_board(board)
+
+            # Check for overlap which would stop the piece
+            if shape.isdisjoint(new_board) is False:
+                board = set.union(shape, board)
+                break
+            board = new_board
+        # Next shape
+        shape_no +=1
+    # Final prints.
+    cur_max_y = max_y+max(list(zip(*board))[1])
+    print(f"Current max_y:{cur_max_y} at {shape_no}")
+    cycle_y = no_of_cycles * cycle_height
+    print(f" Number of cycles {no_of_cycles} shape_count = {cycle_shape_count}")
+    print(f" Additional shapes {no_of_cycles*cycle_shape_count} + {shape_no} = {(no_of_cycles*cycle_shape_count)+shape_no}")
+    print(f" Add {cycle_y} for {no_of_cycles} cycles each adding {cycle_height} height")
+    ans = cycle_y + cur_max_y
+    print(f"Part 2 answer is {ans}")
+    if example:
+        print(f" Check example agains known value: {ans-1514285714288}")
+
+
+def day18(example=False, reload=False):
+    day = 18
+    if example:
+        day = ("2,2,2\n"
+               "1,2,2\n"
+               "3,2,2\n"
+               "2,1,2\n"
+               "2,3,2\n"
+               "2,2,1\n"
+               "2,2,3\n"
+               "2,2,4\n"
+               "2,2,6\n"
+               "1,2,5\n"
+               "3,2,5\n"
+               "2,1,5\n"
+               "2,3,5")
+        #day = "1,1,1\n2,1,1"
+    puzzle = get_input(day, '\n', lambda x: list(map(int, x.split(","))), reload)
+    cube_faces = []
+    for x,y,z in puzzle:
+        a = (x,  y,  z,   x+1, y+1, z)
+        b = (x,  y+1,z,   x+1, y+1, z+1)
+        c = (x+1,y,  z,   x+1, y+1, z+1)
+        d = (x,  y,  z,   x+1, y,   z+1)
+        e = (x,  y,  z,   x,   y+1, z+1)
+        f = (x,  y,  z+1, x+1, y+1, z+1)
+        cube_face = tuple([a,b,c,d,e,f])
+        cube_faces.append(cube_face)
+    pos_faces = 0
+    neg_faces = 0
+    face_set = set()
+    for cube in cube_faces:
+        for face in cube:
+            if face in face_set:
+                neg_faces += 2
+            pos_faces += 1
+            face_set.add(face)
+    print(pos_faces-neg_faces)
+
+
+def _bfs_outside(x,y,z, max_pos, cube_set):
+    queue = []
+    visited = set()
+    if (x,y,z) not in visited and (x,y,z) not in cube_set:
+        queue.append((x,y,z))
+        visited.add((x,y,z))
+
+    while len(queue) > 0:
+        x,y,z = queue.pop(0)
+        if min(x,y,z) < 0 or x >= max_pos[0] or y >= max_pos[1] or z >= max_pos[2]:
+            return False
+        for i in [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]:
+            t = (x+i[0],y+i[1],z+i[2])
+            if t not in visited and t not in cube_set:
+                queue.append(t)
+                visited.add(t)
+    return True
+        
+def day18_p2(example=False, reload=False):
+    #global cube_set
+    day = 18
+    if example:
+        day = ("2,2,2\n"
+               "1,2,2\n"
+               "3,2,2\n"
+               "2,1,2\n"
+               "2,3,2\n"
+               "2,2,1\n"
+               "2,2,3\n"
+               "2,2,4\n"
+               "2,2,6\n"
+               "1,2,5\n"
+               "3,2,5\n"
+               "2,1,5\n"
+               "2,3,5")
+    puzzle = get_input(day, '\n', lambda x: tuple(map(int, x.split(","))), reload)
+    x_pos, y_pos, z_pos = list(zip(*puzzle))
+    max_x = max(x_pos)+1
+    max_y = max(y_pos)+1
+    max_z = max(z_pos)+1
+    #print(f"max_x:{max_x} max_y:{max_y} max_z:{max_z}")
+    cube_set = set(puzzle)
+   
+    enclosed_set = set()
+    max_pos = (max_x+1, max_y+1, max_z+1)
+    for x in range(1,max_x):
+        for y in range(1, max_y):
+            for z in range(1, max_z):
+                if (x,y,z) in puzzle:
+                    continue
+                #print(x,y,z)
+                if _bfs_outside(x,y,z, max_pos, cube_set):
+                    enclosed_set.add(tuple([x,y,z]))
+    size = 0
+    for cube in puzzle:
+        for i in [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]:
+            t = (cube[0]+i[0],cube[1]+i[1],cube[2]+i[2])
+            if t not in puzzle and t not in enclosed_set:
+                size+=1
+    print(size)
+
+
+def day19(example=False, reload=False):
+    """
+    """
+    day = 19
+    if example:
+        day = ("Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.\n"
+               "Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 12 obsidian.")
+    puzzle = get_input(day, "\n", None, reload)
+
+    blueprint_dict = {}
+    for line in puzzle:
+        num = int(line.split("Blueprint")[1].split(":")[0])
+        ore = int(line.split("ore.")[0].split("costs")[1])
+        clay = int(line.split("ore.")[1].split("costs")[1])
+        obsidion_o = int(line.split("ore")[3].split("costs")[1])
+        obsidion_c = int(line.split("clay")[1].split("and")[1])
+        geode_o = int(line.split("ore")[4].split("costs")[1])
+        geode_b = int(line.split("obsidian")[1].split("and")[2])
+        if num in blueprint_dict.keys():
+            raise Exception(f"Duplicate {num} in {blueprint_dict.keys()}")
+        blueprint_dict[num] = {"ore":  {"ore": ore},
+                               "clay": {"ore": clay},
+                               "obsidian": {"ore": obsidion_o, "clay": obsidion_c},
+                               "geode": {"ore": geode_o, "obsidian": geode_b}}
+    print(blueprint_dict)
+
+
+
 def go(day=6, time=False):
 
     try:
-        return eval("_day{}".format(day))
+        return eval("day{}".format(day))
     except Exception as e:
         print(e)
 
