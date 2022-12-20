@@ -11,9 +11,9 @@ import requests
 import functools
 import itertools
 import statistics
+import collections
 import numpy as np
 from os import path
-from collections import defaultdict
 
 
 # Advent of Code
@@ -1196,126 +1196,129 @@ def day16(example=False, reload=False):
     print(f"Part 2 maximum pressure working together is {max_pressure}")
 
 
+# def push(board, shape, move):
+#     new_shape = []
+#     for rock in shape:
+#         this_rock = rock + move
+#         if this_rock[0] in [0, 8]:
+#             return shape  # moved past the edge, abort the move
+#         else:
+#             new_shape.append(rock + move)
+#     if move != [0,-1]:  # Air push
+#         if set(new_shape).isdisjoint(board) is False: # Cant push sideways)
+#             return shape
+#     return new_shape
+        
+        
+# def draw_b(board, this_shape):
+#     viz = np.full((20,8)," ")
+#     for i in board:
+#         viz[tuple(reversed(i))]="#"
+#     for i in this_shape:
+#         viz[tuple(reversed(i))]="#"
+#     for y in range(19,-1,-1):
+#         print("".join(viz[y]))
+#         
+
+
+# def _draw_top(board, max_y):
+#     viz = np.full((21,8), " ")
+#     this_y = max_y
+#     for i in range(20):
+#         for rock in board:
+#             if rock[1] == this_y:
+#                 viz[(i, rock[0])] = "#"
+#         this_y -= 1
+#     for y in range(20):
+#         print("".join(viz[y]))
+
+
+# def day17(example=False, reload=False):
+#     day = 17
+#     if example:
+#         day = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
+#     pushes = get_input(day, "\n", list, reload)[0]
+#     shapes = [
+#         [(3,0), (4,0), (5,0), (6,0)],  # horz. line
+#         [(4,2), (3,1), (4,1), (5,1), (4,0)],  # +
+#         [(5,2), (5,1), (3,0), (4,0), (5,0)],  # L
+#         [(3,3), (3,2), (3,1), (3,0)],  # vert. line
+#         [(3,1), (4,1), (3,0), (4,0)],
+#         ]
+#     for i in range(len(shapes)):
+#         for j in range(len(shapes[i])):
+#             shapes[i][j] = Special_Tuple(shapes[i][j])
+#     decode = {"<":[-1,0], ">":[1,0]}
+#     for i in range(len(pushes)):
+#         pushes[i] = decode[pushes[i]]
+# 
+#     push_index = 0
+#     board = set([(1,0),(2,0),(3,0),(4,0),(5,0),(6,0),(7,0)])
+#     down = [0,-1]
+#     max_y = 0
+#     shape_no = 1
+#     shape_index = 0
+#     keep_size = 40
+#     cycles = {}
+#     for shape in itertools.cycle(shapes):
+#         #if shape_no == 2023:
+#         if shape_no == 1000000000000+1:
+#             break
+#         
+#         if max_y > keep_size:
+#             for x in range(1,8):
+#                 for y in range(4):
+#                     board.discard(tuple([x,max_y-keep_size-y]))
+# 
+#         this_shape = []
+#         for rock in shape:
+#             this_shape.append(rock + [0, max_y + 4])
+#         #print(this_shape)
+#         while True:
+#             # Air moves it
+#                 #input()            
+#             new_shape = push(board, this_shape, pushes[push_index%len(pushes)])
+#             push_index += 1
+#             if set(new_shape).isdisjoint(board) is False:
+#                 board = set.union(set(this_shape), board)
+#                 max_y = max(max_y, max(list(zip(*board))[1]))
+#                 break
+#             #draw_b(board, this_shape)
+#             #print(f"push {shape_no}")
+#             #input()
+#             # Falls
+#             this_shape = new_shape
+#             new_shape = push(board, this_shape, [0,-1])
+#             if set(new_shape).isdisjoint(board) is False:
+#                 board = set.union(set(this_shape), board)
+#                 max_y = max(max_y, max(list(zip(*board))[1]))
+#                 break
+#             this_shape = new_shape
+#         #_draw_top(set.union(board, set(new_shape)), max_y)
+#         print(f"shape:{shape_no}, max:{max_y} cycle={len(shapes)*len(pushes)} board_size:{len(board)} ")
+#         if tuple(sorted(board)) in cycles.keys():
+#             print(f"repeat of {cycles[board]}")
+#             raise Exception()
+#         else:
+#             cycles[tuple(sorted(board))] = shape_no
+#         #draw_b(board, this_shape)
+#         #print(f"shape:{shape_no}  {shape_no % len(shapes)} {push_index % len(pushes)} board size:{len(board)}")
+# 
+#         #input()
+#         shape_no +=1
+#         shape_index += 1
+#     print(shape_no, max_y)
+
+
 class Special_Tuple(tuple):
     def __add__(self, other):
         return Special_Tuple(x + y for x, y in zip(self, other))
 
 
-def push(board, shape, move):
-    new_shape = []
-    for rock in shape:
-        this_rock = rock + move
-        if this_rock[0] in [0, 8]:
-            return shape  # moved past the edge, abort the move
-        else:
-            new_shape.append(rock + move)
-    if move != [0,-1]:  # Air push
-        if set(new_shape).isdisjoint(board) is False: # Cant push sideways)
-            return shape
-    return new_shape
-        
-        
-def draw_b(board, this_shape):
-    viz = np.full((20,8)," ")
-    for i in board:
-        viz[tuple(reversed(i))]="#"
-    for i in this_shape:
-        viz[tuple(reversed(i))]="#"
-    for y in range(19,-1,-1):
-        print("".join(viz[y]))
-        
-
-
-def _draw_top(board, max_y):
-    viz = np.full((21,8), " ")
-    this_y = max_y
-    for i in range(20):
-        for rock in board:
-            if rock[1] == this_y:
-                viz[(i, rock[0])] = "#"
-        this_y -= 1
-    for y in range(20):
-        print("".join(viz[y]))
-
-
-def day17(example=False, reload=False):
-    day = 17
-    if example:
-        day = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
-    pushes = get_input(day, "\n", list, reload)[0]
-    shapes = [
-        [(3,0), (4,0), (5,0), (6,0)],  # horz. line
-        [(4,2), (3,1), (4,1), (5,1), (4,0)],  # +
-        [(5,2), (5,1), (3,0), (4,0), (5,0)],  # L
-        [(3,3), (3,2), (3,1), (3,0)],  # vert. line
-        [(3,1), (4,1), (3,0), (4,0)],
-        ]
-    for i in range(len(shapes)):
-        for j in range(len(shapes[i])):
-            shapes[i][j] = Special_Tuple(shapes[i][j])
-    decode = {"<":[-1,0], ">":[1,0]}
-    for i in range(len(pushes)):
-        pushes[i] = decode[pushes[i]]
-
-    push_index = 0
-    board = set([(1,0),(2,0),(3,0),(4,0),(5,0),(6,0),(7,0)])
-    down = [0,-1]
-    max_y = 0
-    shape_no = 1
-    shape_index = 0
-    keep_size = 40
-    cycles = {}
-    for shape in itertools.cycle(shapes):
-        #if shape_no == 2023:
-        if shape_no == 1000000000000+1:
-            break
-        
-        if max_y > keep_size:
-            for x in range(1,8):
-                for y in range(4):
-                    board.discard(tuple([x,max_y-keep_size-y]))
-
-        this_shape = []
-        for rock in shape:
-            this_shape.append(rock + [0, max_y + 4])
-        #print(this_shape)
-        while True:
-            # Air moves it
-                #input()            
-            new_shape = push(board, this_shape, pushes[push_index%len(pushes)])
-            push_index += 1
-            if set(new_shape).isdisjoint(board) is False:
-                board = set.union(set(this_shape), board)
-                max_y = max(max_y, max(list(zip(*board))[1]))
-                break
-            #draw_b(board, this_shape)
-            #print(f"push {shape_no}")
-            #input()
-            # Falls
-            this_shape = new_shape
-            new_shape = push(board, this_shape, [0,-1])
-            if set(new_shape).isdisjoint(board) is False:
-                board = set.union(set(this_shape), board)
-                max_y = max(max_y, max(list(zip(*board))[1]))
-                break
-            this_shape = new_shape
-        #_draw_top(set.union(board, set(new_shape)), max_y)
-        print(f"shape:{shape_no}, max:{max_y} cycle={len(shapes)*len(pushes)} board_size:{len(board)} ")
-        if tuple(sorted(board)) in cycles.keys():
-            print(f"repeat of {cycles[board]}")
-            raise Exception()
-        else:
-            cycles[tuple(sorted(board))] = shape_no
-        #draw_b(board, this_shape)
-        #print(f"shape:{shape_no}  {shape_no % len(shapes)} {push_index % len(pushes)} board size:{len(board)}")
-
-        #input()
-        shape_no +=1
-        shape_index += 1
-    print(shape_no, max_y)
-
-
 def draw_b2(board, this_shape):
+    """
+    Debug print to draw the tetris board.
+    """
     viz = np.full((40,8)," ")
     for i in board:
         viz[tuple(reversed(i))]="#"
@@ -1325,28 +1328,28 @@ def draw_b2(board, this_shape):
         print("".join(viz[y]))
 
 
-def air(board, shape, move):
-    new_shape = set()
-    for rock in shape:
-        this_rock = rock + move
-        if this_rock[0] in [0, 8]:
-            return shape  # moved past the edge, abort the move
-        else:
-            new_shape.add(rock + move)
-    if new_shape.isdisjoint(board) is False: # Cant push sideways)
-        return shape
-    else:
-        return new_shape
+def move_d17(board, shape=None, move=-1):
+    """
+    Move the tetris shape or the board
+    """
+    new = set()
+    if shape is None:  # Move the board
+        for rock in board:
+            new.add(rock + [0, move])
+    else:  # Push the shape
+        for rock in shape:
+            new_rock = rock + move
+            if new_rock[0] in [0, 8]:  # Moved past the edge, abort the move
+                new = shape
+                break
+            else:
+                new.add(new_rock)
+        if new.isdisjoint(board) is False:  # Can't push sideways something is in the way
+            new = shape
+    return new
 
 
-def mov_board(board, move=-1):
-    new_board = set()
-    for rock in board:
-        new_board.add(rock + [0,move])
-    return new_board
-
-
-def day17_p2(example=False, reload=False):
+def day17(part=1, example=False, reload=False):
     day = 17
     if example:
         day = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
@@ -1375,13 +1378,19 @@ def day17_p2(example=False, reload=False):
     push_index = 0
     max_y = 0
     cycles = {}
-    tower = 1000000000000
+    tower = 2022 if part == 1 else 1000000000000
     finish = tower
     found = False
     cycle_hight = None
     no_of_cycles = None
 
     for this_shape in itertools.cycle(shapes):
+
+        # Correction for when the piece drops below the top of the tower.
+        min_y = min(0, min(list(zip(*board))[1]))
+        if min_y != 0:
+            board = move_d17(board, None, abs(min_y))
+
         # Erase the bottom of the board to speed the set checks.
         for y in range(40, max(list(zip(*board))[1])+1):
             max_y += 1
@@ -1390,18 +1399,12 @@ def day17_p2(example=False, reload=False):
 
         if shape_no == finish:
             break
-         
         size, shape = this_shape
 
-        min_y = min(list(zip(*board))[1])  # Correction for when the piece drops below the top of the tower.
-        min_y = min(min_y, 0)
-        if min_y != 0:
-            board = mov_board(board, abs(min_y))
-
         # Logic to look for the cyclic nature of the puzzle.
-        if shape_no % len(shapes) == 0:
+        if shape_no % len(shapes) == 0 and part == 2 and not found:
             t_board = tuple(board)
-            if t_board in cycles.keys() and found is False:
+            if t_board in cycles.keys():
                 #draw_b2(board, set())
                 print(f"Duplicate [{shape_no}, {max_y+max(list(zip(*board))[1])}] with {cycles[t_board]}")
                 cycle_shape_count = shape_no - cycles[t_board][0]
@@ -1415,14 +1418,14 @@ def day17_p2(example=False, reload=False):
                 cycles[t_board] = [shape_no, max_y+max(list(zip(*board))[1])]
 
         # Move board down to fit the new shape
-        board = mov_board(board, size + 3)
+        board = move_d17(board, None, size + 3)
 
         while True:
             # Air moves it
-            shape = air(board, shape, pushes[push_index%len(pushes)])
+            shape = move_d17(board, shape, pushes[push_index%len(pushes)])
             push_index += 1
 
-            # Shape falls (really the board moved up)
+            # Shape falls (really the board moves up so that the top of the shape stays at y==0)
             new_board = mov_board(board)
 
             # Check for overlap which would stop the piece
@@ -1432,17 +1435,21 @@ def day17_p2(example=False, reload=False):
             board = new_board
         # Next shape
         shape_no +=1
+
     # Final prints.
     cur_max_y = max_y+max(list(zip(*board))[1])
-    print(f"Current max_y:{cur_max_y} at {shape_no}")
-    cycle_y = no_of_cycles * cycle_height
-    print(f" Number of cycles {no_of_cycles} shape_count = {cycle_shape_count}")
-    print(f" Additional shapes {no_of_cycles*cycle_shape_count} + {shape_no} = {(no_of_cycles*cycle_shape_count)+shape_no}")
-    print(f" Add {cycle_y} for {no_of_cycles} cycles each adding {cycle_height} height")
-    ans = cycle_y + cur_max_y
-    print(f"Part 2 answer is {ans}")
-    if example:
-        print(f" Check example agains known value: {ans-1514285714288}")
+    if part == 1:
+        print(f"Part 1 answer is {cur_max_y}")
+    else:
+        print(f"Current max_y:{cur_max_y} at {shape_no}")
+        cycle_y = no_of_cycles * cycle_height
+        print(f" Number of cycles {no_of_cycles} shape_count = {cycle_shape_count}")
+        print(f" Additional shapes {no_of_cycles*cycle_shape_count} + {shape_no} = {(no_of_cycles*cycle_shape_count)+shape_no}")
+        print(f" Add {cycle_y} for {no_of_cycles} cycles each adding {cycle_height} height")
+        ans = cycle_y + cur_max_y
+        print(f"Part 2 answer is {ans}")
+        if example:
+            print(f" Check example agains known value: {ans-1514285714288}")
 
 
 def day18(example=False, reload=False):
@@ -1573,6 +1580,68 @@ def day19(example=False, reload=False):
                                "geode": {"ore": geode_o, "obsidian": geode_b}}
     print(blueprint_dict)
 
+
+def day19(example=False, reload=False):
+    day = 19
+    if example:
+        day = ""
+    puzzle = get_input(day, "\n", None, reload)
+
+
+def print_q(message, value_dict):
+    """
+    Helper function to debug day 20 printing the original message to check against the example.
+    """
+    temp_list = []
+    for i in message:
+        temp_list.append(value_dict[i])
+    #temp_list.insert(0, temp_list.pop(-1))
+    print(temp_list)
+
+
+def day20(part=1, example=False, reload=False):
+    """
+    Encrypted messages, tried to use a simple list at first but had not considered there
+    might be duplicate values in the message.
+    """
+    day=20
+    if example:
+        day = "1\n2\n-3\n3\n-2\n0\n4"
+    original_file = get_input(day, "\n", int, reload)
+    value_dict = {}
+    message = collections.deque(maxlen=len(original_file))
+    decryption = 811589153
+    where_is_zero = None
+    # Parse the puzzle and load a dictionary with all the values giving each a unique key (index)
+    for index, number in enumerate(original_file):
+        if index in value_dict.keys():
+            raise Exception("duplicate {index}")
+        if number == 0:
+            where_is_zero = index
+        value_dict[index] = number if part == 1 else number * decryption
+        message.append(index)
+    print("Zero is at ", where_is_zero)  # Keep track of where 0 is because it is important later.
+
+    # Start the message decryption
+    print("Start mixing")
+    mixing_loop = 1 if part == 1 else 10
+    for i in range(mixing_loop):
+        for index, value in value_dict.items():
+            # Search for the number by finding it's associated key (index) and
+            # moving it to the end of the queue
+            message.rotate((message.index(index) + 1) * -1) # + 1 to move it to the bottom instead of the top.
+            message.pop()
+            message.rotate(value * -1)  # Rotate by the desired amount then re-insert
+            message.append(index)
+
+    # Look up the grove coordinates
+    answer = 0
+    for check in [1000, 2000, 3000]:
+        print(f"Checking {check}")
+        message.rotate(message.index(where_is_zero) * -1)  # Start at 0
+        message.rotate(-1 * check)  # Rotate 1000, 2000, or 3000 times.
+        answer += value_dict[message[0]]
+    print(answer)
 
 
 def go(day=6, time=False):
