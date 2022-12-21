@@ -1644,6 +1644,139 @@ def day20(part=1, example=False, reload=False):
     print(answer)
 
 
+def _monkey_math(monkey, monkeys, humn_req=False):
+    if monkey == "humn":
+        humn_req = True
+    if type(monkeys[monkey]["op"]) in [int, float]:
+        return monkeys[monkey]["op"], humn_req
+    else:
+        left, humn_req_l = _monkey_math(monkeys[monkey]["left"], monkeys, humn_req)
+        right, humn_req_r = _monkey_math(monkeys[monkey]["right"], monkeys, humn_req)
+        return monkeys[monkey]["op"](left,right), humn_req_l | humn_req_r
+
+
+def _dfs_path(monkeys, start, end):
+    stack = [(start, [start])]
+    visited = set()
+    while stack:
+        (monkey, path) = stack.pop()
+        if monkey not in visited:
+            if monkey == end:
+                return path
+            visited.add(monkey)
+            if type(monkeys[monkey]["op"]) is not int:
+                stack.append((monkeys[monkey]["left"], path+[monkeys[monkey]["left"]]))
+                stack.append((monkeys[monkey]["right"], path+[monkeys[monkey]["right"]]))
+
+
+def day21(example=False, reload=False, debug_print=False):
+    """
+    """
+    import operator
+    day=21
+
+    # Helper lookup tables.
+    reverse = {operator.add: operator.sub,
+               operator.sub: operator.add,
+               operator.mul: operator.ifloordiv,
+               operator.ifloordiv: operator.mul}
+    decode = {"+": operator.add,
+              "-": operator.sub,
+              "*": operator.mul,
+              "/": operator.ifloordiv}
+    debug_lookup = {v: k for k, v in decode.items()}  # Only for debug prints
+
+    if example:
+        day = ("root: pppw + sjmn\n"
+               "dbpl: 5\n"
+               "cczh: sllz + lgvd\n"
+               "zczc: 2\n"
+               "ptdq: humn - dvpt\n"
+               "dvpt: 3\n"
+               "lfqf: 4\n"
+               "humn: 5\n"
+               "ljgn: 2\n"
+               "sjmn: drzm * dbpl\n"
+               "sllz: 4\n"
+               "pppw: cczh / lfqf\n"
+               "lgvd: ljgn * ptdq\n"
+               "drzm: hmdt - zczc\n"
+               "hmdt: 32\n")
+    puzzle = get_input(day, '\n', None, reload)
+    monkeys = {}
+    for line in puzzle:
+        monkey_name = line.split(":")[0]
+        if monkey_name in monkeys.keys():
+            raise Exception("Duplicate monkey {monkey_name} in {monkey_dict}")
+        line_list = line.split()
+        monkeys[monkey_name] = {}
+        if len(line_list) == 2:
+            monkeys[monkey_name] = {"op": int(line_list[-1])}
+        else:
+            monkeys[monkey_name] = {"op": decode[line_list[2]]}
+            monkeys[monkey_name]["left"]  = line_list[1]
+            monkeys[monkey_name]["right"] = line_list[3]
+
+    print(f'Part 1\n The "root" monkey will yell {_monkey_math("root", monkeys)[0]}')
+
+    # Collapse the graph of independent monkeys (the ones that don't depend on humn)
+    for monkey in monkeys.keys():
+        value, humn_req = _monkey_math(monkey, monkeys)
+        if not humn_req:
+            monkeys[monkey] = {"op": value}
+
+    print("Part 2")
+    # Decide what the value to match should be.
+    to_match=None
+    for side in ["right", "left"]:
+        value, humn_req = _monkey_math(monkeys["root"][side], monkeys)
+        if not humn_req:
+            to_match = value
+            other = {"left":"right", "right":"left"}[side]
+            print(f' {side.capitalize()} monkey "{monkeys["root"][side]}" is independent, value to match is {to_match}')
+            
+    path = _dfs_path(monkeys, monkeys["root"][other], "humn")
+    # print(f'Path from {monkeys["root"][other]} to humn is {path}')
+    path.pop()  # Remove humn
+
+    # Reverse the math operations while moving to humn
+    for monkey in path:
+        left = monkeys[monkey]["left"]
+        right = monkeys[monkey]["right"]
+        value_l,  humn_req_l =  _monkey_math(monkeys[monkey]["left"], monkeys)
+        value_r, humn_req_r =  _monkey_math(monkeys[monkey]["right"], monkeys)
+        op = monkeys[monkey]["op"]
+        rev_op = reverse[op]
+        if debug_print:
+            if humn_req_l:
+                print(f" {monkey} = {to_match} = {left} {debug_lookup[op]} {value_r}")
+            else:
+                print(f" {monkey} = {to_match} = {value_l} {debug_lookup[op]} {right}")
+        if humn_req_l and humn_req_r:  # Really hope this does not happen
+            raise Exception("Both sides depend on humn!")
+        if humn_req_l:  # Solve the equation for the left side monkey
+            solve = left
+            name_order = [monkey, right]
+            value_order = [to_match, value_r]
+        else:  # Solve the equation for the right side monkey.
+            solve = right
+            name_order = [monkey, left]
+            value_order = [to_match, value_l]
+        if humn_req_r and op in [operator.sub, operator.ifloordiv]:  # Special case for solving the right hand side.
+            rev_op = reverse[rev_op]
+            value_order.reverse()
+        #print(f" {solve} = {name_order[0]} {debug_lookup[rev_op]} {name_order[1]}")
+        to_match = rev_op(value_order[0], value_order[1])
+        if debug_print:
+            print(f" {solve} = {value_order[0]} {debug_lookup[rev_op]} {value_order[1]} = {to_match}")
+    # Double check the answer.
+    monkeys["humn"]["op"] = to_match
+    left, _ = _monkey_math(monkeys["root"]["left"], monkeys)
+    right, _ = _monkey_math(monkeys["root"]["right"], monkeys)
+    if left == right:
+        print(f' humn = {to_match} makes {monkeys["root"]["left"]} = {monkeys["root"]["right"]} = {left}')
+
+
 def go(day=6, time=False):
 
     try:
