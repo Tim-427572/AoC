@@ -681,7 +681,7 @@ def day10_viz(stdscr, puzzle):
         stdscr.addch(vert, horz, chr(0xB7), curses.color_pair(1))
         # Show the screen.
         stdscr.refresh()
-        time.sleep(0.05)
+        time.sleep(0.1)
         # Clear the 3 characters around x and clear the dot.
         stdscr.addch(vert, horz, " ", curses.color_pair(1))
         for i in [-1,0,1]:
@@ -883,11 +883,11 @@ def packet_compare(left, right):
         r = right[i] if i < len(right) else None
         # Checks to deal with list vs list or list vs int
         if type(l) == int and type(r) == list:
-            result = pair_check([l], r)
+            result = packet_compare([l], r)
         elif type(l) == list and type(r) == int:
-            result = pair_check(l, [r])
+            result = packet_compare(l, [r])
         elif type(l) == list and type(r) == list:
-            result = pair_check(l, r)
+            result = packet_compare(l, r)
         elif r is None:  # Right ended first order incorrect
             result = 1
         elif l is None:  # Left ended first, order correct
@@ -920,10 +920,13 @@ def day13(example=False, reload=False):
     # Part 1, check pairs of packets.
     score = 0
     index = 1
+    l = {-1:True, 1:False}
     for left, right in zip(*[iter(packets)]*2):
-        if pair_check(left, right) == -1:
+        if packet_compare(left, right) == -1:
             score += index
         index += 1
+        #print(f"{left}\n{right}\n{l[packet_compare(left, right)]}")
+        # input()
     print(f"Part 1 sum of indices is {score}")
     # Part 2 add the divider packets, sort and then find their locations.
     packets.append([[2]])
@@ -1313,6 +1316,11 @@ def day16(example=False, reload=False):
 class Special_Tuple(tuple):
     def __add__(self, other):
         return Special_Tuple(x + y for x, y in zip(self, other))
+    def __setitem__(self, key, value):
+        l = list(self)
+        l[key] = value
+        print(l)
+        return Special_Tuple(tuple(l))
 
 
 def draw_b2(board, this_shape):
@@ -1352,7 +1360,7 @@ def move_d17(board, shape=None, move=-1):
 def day17(part=1, example=False, reload=False):
     day = 17
     if example:
-        day = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>"
+        day = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>\n"
     pushes = get_input(day, "\n", list, reload)[0]
     shapes = [
         [1, set([Special_Tuple((3,0)), Special_Tuple((4,0)), Special_Tuple((5,0)), Special_Tuple((6,0))])],  # horz. line
@@ -1390,6 +1398,9 @@ def day17(part=1, example=False, reload=False):
         min_y = min(0, min(list(zip(*board))[1]))
         if min_y != 0:
             board = move_d17(board, None, abs(min_y))
+        #draw_b2(board, set())
+        #print(shape_no, max_y+max(list(zip(*board))[1]))
+        #input()
 
         # Erase the bottom of the board to speed the set checks.
         for y in range(40, max(list(zip(*board))[1])+1):
@@ -1426,7 +1437,7 @@ def day17(part=1, example=False, reload=False):
             push_index += 1
 
             # Shape falls (really the board moves up so that the top of the shape stays at y==0)
-            new_board = mov_board(board)
+            new_board = move_d17(board)
 
             # Check for overlap which would stop the piece
             if shape.isdisjoint(new_board) is False:
@@ -1645,6 +1656,9 @@ def day20(part=1, example=False, reload=False):
 
 
 def _monkey_math(monkey, monkeys, humn_req=False):
+    """
+    Recursive loop to perform the monkey math.
+    """
     if monkey == "humn":
         humn_req = True
     if type(monkeys[monkey]["op"]) in [int, float]:
@@ -1656,6 +1670,9 @@ def _monkey_math(monkey, monkeys, humn_req=False):
 
 
 def _dfs_path(monkeys, start, end):
+    """
+    Quick DFS search to find a path between two monkeys.
+    """
     stack = [(start, [start])]
     visited = set()
     while stack:
@@ -1671,6 +1688,7 @@ def _dfs_path(monkeys, start, end):
 
 def day21(example=False, reload=False, debug_print=False):
     """
+    Monkey Math!
     """
     import operator
     day=21
@@ -1734,7 +1752,7 @@ def day21(example=False, reload=False, debug_print=False):
         if not humn_req:
             to_match = value
             other = {"left":"right", "right":"left"}[side]
-            print(f' {side.capitalize()} monkey "{monkeys["root"][side]}" is independent, the value to match is {to_match}')
+            print(f' {side.capitalize()} monkey "{monkeys["root"][side]}" is independent, make "{monkeys["root"][other]}" match the value {to_match}')
             break
             
     path = _dfs_path(monkeys, monkeys["root"][other], "humn")  # Use DFS to find the path from root to humn.
@@ -1750,9 +1768,10 @@ def day21(example=False, reload=False, debug_print=False):
         rev_op = reverse[op]
         if debug_print:
             if humn_req_l:
-                print(f" {name_order[0]} = {to_match} = {name_order[0]} {debug_lookup[op]} {value_order[2]}")
+                print(f" {name_order[0]} = {name_order[1]} {debug_lookup[op]} {value_order[2]} = {to_match}")
             else:
-                print(f" {name_order[0]} = {to_match} = {value_order[1]} {debug_lookup[op]} {name_order[2]}")
+                print(f" {name_order[0]} = {value_order[1]} {debug_lookup[op]} {name_order[2]} = {to_match}")
+            foo=1
         if humn_req_l and humn_req_r:  # Really hope this does not happen
             raise Exception("Both sides depend on humn!")
         remove = 1 if humn_req_l else 2  # Decide if we are solving for the left or right monkey.
@@ -1773,6 +1792,375 @@ def day21(example=False, reload=False, debug_print=False):
         print(f' setting humn to {to_match} makes {monkeys["root"]["left"]} = {monkeys["root"]["right"]} = {left}')
     else:
         print(f' setting humn to {to_match} failed to work')
+
+
+def draw_b22(board):
+    """
+    Debug print to draw the force field board.
+    """
+    for line in board:
+        print("".join(line))
+
+
+def day22(example=True, reload=False, debug_print=False):
+    """
+    Grove force field password.
+    """
+    day = 22
+    if example:
+        day = ("        ...#\n"
+               "        .#..\n"
+               "        #...\n"
+               "        ....\n"
+               "...#.......#\n"
+               "........#...\n"
+               "..#....#....\n"
+               "..........#.\n"
+               "        ...#....\n"
+               "        .....#..\n"
+               "        .#......\n"
+               "        ......#.\n"
+               "\n"
+               "10R5L5R10L5R7L5")
+        #day = (" \n"
+        #       " \n"
+        #       "...\n"
+        #       "...\n"
+        #       "...  \n"
+        #       "\n" 
+        #       "R3R4\n")
+    puzzle = get_input(day, '\n', None, reload)
+    directions = []
+    n = ""
+    for c in puzzle[-1]:
+        if c in ["R","L"]:
+            if n != "":
+                directions.append(int(n))
+                n=""
+            directions.append(c)
+        else:
+            n+=c
+    if n != "":
+        directions.append(int(n))
+    #print(directions)
+    size_y = len(puzzle) - 2
+    size_x = 0
+    for line in puzzle:
+        if line == "":
+            break
+        size_x = max(size_x, len(line))
+    empty = "_"
+    print(f"Map size is {size_x},{size_y}")
+    board = np.full((size_y,size_x), empty)
+    for i_y, line in enumerate(puzzle):
+        if line == "":
+            break
+        for i_x, c in enumerate(line):
+            if c in [".", "#"]:
+                board[(i_y,i_x)] = c
+    right = {(0,1): ( 1,0), ( 1,0): (0,-1), (0,-1): (-1,0), (-1,0): (0,1)}
+    left =  {(0,1): (-1,0), (-1,0): (0,-1), (0,-1): ( 1,0), ( 1,0): (0,1)}
+    decode = {(0,1): ">", (0,-1): "<", (1,0): "v", (-1,0): "^"}
+    score = [">", "v", "<", "^"]
+    direction = (0,1)
+    position = np.array(np.argwhere(board == ".")[0])
+    if debug_print:
+        board[tuple(position)] = "@"
+    for move in directions:
+        if move == "R":
+            direction = right[direction]
+        elif move == "L":
+            direction = left[direction]
+        elif type(move) is int:
+            #print(move)
+            for _ in itertools.repeat(None, move):
+                new_pos = position + direction
+                if debug_print:
+                    draw_b22(board)
+                    print(position, new_pos)
+                # Wrap the edges of the numpy array
+                new_pos[0] = board[:,0].size - 1 if new_pos[0] < 0 else new_pos[0]  # top    -> bottom
+                new_pos[0] = 0 if new_pos[0] >= board[:,0].size else new_pos[0]     # bottom -> top
+                new_pos[1] = 0 if new_pos[1] >= board[0].size else new_pos[1]       # right -> left
+                new_pos[1] = board[0].size - 1 if new_pos[1] < 0 else new_pos[1]     # left  -> right
+                # Wrap to the valid . locations
+                new_pos[0] = np.argwhere(board[:,new_pos[1]] != empty)[-1][0] if board[tuple(new_pos)] == empty and decode[direction] == "^" else new_pos[0]  # top    -> bottom
+                new_pos[0] = np.argwhere(board[:,new_pos[1]] != empty)[0][0]  if board[tuple(new_pos)] == empty and decode[direction] == "v" else new_pos[0]  # bottom -> top
+                new_pos[1] = np.argwhere(board[new_pos[0]]   != empty)[0][0]  if board[tuple(new_pos)] == empty and decode[direction] == ">" else new_pos[1]  # right  -> left
+                new_pos[1] = np.argwhere(board[new_pos[0]]   != empty)[-1][0] if board[tuple(new_pos)] == empty and decode[direction] == "<" else new_pos[1]  # left   -> right
+                if board[tuple(new_pos)] != "#":
+                    if debug_print:
+                        board[tuple(position)] = decode[direction]
+                        board[tuple(new_pos)] = "@"
+                    position = new_pos
+                if debug_print:
+                    input()
+        else:
+            raise Exception(f"Unhandled command {move}")
+    print("Part 1 the password is:",(1000 * (position[0] + 1)) + (4 *(position[1] + 1)) + score.index(decode[direction]))
+
+
+class Point:
+    def __init__(self, x, y, shape):
+        self.x = x
+        self.y = y
+        self.contains = shape
+        if self.contains == "#":
+            self.is_empty = False
+        else:
+            self.is_empty = True
+        self.up = None
+        self.down = None
+        self.right = None
+        self.left = None
+    def show(self):
+        print(f"({self.x},{self.y}) {self.contains}")
+
+
+def draw_b22_a(board):
+    """
+    Debug print to draw the force field board.
+    """
+    for line in board:
+        s = ""
+        for p in line:
+            if p is None:
+                s+= " "
+            else:
+                s += p.contains
+        print(s)
+
+
+def np_get(array, y, x):
+    if y >= array.shape[0] or x >= array.shape[1]:
+        return None
+    elif y < 0 or x < 0:
+        return None
+    else:
+        return array[y,x]
+
+
+def day22_p2(example=True, reload=False, debug_print=False):
+    """
+    Grove force field password.
+    """
+    day = 22
+    if example:
+        day = ("        ...#\n"
+               "        .#..\n"
+               "        #...\n"
+               "        ....\n"
+               "...#.......#\n"
+               "........#...\n"
+               "..#....#....\n"
+               "..........#.\n"
+               "        ...#....\n"
+               "        .....#..\n"
+               "        .#......\n"
+               "        ......#.\n"
+               "\n"
+               "10R5L5R10L5R7L5")
+        #day = (" \n"
+        #       " \n"
+        #       "...\n"
+        #       "...\n"
+        #       "...  \n"
+        #       "\n" 
+        #       "R3R4\n")
+    puzzle = get_input(day, '\n', None, reload)
+    directions = []
+    # Parse thge movement commands
+    n = ""
+    for c in puzzle[-1]:
+        if c in ["R","L"]:
+            if n != "":
+                directions.append(int(n))
+                n=""
+            directions.append(c)
+        else:
+            n+=c
+    if n != "":
+        directions.append(int(n))
+    # Put the puzzle board into a numpy array where each spot is a point class object.
+    size_y = len(puzzle) - 2
+    size_x = 0
+    for line in puzzle:
+        if line == "":
+            break
+        size_x = max(size_x, len(line))
+    empty = " "
+    print(f"Map size is {size_x},{size_y}")
+    board = np.full((size_y,size_x), None)
+    for i_y, line in enumerate(puzzle):
+        if line == "":
+            break
+        for i_x, c in enumerate(line):
+            if c in [".", "#"]:
+                board[(i_y,i_x)] = Point(i_x+1, i_y+1, c)
+    draw_b22_a(board)
+    # Really not sure about how to make this work well. Manual stuff incoming.
+
+    # Walk the board (numpy array) connecting adjacent points
+    for y in range(board.shape[0]):
+        for x in range(board.shape[1]):
+            if board[y,x] is not None:
+                pos = np.array([y,x])
+                for direction, move in {"up":(-1,0), "down":(1,0), "left":(0,-1), "right":(0,1)}.items():
+                    n = pos + move
+                    neighbor = np_get(board, *n)
+                    if neighbor is not None:
+                        setattr(board[y,x], direction, board[tuple(n)])
+    # Stitch together the other edges of the cube.
+    return board
+
+
+#@functools.cache
+def elf_adjacent_old(elf):
+    d = {"north": set([(elf[0] - 1, elf[1] - 1), (elf[0], elf[1] - 1), (elf[0] + 1, elf[1] - 1)]),
+         "south": set([(elf[0] - 1, elf[1] + 1), (elf[0], elf[1] + 1), (elf[0] + 1, elf[1] + 1)]),
+         "east":  set([(elf[0] + 1, elf[1] - 1), (elf[0] + 1, elf[1]), (elf[0] + 1, elf[1] + 1)]),
+         "west":  set([(elf[0] - 1, elf[1] - 1), (elf[0] - 1, elf[1]), (elf[0] - 1, elf[1] + 1)]),
+         "north_pos": (elf[0],     elf[1] - 1),
+         "south_pos": (elf[0],     elf[1] + 1),
+         "east_pos":  (elf[0] + 1, elf[1]),
+         "west_pos":  (elf[0] - 1, elf[1]),
+         "around": set([(elf[0] - 1, elf[1] - 1), (elf[0], elf[1] - 1), (elf[0] + 1, elf[1] - 1),
+                        (elf[0] - 1, elf[1] + 1), (elf[0], elf[1] + 1), (elf[0] + 1, elf[1] + 1),
+                        (elf[0] + 1, elf[1]), (elf[0] - 1, elf[1])])
+        }
+    return d
+
+@functools.cache
+def elf_adjacent(elf):
+    nw = (elf[0] - 1, elf[1] - 1)
+    n  = (elf[0],     elf[1] - 1)
+    ne = (elf[0] + 1, elf[1] - 1)
+    w  = (elf[0] - 1, elf[1])
+    e  = (elf[0] + 1, elf[1])
+    sw = (elf[0] - 1, elf[1] + 1)
+    s  = (elf[0],     elf[1] + 1)
+    se = (elf[0] + 1, elf[1] + 1)
+    d = {"north": {nw, n, ne},
+         "south": {sw, s, se},
+         "east":  {ne, e, se},
+         "west":  {nw, w, sw},
+         "north_pos": n,
+         "south_pos": s,
+         "east_pos":  e,
+         "west_pos":  w,
+         "around": {nw, n, ne, e, w, sw, s, se}}
+    return d
+
+
+def draw_elves(elves):
+        x, y = zip(*elves)
+        x_size = max(x)-min(x) + 1
+        y_size = max(y)-min(y) + 1
+        x_adj = 0 - min(x)
+        y_adj = 0 - min(y)
+        #print(x, x_size, x_adj)
+        #print(y, y_size, y_adj)
+        b = np.full((y_size, x_size),".")
+        for elf in elves:
+            b[elf[1] + y_adj, elf[0] + x_adj] = "#"
+        draw_b22(b)
+        #print(np.count_nonzero(b=="#"))
+
+
+def day23(example=False, reload=False, debug_print=False):
+    day = 23
+    if example:
+        day = (".....\n"
+               "..##.\n"
+               "..#..\n"
+               ".....\n"
+               "..##.\n"
+               ".....")
+        day = ("....#..\n"
+               "..###.#\n"
+               "#...#.#\n"
+               ".#...##\n"
+               "#.###..\n"
+               "##.#.##\n"
+               ".#..#..")
+    puzzle = get_input(day, "\n", None, reload)
+    move_order = collections.deque(["north", "south", "west", "east"], maxlen=4)
+    elves = set()
+    for row_index, row in enumerate(puzzle):
+        for column_index, char in enumerate(row):
+            if char == "#":
+                elves.add((column_index, row_index))
+    if debug_print:
+        draw_elves(elves)
+        input()
+    num_elves = len(elves)
+    this_round = 0
+    while True:
+        elf_pos = {}
+        next_pos = collections.defaultdict(int)
+        someone_moved = False
+        for elf in elves:
+            adjacent = elf_adjacent(elf)
+            #if len(elves.intersection(adjacent["around"])) == 0:
+            if not elves & adjacent["around"]:
+                if debug_print:
+                    print(f"{elf} should not move")
+                elf_pos[elf] = elf
+                next_pos[elf] += 1
+                continue
+            for move in move_order:
+                #if len(elves.intersection(adjacent[move])) == 0:
+                if not elves & adjacent[move]:
+                    if debug_print:
+                        print(f"{elf} should move {move} to", adjacent[f"{move}_pos"])
+                    elf_pos[elf] = adjacent[f"{move}_pos"]
+                    next_pos[adjacent[f"{move}_pos"]] += 1
+                    someone_moved = True
+                    break
+            if elf not in elf_pos.keys():  # No valid directions.
+                if debug_print:
+                    print(f"{elf} had no valid moves")
+                elf_pos[elf] = elf
+                next_pos[elf] += 1
+        if len(next_pos.keys()) == len(elves):
+            # All move, no overlaps.
+            if debug_print:
+                print("All elves move")
+            elves = set(next_pos.keys())
+        else:
+            if debug_print:
+                print("Overlapping elves")
+            elves = set()
+            for here, there in elf_pos.items():
+                if next_pos[there] > 1:
+                    elves.add(here)
+                else:
+                    elves.add(there)
+        this_round += 1
+        if debug_print:
+            #print("after", elves, len(elves))
+            print(f"Round {this_round} and the move order was {move_order}")
+            draw_elves(elves)
+            input()
+        move_order.rotate(-1)
+        if this_round == 10:
+                x, y = zip(*elves)
+                x_size = max(x)-min(x) + 1
+                y_size = max(y)-min(y) + 1
+                tiles = (x_size * y_size) - len(elves)
+                print(f"Part 1, after round {this_round} there are {tiles} empty spaces")
+        if len(elves) != num_elves:
+            raise Exception("lost an elf")
+        if someone_moved is False:
+            break
+    print(f"Part 2, the elves stop moving after {this_round} rounds")
+
+
+def profile(day, example=False):
+    import cProfile
+    func_str = f"day{day}(example={example})"
+    print(func_str)
+    cProfile.runctx(func_str, globals(), locals())
 
 
 def go(day=6, time=False):
