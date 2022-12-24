@@ -1914,7 +1914,15 @@ class Point:
         self.right = None
         self.left = None
     def show(self):
-        print(f"({self.x},{self.y}) {self.contains}")
+        print(f"({self.y},{self.x}) {self.contains}")
+        if self.up:
+            print(f"up: ({self.up[0].y}, {self.up[0].x}) {self.up[1]}")
+        if self.down:
+            print(f"down: ({self.down[0].y}, {self.down[0].x}) {self.down[1]}")
+        if self.left:
+            print(f"left: ({self.left[0].y}, {self.left[0].x}) {self.left[1]}")
+        if self.right:
+            print(f"right: ({self.right[0].y}, {self.right[0].x}) {self.right[1]}")
 
 
 def draw_b22_a(board):
@@ -1959,7 +1967,7 @@ def day22_p2(example=True, reload=False, debug_print=False):
                "        .#......\n"
                "        ......#.\n"
                "\n"
-               "10R5L5R10L5R7L5")
+               "10R5L5R10L4R5L5")
         #day = (" \n"
         #       " \n"
         #       "...\n"
@@ -1990,14 +1998,16 @@ def day22_p2(example=True, reload=False, debug_print=False):
         size_x = max(size_x, len(line))
     empty = " "
     print(f"Map size is {size_x},{size_y}")
-    board = np.full((size_y,size_x), None)
+    board = np.full((size_y+1,size_x+1), None)
+    cur_pos = None
     for i_y, line in enumerate(puzzle):
         if line == "":
             break
         for i_x, c in enumerate(line):
             if c in [".", "#"]:
-                board[(i_y,i_x)] = Point(i_x+1, i_y+1, c)
-    draw_b22_a(board)
+                board[(i_y+1,i_x+1)] = Point(i_x+1, i_y+1, c)
+            if c == "." and cur_pos is None:
+                cur_pos = board[i_y+1,i_x+1]
     # Really not sure about how to make this work well. Manual stuff incoming.
 
     # Walk the board (numpy array) connecting adjacent points
@@ -2009,8 +2019,109 @@ def day22_p2(example=True, reload=False, debug_print=False):
                     n = pos + move
                     neighbor = np_get(board, *n)
                     if neighbor is not None:
-                        setattr(board[y,x], direction, board[tuple(n)])
+                        setattr(board[y,x], direction, [board[tuple(n)], ""])
     # Stitch together the other edges of the cube.
+    if example:
+        # 3 to 1
+        for p1, p3 in zip(board[1:5,9], board[5,5:9]):
+            p3.up   = [p1, "R"]
+            p1.left = [p3, "L"]
+        # 3 to 5
+        for p3, p5 in zip(board[8,5:9], reversed(board[9:13,9])):
+            p3.down = [p5, "L"]
+            p5.left = [p3, "R"]
+        # 4 to 6
+        for p4, p6 in zip(reversed(board[5:9,12]), board[9,13:17]):
+            p4.right = [p6, "R"]
+            p6.up    = [p4, "L"]
+        # 1 to 6
+        for p1, p6 in zip(board[1:5,12], reversed(board[9:13,16])):
+            p1.right = [p6, "RR"]
+            p6.right = [p1, "LL"]
+        # 1 to 2
+        for p1, p2 in zip(board[1,9:13], reversed(board[5,1:5])):
+            p1.up = [p2, "RR"]
+            p2.up = [p1, "LL"]
+        # 2 to 6
+        for p2, p6 in zip(board[5:9,1], reversed(board[12,13:17])):
+            p2.left = [p6, "R"]
+            p6.down  = [p2, "L"]
+        # 2 to 5
+        for p2, p5 in zip(board[8,1:5], reversed(board[12,9:13])):
+            p2.down = [p5, "RR"]
+            p5.down = [p2, "LL"]
+    else:
+        # 2 to 3
+        for p2, p3 in zip(board[50,101:150+1], board[51:100+1,100]):
+            #print(f"({p2.y},{p2.x})->({p3.y},{p3.x})")
+            p2.down  = [p3, "R"]
+            p3.right = [p2, "L"]
+        # 3 to 4
+        for p3, p4 in zip(board[51:100+1,51], board[101,1:50+1]):
+            p3.left = [p4, "L"]
+            p4.up   = [p3, "R"]
+        # 5 to 6
+        for p5, p6 in zip(board[150,51:100+1], board[151:200+1,50]):
+            p5.down  = [p6, "R"]
+            p6.right = [p5, "L"]
+        # 2 to 5
+        for p2, p5 in zip(reversed(board[1:50+1,150]), board[101:150+1,100]):
+            p2.right = [p5, "RR"]
+            p5.right = [p2, "LL"]
+        # 2 to 6
+        for p2, p6 in zip(board[1,101:150+1], board[200,1:50+1]):
+            p2.up = [p6, ""]
+            p6.down = [p2, ""]
+        # 1 to 6
+        for p1, p6 in zip(board[1,51:100+1], board[151:200+1,1]):
+            p1.up = [p6, "R"]
+            p6.left = [p1, "L"]
+        # 1 to 4
+        for p1, p4 in zip(reversed(board[1:50+1,51]), board[101:150+1,1]):
+            p1.left = [p4, "RR"]
+            p4.left = [p1, "LL"]
+
+    # Build a board for debug prints and double check all points are connected.
+    dbg_board = np.full(board.shape, " ")
+    for row in board:
+        for p in row:
+            if p:
+                dbg_board[p.y,p.x] = p.contains
+                for d in ["right", "down", "left", "up"]:
+                    if getattr(p,d) is None:
+                        print(f"Warning {d} missing a connection")
+                        p.show()
+                        input()
+    dbg_board[cur_pos.y, cur_pos.x] = "@"
+    if debug_print:
+        draw_b22(dbg_board)
+    orentation = collections.deque(["right", "down", "left", "up"])
+    turn = {"R":-1, "L":1}
+    for direction in directions:
+        if direction in ["R","L"]:
+            orentation.rotate(turn[direction])
+        elif type(direction) is int:
+            #cur_pos.show()
+            #print(orentation[0])
+            for i in range(direction):
+                n, cube_rotate = getattr(cur_pos, orentation[0])
+                if n.is_empty:
+                    dbg_board[cur_pos.y, cur_pos.x] = {"right":">", "up":"^", "down":"v", "left":"<"}[orentation[0]]
+                    dbg_board[n.y,n.x] = "@"
+                    cur_pos = n
+                    for r in cube_rotate:
+                        orentation.rotate(turn[r])
+                    if debug_print:
+                        draw_b22(dbg_board)
+                    #input()
+        else:
+            raise Exception("Unhandled direction command")
+
+    print("END")
+    cur_pos.show()
+    print(orentation[0])
+    score = ["right", "down", "left", "up"]
+    print((cur_pos.y * 1000) + (cur_pos.x * 4) + score.index(orentation[0]))
     return board
 
 
