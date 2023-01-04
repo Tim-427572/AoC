@@ -1137,6 +1137,14 @@ def day15_p2(example=False, reload=False):
 
 
 def valve_dfs(valves, valve, remaining_time, on, pressure, pressures):
+    """
+    valves - the graph we are searching.
+    valve - the valve position we are at.
+    remaining_time - time this valve would be open for.
+    on - A one hot encoding of which valves have been turned on.
+    pressure - the amount of pressure released (the score for the search)
+    pressures - a dictionary to hold the max pressure score for each set of turned on valves.
+    """
     pressures[on] = max(pressures.get(on, 0), pressure)
     for k,v in valves.items():
         new_time = remaining_time - valves[valve]['distance'][k] - 1
@@ -1565,9 +1573,10 @@ def day18_p2(example=False, reload=False):
     print(size)
 
 
-def day19(example=False, reload=False):
+def day19(example=False, part=1, reload=False):
     """
     """
+    import cpmpy
     day = 19
     if example:
         day = ("Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.\n"
@@ -1589,14 +1598,47 @@ def day19(example=False, reload=False):
                                "clay": {"ore": clay},
                                "obsidian": {"ore": obsidion_o, "clay": obsidion_c},
                                "geode": {"ore": geode_o, "obsidian": geode_b}}
-    print(blueprint_dict)
+    #print(blueprint_dict)
+    number_of_min = 24 if part == 1 else 32
+    qualities = []
+    for blueprint, costs in blueprint_dict.items():
+        if part == 2 and int(blueprint) > 3:
+            continue
+        cost_array = cpmpy.cpm_array([[0,                        0,                         0,                          0],
+                                      [costs["ore"]["ore"],      0,                         0,                          0],
+                                      [costs["clay"]["ore"],     0,                         0,                          0],
+                                      [costs["obsidian"]["ore"], costs["obsidian"]["clay"], 0,                          0],
+                                      [costs["geode"]["ore"],    0,                         costs["geode"]["obsidian"], 0]])
 
-
-def day19(example=False, reload=False):
-    day = 19
-    if example:
-        day = ""
-    puzzle = get_input(day, "\n", None, reload)
+        robots_per_step =    cpmpy.intvar(0, 9999, shape=(4, number_of_min + 1), name="robots")
+        resources_per_step = cpmpy.intvar(0, 9999, shape=(4, number_of_min + 1), name="resources")
+        building = cpmpy.intvar(-1, 3, shape=(1, number_of_min + 1), name="building")
+        blueprint_model = cpmpy.Model()
+        for r in range(4):
+            blueprint_model += (robots_per_step[r, 0] == (1 if r == 0 else 0))  # Start with 1 ore robot
+            blueprint_model += (resources_per_step[r, 0] == 0)  # Start with 0 resources
+            for s in range(1, number_of_min+1):  # For each minute
+                blueprint_model += (resources_per_step[r, s] == resources_per_step[r, s-1] >= cost_array[building[0, s] + 1, r])  # Only spend resources when you have enough
+                blueprint_model += (resources_per_step[r, s] == resources_per_step[r, s-1] + robots_per_step[r, s-1] - cost_array[building[0, s]+1, r])  # Robot of type r make 1 resource per step, subtract resources used to make robots.
+                blueprint_model += (robots_per_step[r, s] == (robots_per_step[r, s-1]) + (building[0, s] == r))  # Keep the robots, add if a robot is built.
+        blueprint_model.maximize(resources_per_step[3][number_of_min])  # Maximize geodes produced
+        if blueprint_model.solve():
+            value = resources_per_step[3][number_of_min].value()
+            print(f"Solved blueprint {blueprint} with max geodes {value}")
+            if part == 1:
+                qualities.append(int(blueprint) * value)
+            else:
+                qualities.append(value)
+        else:
+            print(f"No solution found for blueprint {blueprint}")
+    if part == 1:
+        print(sum(qualities))
+    else:
+        print(qualities)
+        ans = 1
+        for v in qualities:
+            ans *= v
+        print(ans)
 
 
 def print_q(message, value_dict):
@@ -2272,6 +2314,122 @@ def profile(day, example=False):
     func_str = f"day{day}(example={example})"
     print(func_str)
     cProfile.runctx(func_str, globals(), locals())
+
+
+def bfs_day24(start, end, blizz, moves=0):
+    stack = [(start[0], start[1], moves)]
+    visited = set()
+    while stack:
+        x, y, move = stack.pop(0)
+
+
+def day24(example=False, reload=False):
+    day = 24
+    if example:
+        day = ("#.######\n"
+               "#>>.<^<#\n"
+               "#.<..<<#\n"
+               "#>v.><>#\n"
+               "#<^v^^>#\n"
+               "######.#")
+    puzzle = get_input(day, "\n", None, reload)
+    blizz_set = set()
+    blizz_decode = {">": (1, 0), "<":(-1,0), "^": (0, -1), "v": (0, 1)}
+    for y, line in enumerate(puzzle):
+        for x, c in enumerate(line):
+            if line == puzzle[0] and c == ".":
+                start = (x,y)
+            elif line == puzzle[-1] and c == ".":
+                end = (x,y)
+            elif c not in [".", "#"]:
+                blizz_set.add((x,y,blizz_decode[c]))
+    print(blizz_set)
+
+
+def day25(example=False, reload=False):
+    """
+    Terrible code but at this point I don't really care.
+    """
+    day = 25
+    if example:
+        day = ("1=-0-2\n"
+               "12111\n"
+               "2=0=\n"
+               "21\n"
+               "2=01\n"
+               "111\n"
+               "20012\n"
+               "112\n"
+               "1=-1=\n"
+               "1-12\n"
+               "12\n"
+               "1=\n"
+               "122")
+    numbers = get_input(day, "\n", None)
+    decimal = []
+    for number in numbers:
+        #print("converting", number)
+        if "-" in number or "=" in number:
+            num_list = list(number)
+            place = 0
+            new_dec = 0
+            while num_list:
+                digit = num_list.pop()
+                if digit == "-":
+                    new_dec += int(str(-1*(10**place)), 5)
+                elif digit == "=":
+                    new_dec += int(str(-2*(10**place)), 5)
+                else:
+                    new_dec += int(str(int(digit)*(10**place)), 5)
+                place += 1
+                #print(digit, new_dec)
+            decimal.append(new_dec)
+        else:
+            decimal.append(int(number, 5))
+    #for i,j in zip(numbers, decimal):
+    #    print(i, j)
+    s = sum(decimal)
+    print("")
+    print(s)
+    b5 = int(np.base_repr(s,base=5))
+    print(b5)
+    a = ""
+    while b5 > 0:
+        r = b5 % 10
+        b5 = b5 // 10
+        if r == 5:
+            b5 += 1
+            r = 0
+        if r == 4:
+            a = "-" + a
+            b5 += 1
+        elif r == 3:
+            a = "=" + a
+            b5 += 1
+        else:
+            a = str(r) + a
+        #print(r, b5, a)
+    print(a)
+    number = a
+    new_dec = 0
+    # Check the results.
+    if "-" in number or "=" in number:
+        num_list = list(number)
+        place = 0
+        while num_list:
+            digit = num_list.pop()
+            if digit == "-":
+                new_dec += int(str(-1*(10**place)), 5)
+            elif digit == "=":
+                new_dec += int(str(-2*(10**place)), 5)
+            else:
+                new_dec += int(str(int(digit)*(10**place)), 5)
+            place += 1
+            #print(digit, new_dec)
+    print(new_dec)
+
+
+
 
 
 def go(day=6, time=False):
