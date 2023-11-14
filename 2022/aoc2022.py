@@ -3,7 +3,7 @@ import sys
 import math
 import time
 import copy
-import curses
+import curses # pip install windows-curses
 import pickle
 import socket
 import string
@@ -2183,7 +2183,7 @@ def elf_adjacent_old(elf):
         }
     return d
 
-@functools.cache
+#@functools.cache
 def elf_adjacent(elf):
     nw = (elf[0] - 1, elf[1] - 1)
     n  = (elf[0],     elf[1] - 1)
