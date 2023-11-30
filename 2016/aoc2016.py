@@ -13,6 +13,7 @@ from collections import defaultdict
 import itertools
 from functools import lru_cache
 from string import ascii_lowercase
+import hashlib
 
 # Advent of Code
 # Never did spend the time to work out how to get oAuth to work so this code expects you to
@@ -214,24 +215,40 @@ def _room_decode(name):
     name_id, checksum = name.split("[")
     checksum = checksum.strip("]")
     sector_id = name_id.split("-")[-1]
-    name_letters = name_id.strip(sector_id)
+    name_letters = name_id.strip(sector_id).strip("-")
     letter_freq = {}
     for c in ascii_lowercase:
         freq = name_letters.count(c)
         if freq > 0:
             letter_freq.setdefault(freq, [])
             letter_freq[freq].append(c)
-    return (letter_freq, sector_id, checksum)
+    return (name_letters, letter_freq, sector_id, checksum)
+
+
+def _decrypt(name, sector_id):
+    name_list = name.split("-")
+    decrypted = ""
+    for word in name_list:
+        result = ""
+        for l in word:  # noqa: E741
+            l_num = ord(l) - 0x60
+            l_num += sector_id
+            l_num = l_num % 26
+            l_num = 26 if l_num == 0 else l_num
+            result += chr(l_num + 0x60)
+        decrypted += result + " "
+    return decrypted.strip()
+
 
 def _day4():
     """
     """
     day = "aaaaa-bbb-z-y-x-123[abxyz]\na-b-c-d-e-f-g-h-987[abcde]\nnot-a-real-room-404[oarel]\ntotally-real-room-200[decoy]"
     day = 4
-    kiosk = get_input(day, "\n", _room_decode, True)
+    kiosk = get_input(day, "\n", _room_decode, False)
     sector_id_sum = 0
     for room in kiosk:
-        freq_dict, sector_id, checksum = room
+        name, freq_dict, sector_id, checksum = room
         freq_keys = sorted(freq_dict.keys(), reverse=True)
         my_checksum = []
         for key in freq_keys:
@@ -239,7 +256,70 @@ def _day4():
         my_checksum = "".join(str(x) for x in my_checksum[:5])
         if my_checksum == checksum:
             sector_id_sum += int(sector_id)
+            decrypted = _decrypt(name, int(sector_id))
+            if "north" in decrypted:
+                part_2_str = f"Part 2 The sector ID of the {decrypted} is {sector_id}"
     print(f"Part 1 sum of sector IDs is {sector_id_sum}")
+    print(part_2_str)
+
+
+def _day5(door_id):
+    """
+    """
+    passcode1 = ""
+    passcode2 = [None] * 8
+    i = 0
+    while True:
+        #print(i)
+        if len(passcode1) == 8 and None not in passcode2:
+            break
+        h = hashlib.md5(f"{door_id}{i}".encode("utf-8")).hexdigest()
+        if h.startswith("00000"):
+            passcode1 += h[5] if len(passcode1) < 8 else ""
+            position = int(h[5],16)
+            if position in range(0,8) and passcode2[position] == None:
+                passcode2[position] = h[6]
+            # print(passcode1)
+            # print(passcode2)
+        i += 1
+    print(f"Part 1 passcode is {passcode1}")
+    print(f"Part 2 passcode is {''.join(passcode2)}")
+
+
+def _day6():
+    """
+    """
+    puzzle = ("eedadn\n",
+              "drvtee\n",
+              "eandsr\n",
+              "raavrd\n",
+              "atevrs\n",
+              "tsrnev\n",
+              "sdttsa\n",
+              "rasrtv\n",
+              "nssdts\n",
+              "ntnada\n",
+              "svetve\n",
+              "tesnvt\n",
+              "vntsnd\n",
+              "vrdear\n",
+              "dvrsen\n",
+              "enarar\n")
+    puzzle = get_input(6, "\n", None)
+    puzzle_list = []
+    for line in puzzle:
+        puzzle_list.append(list(line.strip()))
+    message = np.array(puzzle_list, str)
+    result1 = ""
+    result2 = ""
+    for column in message.T:
+        values, counts = np.unique(column, return_counts=True)
+        result1 += values[np.argmax(counts)]
+        result2 += values[np.argmin(counts)]
+    print(f"Part 1 the message was {result1}")
+    print(f"Part 2 the message was {result2}")
+
+        
 
 
 def go(day=1):
@@ -249,8 +329,8 @@ def go(day=1):
         print(e)
 
 
-import concurrent.futures
-import time
+# import concurrent.futures
+# import time
 
 
 #if __name__ == "__main__":
