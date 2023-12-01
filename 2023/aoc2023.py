@@ -127,80 +127,39 @@ def day1(example=False):
     """
     So it begins!
     """
-    if example:
-        puzzle = (
-"1abc2\n",
-"pqr3stu8vwx\n",
-"a1b2c3d4e5f\n",
-"treb7uchet\n"    
-        )
+    day = 1 if example is False else ("1abc2\n"
+                                      "pqr3stu8vwx\n"
+                                      "a1b2c3d4e5f\n"
+                                      "treb7uchet\n")
+    # Part 2 example
+    # day = ("two1nine\n"
+    #        "eightwothree\n"
+    #        "abcone2threexyz\n"
+    #        "xtwone3four\n"
+    #        "4nineeightseven2\n"
+    #        "zoneight234\n"
+    #        "7pqrstsixteen\n")
 
-    else:
-        day=1
-        puzzle = get_input(day, '\n', None, )
-    r= 0
-    for i in puzzle:
-        num=""
-        for l in i:
-            if l.isnumeric():
-              num+=l
-              break
-        for l in range(len(i)-1,-1,-1):
-            if i[l].isnumeric():
-                num+=i[l]
-                break
-        print(f"{i} - {num}")
-        r+= int(num)
-    print(r)
-
-
-def day1_part2(example=False):
-    """
-    So it begins!
-    """
-    if example:
-        puzzle = ("two1nine\n",
-                  "eightwothree\n",
-                  "abcone2threexyz\n",
-                  "xtwone3four\n",
-                  "4nineeightseven2\n",
-                  "zoneight234\n",
-                  "7pqrstsixteen\n")
-
-    else:
-        day=1
-        puzzle = get_input(day, '\n', None, )
-    calibration_sum = 0
-    sp = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]   
-    for w in puzzle:
-        num=""
-        fl=""
-        ll=""
-        f_n_i=len(w)
-        l_n_i=0
-        for i in range(len(w)):
-            if w[i].isnumeric():
-              f_n_i = i
-              fl=w[i]
-              break
-        for i in range(len(w)-1,-1,-1):
-            if w[i].isnumeric():
-                l_n_i = i
-                ll=w[i]
-                break
-        for n in sp:
-            if n in w:
-                if w.index(n) < f_n_i:
-                    f_n_i = w.index(n)
-                    fl=str(sp.index(n)+1)
-                if w.rindex(n) > l_n_i:
-                    l_n_i = w.rindex(n)
-                    ll=str(sp.index(n)+1)
-        num = int(f"{fl}{ll}")
-        print(num)
-        r+= int(num)
-        #f=input()
-    print(r)
+    calibration_doc = get_input(day, '\n', None, )
+    p1_calibration = 0
+    p2_calibration = 0
+    value = "00"
+    numbers = "1234567890"
+    number_words = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]   
+    for new_value in calibration_doc:
+        size = len(new_value)
+        first_digit_index = min([new_value.index(x) if x in new_value else size for x in numbers])
+        last_digit_index = max([new_value.rindex(x) if x in new_value else 0 for x in numbers])
+        if first_digit_index in range(size) and last_digit_index in range(size):
+            value = f"{new_value[first_digit_index]}{new_value[last_digit_index]}"
+        p1_calibration += int(value)
+        first_word_dict = dict([(new_value.index(x), numbers[number_words.index(x)]) if x in new_value else (size, "!") for x in number_words])
+        last_word_dict = dict([(new_value.rindex(x), numbers[number_words.index(x)]) if x in new_value else (0, "!") for x in number_words])
+        value = first_word_dict[min(first_word_dict.keys())] + value[1] if min(first_word_dict.keys()) < first_digit_index else value
+        value = value[0] + last_word_dict[max(last_word_dict.keys())] if max(last_word_dict.keys()) > last_digit_index else value
+        p2_calibration += int(value)
+    print(f"Part 1 the sum of calibration values is {p1_calibration}")
+    print(f"Part 2 the sum of calibration values is {p2_calibration}")
 
 
 class Viz(pyglet.window.Window):
