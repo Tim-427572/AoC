@@ -164,6 +164,78 @@ def day1(example=False):
     print(f"Part 2 the sum of calibration values is {p2_calibration}")
 
 
+def day1_speed(example=0):
+    day = 1
+    if example == 1:
+        day = ("1abc2\n"
+               "pqr3stu8vwx\n"
+               "a1b2c3d4e5f\n"
+               "treb7uchet\n")
+    if example == 2:
+        day = ("two1nine\n"
+               "eightwothree\n"
+               "abcone2threexyz\n"
+               "xtwone3four\n"
+               "4nineeightseven2\n"
+               "zoneight234\n"
+               "7pqrstsixteen\n")
+    calibration_doc = get_input(day, '\n', None, False)
+    p1_calibration = p2_calibration = 0
+    number_set = ("1", "2", "3", "4", "5", "6", "7", "8", "9")
+    number_forward_dict = {"o": [("one", "1")],
+                           "e": [("eight", "8")],
+                           "t": [("two", "2"), ("three","3")],
+                           "f": [("four", "4"), ("five", "5")],
+                           "s": [("six", "6"), ("seven", "7")],
+                           "n": [("nine", "9")]}
+    number_reverse_dict = {"e": [("one", "1"), ("three","3"), ("five", "5"), ("nine", "9")],
+                           "o": [("two", "2")],
+                           "r": [("four", "4")],
+                           "x": [("six", "6")],
+                           "n": [("seven", "7")],
+                           "t": [("eight", "8")]}
+    for new_value in calibration_doc:
+        first_digit = first_word = first_thing = None
+        forward = new_value
+        while forward:
+            if first_digit is None and forward[0] in number_set:
+                first_digit = forward[0]
+                first_thing = first_digit if first_thing is None else first_thing
+            if first_word is None and forward[0] in number_forward_dict.keys():
+                for number_word, value in number_forward_dict[forward[0]]:
+                    if forward.startswith(number_word):
+                        first_word = value
+                        break
+                first_thing = first_word if first_thing is None else first_thing
+            if first_digit is not None and first_word is not None:
+                break
+            forward = forward[1:]
+        last_digit = last_word = last_thing = None
+        backwards = new_value
+        while backwards:
+            if last_digit is None and backwards[-1] in number_set:
+                last_digit = backwards[-1]
+                last_thing = last_digit if last_thing is None else last_thing
+            if last_word is None and backwards[-1] in number_reverse_dict.keys():
+                for number_word, value in number_reverse_dict[backwards[-1]]:
+                    if backwards.endswith(number_word):
+                        last_word = value
+                        break
+                last_thing = last_word if last_thing is None else last_thing
+            #print(backwards, last_digit, last_word)
+            if last_digit is not None and last_word is not None:
+                break
+            backwards = backwards[:-1]
+        # Only need this conditional to avoid an error when running example #2.
+        # p1_calibration += int(f"{first_digit}{last_digit}") if first_digit is not None and last_digit is not None else p1_calibration
+        p1_calibration += int(f"{first_digit}{last_digit}")
+        p2_calibration += int(f"{first_thing}{last_thing}")
+    print(f"Part 1 the sum of calibration values is {p1_calibration}")
+    print(f"Part 2 the sum of calibration values is {p2_calibration}")
+
+
+
+
 class Viz(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
