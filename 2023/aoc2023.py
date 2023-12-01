@@ -1,18 +1,19 @@
-import re
-import sys
-import math
-import time
-import copy
-import curses # pip install windows-curses
+# import re
+# import sys
+# import math
+# import time
+# import copy
+# import curses # pip install windows-curses
 import pickle
 import socket
-import string
+import pyglet
+# import string
 import requests
-import functools
-import itertools
-import statistics
-import collections
-import numpy as np
+# import functools
+# import itertools
+# import statistics
+# import collections
+# import numpy as np
 from os import path
 
 
@@ -122,16 +123,101 @@ def get_input(day, seperator, cast, override=False):
     return puzzle_input
 
 
-def day1():
+def day1(example=False):
     """
     So it begins!
     """
-    day = ""
-    day = 1
-    puzzle = get_input(day, '\n', None)
+    if example:
+        puzzle = (
+"1abc2\n",
+"pqr3stu8vwx\n",
+"a1b2c3d4e5f\n",
+"treb7uchet\n"    
+        )
+
+    else:
+        day=1
+        puzzle = get_input(day, '\n', None, )
+    r= 0
+    for i in puzzle:
+        num=""
+        for l in i:
+            if l.isnumeric():
+              num+=l
+              break
+        for l in range(len(i)-1,-1,-1):
+            if i[l].isnumeric():
+                num+=i[l]
+                break
+        print(f"{i} - {num}")
+        r+= int(num)
+    print(r)
+
+
+def day1_part2(example=False):
+    """
+    So it begins!
+    """
+    if example:
+        puzzle = ("two1nine\n",
+                  "eightwothree\n",
+                  "abcone2threexyz\n",
+                  "xtwone3four\n",
+                  "4nineeightseven2\n",
+                  "zoneight234\n",
+                  "7pqrstsixteen\n")
+
+    else:
+        day=1
+        puzzle = get_input(day, '\n', None, )
+    calibration_sum = 0
+    sp = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]   
+    for w in puzzle:
+        num=""
+        fl=""
+        ll=""
+        f_n_i=len(w)
+        l_n_i=0
+        for i in range(len(w)):
+            if w[i].isnumeric():
+              f_n_i = i
+              fl=w[i]
+              break
+        for i in range(len(w)-1,-1,-1):
+            if w[i].isnumeric():
+                l_n_i = i
+                ll=w[i]
+                break
+        for n in sp:
+            if n in w:
+                if w.index(n) < f_n_i:
+                    f_n_i = w.index(n)
+                    fl=str(sp.index(n)+1)
+                if w.rindex(n) > l_n_i:
+                    l_n_i = w.rindex(n)
+                    ll=str(sp.index(n)+1)
+        num = int(f"{fl}{ll}")
+        print(num)
+        r+= int(num)
+        #f=input()
+    print(r)
+
+
+class Viz(pyglet.window.Window):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def on_draw(self):
+        self.clear()
+        label = pyglet.text.Label("Hello, world",font_name='Times New Roman',font_size=36, x=self.width//2, y=self.height//2, anchor_x='center',anchor_y='center')
+        label.draw()
+
+def v():
+    #label = pyglet.text.Label("Hello, world",font_name='Times New Roman',font_size=36, anchor_x='center',anchor_y='center')
+    _ = Viz(512, 512, "Test",resizable=False)
+    pyglet.app.run()
 
 def go(day=1):
-
     try:
         return eval("day{}".format(day))
     except Exception as e:

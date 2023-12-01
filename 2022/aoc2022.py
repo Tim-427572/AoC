@@ -681,7 +681,7 @@ def day10_viz(stdscr, puzzle):
         stdscr.addch(vert, horz, chr(0xB7), curses.color_pair(1))
         # Show the screen.
         stdscr.refresh()
-        time.sleep(0.1)
+        time.sleep(0.025)
         # Clear the 3 characters around x and clear the dot.
         stdscr.addch(vert, horz, " ", curses.color_pair(1))
         for i in [-1,0,1]:
