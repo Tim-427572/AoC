@@ -127,36 +127,38 @@ def day1(example=False):
     """
     So it begins!
     """
-    day = 1 if example is False else ("1abc2\n"
-                                      "pqr3stu8vwx\n"
-                                      "a1b2c3d4e5f\n"
-                                      "treb7uchet\n")
-    # Part 2 example
-    # day = ("two1nine\n"
-    #        "eightwothree\n"
-    #        "abcone2threexyz\n"
-    #        "xtwone3four\n"
-    #        "4nineeightseven2\n"
-    #        "zoneight234\n"
-    #        "7pqrstsixteen\n")
+    day = 1
+    if example == 1:
+        day = ("1abc2\n"
+               "pqr3stu8vwx\n"
+               "a1b2c3d4e5f\n"
+               "treb7uchet\n")
+    if example == 2:
+        day = ("two1nine\n"
+               "eightwothree\n"
+               "abcone2threexyz\n"
+               "xtwone3four\n"
+               "4nineeightseven2\n"
+               "zoneight234\n"
+               "7pqrstsixteen\n")
 
-    calibration_doc = get_input(day, '\n', None, )
+    calibration_doc = get_input(day, '\n', None, False)
     p1_calibration = 0
     p2_calibration = 0
-    value = "00"
     numbers = "1234567890"
     number_words = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]   
     for new_value in calibration_doc:
-        size = len(new_value)
-        first_digit_index = min([new_value.index(x) if x in new_value else size for x in numbers])
-        last_digit_index = max([new_value.rindex(x) if x in new_value else 0 for x in numbers])
-        if first_digit_index in range(size) and last_digit_index in range(size):
-            value = f"{new_value[first_digit_index]}{new_value[last_digit_index]}"
+        if any(digit in new_value for digit in numbers):  # Conditional just for the part 2 example, not needed for the real puzzle input.
+            digit_index_list = [f(x) for x in numbers if x in new_value for f in (lambda x: new_value.index(x), lambda x: new_value.rindex(x))]
+            value = f"{new_value[min(digit_index_list)]}{new_value[max(digit_index_list)]}"
+        else:
+            value = "00"
         p1_calibration += int(value)
-        first_word_dict = dict([(new_value.index(x), numbers[number_words.index(x)]) if x in new_value else (size, "!") for x in number_words])
-        last_word_dict = dict([(new_value.rindex(x), numbers[number_words.index(x)]) if x in new_value else (0, "!") for x in number_words])
-        value = first_word_dict[min(first_word_dict.keys())] + value[1] if min(first_word_dict.keys()) < first_digit_index else value
-        value = value[0] + last_word_dict[max(last_word_dict.keys())] if max(last_word_dict.keys()) > last_digit_index else value
+        if any(word in new_value for word in number_words):  # Skip if there are no number words in the calibration.
+            first_word_dict = dict([(new_value.index(x), numbers[number_words.index(x)]) for x in number_words if x in new_value])
+            value = first_word_dict[min(first_word_dict.keys())] + value[1] if min(first_word_dict.keys()) < min(digit_index_list) else value
+            last_word_dict = dict([(new_value.rindex(x), numbers[number_words.index(x)]) for x in number_words if x in new_value])
+            value = value[0] + last_word_dict[max(last_word_dict.keys())] if max(last_word_dict.keys()) > max(digit_index_list) else value
         p2_calibration += int(value)
     print(f"Part 1 the sum of calibration values is {p1_calibration}")
     print(f"Part 2 the sum of calibration values is {p2_calibration}")
