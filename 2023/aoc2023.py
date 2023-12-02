@@ -13,7 +13,7 @@ import requests
 # import itertools
 # import statistics
 # import collections
-# import numpy as np
+import numpy as np
 from os import path
 
 
@@ -235,62 +235,30 @@ def day1_speed(example=0):
 
 
 def day2(example=False, reload=False):
-    day = 2 if not example else """Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
-Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
-Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
-Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
-Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
-"""
+    day = 2 if not example else ("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green\n"
+                                 "Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue\n"
+                                 "Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red\n"
+                                 "Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red\n"
+                                 "Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green\n")
     puzzle = get_input(day, "\n", None, reload)
-    d = {"red":12,"green":13,"blue":14} 
-    s=0
-    for i in puzzle:
-        gid, game = i.split(":")
-        gid = gid.split(" ")[1]
-        impossible = False
-        for r in game.split(";"):
-            for cu in r.split(","):
-                n,c = cu.strip().split(" ")
-                if d[c] < int(n):
-                    impossible = True
-                print(n,c)
-        if not impossible:
-            s += int(gid)
-    print(s)
-
-
-def day2_2(example=False, reload=False):
-    day = 2 if not example else """Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
-Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
-Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
-Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
-Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
-"""
-    puzzle = get_input(day, "\n", None, reload)
-    s=0
-    for i in puzzle:
-        gid, game = i.split(":")
-        gid = gid.split(" ")[1]
-        impossible = False
-        d = {"red":0,"green":0,"blue":0} 
-        for r in game.split(";"):
-            for cu in r.split(","):
-                n,c = cu.strip().split(" ")
-                if d[c] < int(n):
-                    d[c] = int(n)
-        print(d)
-        p = 1
-        for v in d.values():
-            p = p * v
-        print(p)
-        s += p
-    print(s)
-
-
-
-
-
-
+    p1_cubes = {"red":12, "green":13, "blue":14} 
+    p1_possible_sum = p2_power_sum = 0
+    for game in puzzle:
+        game_id, game_info = game.split(":")
+        game_id = game_id.split(" ")[1]
+        possible_game = True
+        min_cubes = {"red":0, "green":0, "blue":0} 
+        for subset in game_info.split(";"):
+            for cubes in subset.split(","):
+                number, color = cubes.strip().split(" ")
+                number = int(number)
+                possible_game = False if p1_cubes[color] < number else possible_game
+                min_cubes[color] = number if min_cubes[color] < number else min_cubes[color]
+        if possible_game:
+            p1_possible_sum += int(game_id)
+        p2_power_sum += np.prod(list(min_cubes.values()))
+    print(f"Part 1 sum of possible game IDs is {p1_possible_sum}")
+    print(f"Part 2 sum of game cube power is {p2_power_sum}")
 
 
 class Viz(pyglet.window.Window):
