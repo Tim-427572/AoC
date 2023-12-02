@@ -179,7 +179,7 @@ def day1_speed(example=0):
                "4nineeightseven2\n"
                "zoneight234\n"
                "7pqrstsixteen\n")
-    calibration_doc = get_input(day, '\n', None, False)
+    calibration_doc = get_input(day, "\n", None, False)
     p1_calibration = p2_calibration = 0
     number_set = ("1", "2", "3", "4", "5", "6", "7", "8", "9")
     number_forward_dict = {"o": [("one", "1")],
@@ -232,6 +232,63 @@ def day1_speed(example=0):
         p2_calibration += int(f"{first_thing}{last_thing}")
     print(f"Part 1 the sum of calibration values is {p1_calibration}")
     print(f"Part 2 the sum of calibration values is {p2_calibration}")
+
+
+def day2(example=False, reload=False):
+    day = 2 if not example else """Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
+"""
+    puzzle = get_input(day, "\n", None, reload)
+    d = {"red":12,"green":13,"blue":14} 
+    s=0
+    for i in puzzle:
+        gid, game = i.split(":")
+        gid = gid.split(" ")[1]
+        impossible = False
+        for r in game.split(";"):
+            for cu in r.split(","):
+                n,c = cu.strip().split(" ")
+                if d[c] < int(n):
+                    impossible = True
+                print(n,c)
+        if not impossible:
+            s += int(gid)
+    print(s)
+
+
+def day2_2(example=False, reload=False):
+    day = 2 if not example else """Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
+"""
+    puzzle = get_input(day, "\n", None, reload)
+    s=0
+    for i in puzzle:
+        gid, game = i.split(":")
+        gid = gid.split(" ")[1]
+        impossible = False
+        d = {"red":0,"green":0,"blue":0} 
+        for r in game.split(";"):
+            for cu in r.split(","):
+                n,c = cu.strip().split(" ")
+                if d[c] < int(n):
+                    d[c] = int(n)
+        print(d)
+        p = 1
+        for v in d.values():
+            p = p * v
+        print(p)
+        s += p
+    print(s)
+
+
+
+
 
 
 
