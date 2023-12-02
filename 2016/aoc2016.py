@@ -320,6 +320,78 @@ def _day6():
     print(f"Part 2 the message was {result2}")
 
         
+def _day7(example=False):
+    """
+    IPv7
+    """
+    day = 7 if not example else ("abba[mnop]qrst\n"
+                                 "abcd[bddb]xyyx\n"
+                                 "aaaa[qwer]tyui\n"
+                                 "ioxxoj[asdfgh]zxcvbn\n")
+    puzzle = get_input(day, "\n", None)
+    inside_re = re.compile("\[(.*?)\]")
+    outside_re = re.compile("([^[\]]+)(?:$|\[)")
+    p1_count = 0
+    for ip in puzzle:
+        hypernet_abba = False
+        for inside in inside_re.findall(ip):
+            while len(inside) > 3 and not hypernet_abba:
+                if (inside[0] != inside[1] and
+                    inside[0] == inside[3] and
+                    inside[1] == inside[2]):
+                    hypernet_abba = True
+                    break
+                inside = inside[1:]
+            if hypernet_abba:
+                break
+        abba = False
+        if not hypernet_abba:
+            for outside in outside_re.findall(ip):
+                while len(outside) > 3 and not abba:
+                    if (outside[0] != outside[1] and
+                        outside[0] == outside[3] and
+                        outside[1] == outside[2]):
+                        abba = True
+                        break
+                    outside = outside[1:]
+                if abba:
+                    break
+        if abba and not hypernet_abba:
+            p1_count += 1
+        #print(ip, abba, hypernet_abba, p1_count)
+    print(p1_count)
+
+
+def _day7_p2(example=False):
+    """
+    IPv7
+    """
+    day = 7 if not example else ("aba[bab]xyz\n"
+                                 "xyx[xyx]xyx\n"
+                                 "aaa[kek]eke\n"
+                                 "zazbz[bzb]cdb\n")
+    puzzle = get_input(day, "\n", None)
+    inside_re = re.compile("\[(.*?)\]")
+    outside_re = re.compile("([^[\]]+)(?:$|\[)")
+    p2_count = 0
+    for ip in puzzle:
+        for outside in outside_re.findall(ip):
+            ssl = False
+            while len(outside) > 2:
+                if (outside[0] != outside[1] and
+                    outside[0] == outside[2]):
+                    aba = f"{outside[1]}{outside[0]}{outside[1]}"
+                    for inside in inside_re.findall(ip):
+                        if aba in inside:
+                            ssl = True
+                            outside = ""
+                outside = outside[1:]
+            if ssl:
+                break
+        if ssl:
+            p2_count += 1
+        #print(ip, ssl, p2_count)
+    print(p2_count)
 
 
 def go(day=1):
