@@ -261,6 +261,118 @@ def day2(example=False, reload=False):
     print(f"Part 2 sum of game cube power is {p2_power_sum}")
 
 
+def day3(example=False, reload=False):
+    from numpy.lib import stride_tricks
+    day = 3 if not example else ("467..114..\n"
+                                 "...*......\n"
+                                 "..35..633.\n"
+                                 "......#...\n"
+                                 "617*......\n"
+                                 ".....+.58.\n"
+                                 "..592.....\n"
+                                 "......755.\n"
+                                 "...$.*....\n"
+                                 ".664.598..\n")
+    schematic = get_input(day, "\n", None)
+    schematic_array = np.array(list(map(list, schematic)))
+    schematic_array = np.pad(schematic_array, 1, 'constant', constant_values = ".")
+    shape = (schematic_array.shape[0] - 2, schematic_array.shape[1] - 4, 3, 5)
+    stride = schematic_array.strides * 2
+    patches = stride_tricks.as_strided(schematic_array, shape=shape, strides=stride)
+    #return patches
+    engine_part_sum = 0
+    for row in patches:
+        for patch in row:
+            if np.char.isdigit(patch[1,3]) and not np.char.isdigit(patch[1,4]):  # Found the left edge of a number
+                print(patch)
+                if not patch[1, 2].isdigit():  # one digit number
+                    possible_num = int("".join(patch[1,3:4]))
+                    patch = patch[:,2:]
+                elif not patch[1, 1].isdigit():  # two digit number
+                    possible_num = int("".join(patch[1,2:4]))
+                    patch = patch[:,1:]
+                else:
+                    possible_num = int("".join(patch[1,1:4]))
+                #np.place(patch, np.char.isdigit(patch), ".")
+                non_digit = patch[~np.char.isdigit(patch)]
+                if np.count_nonzero( non_digit=="." ) != non_digit.size:
+                    #print(possible_num)
+                    engine_part_sum += int(possible_num)
+    print(engine_part_sum)
+    #return patches
+
+
+def day3_p2(example=False, reload=False):
+    from numpy.lib import stride_tricks
+    day = 3 if not example else ("467..114..\n"
+                                 "...*......\n"
+                                 "..35..633.\n"
+                                 "......#...\n"
+                                 "617*......\n"
+                                 ".....+.58.\n"
+                                 "..592.....\n"
+                                 "......755.\n"
+                                 "...$.*....\n"
+                                 ".664.598..\n")
+    schematic = get_input(day, "\n", None)
+    schematic_array = np.array(list(map(list, schematic)))
+    schematic_array = np.pad(schematic_array, 1, 'constant', constant_values = ".")
+    shape = (schematic_array.shape[0] - 2, schematic_array.shape[1] - 6, 3, 7)
+    stride = schematic_array.strides * 2
+    patches = stride_tricks.as_strided(schematic_array, shape=shape, strides=stride)
+    gear_ratio_sum = 0
+    for thing in patches:
+        for patch in thing:
+            if patch[1,3] == "*":
+                test = patch[:,2:5]
+                numbers = 0
+                for row in test:
+                    digit_count = np.count_nonzero(np.char.isdigit(row))
+                    if digit_count:
+                        if digit_count > 1 and not np.char.isdigit(row[1]):
+                            numbers += 2
+                        else:
+                            numbers += 1
+                if numbers == 2:
+                    #print(patch)
+                    gears = []
+                    for row in patch:
+                        if np.char.isdigit(row[3]):
+                            num = row[3]
+                            for l in row[4:6]:
+                                if l.isdigit():
+                                    num += l
+                                else:
+                                    break
+                            for l in np.flip(row[1:3]):
+                                if l.isdigit():
+                                    num = l+num
+                                else:
+                                    break
+                            gears.append(int(num))
+                        if not np.char.isdigit(row[3]):
+                            if np.char.isdigit(row[2]):
+                                num = ""
+                                for l in np.flip(row[:3]):
+                                    if l.isdigit():
+                                        num = l + num
+                                    else:
+                                        break
+                                gears.append(int(num))
+                            if np.char.isdigit(row[4]):
+                                num = ""
+                                for l in row[4:]:
+                                    if l.isdigit():
+                                        num += l
+                                    else:
+                                        break
+                                gears.append(int(num))
+                    #print(gears)
+                    gear_ratio_sum += np.prod(gears)
+    print(gear_ratio_sum)
+    #return patches
+
+
 class Viz(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
