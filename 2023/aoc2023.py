@@ -1,23 +1,24 @@
-import re
+import hashlib
 # import sys
 # import math
 # import time
 # import copy
 # import curses # pip install windows-curses
+import inspect
 import pickle
-import socket
-import pyglet
 import random
-import hashlib
-# import string
-import requests
+import re
+import socket
+from os import path
+
 # import functools
 # import itertools
 # import statistics
 # import collections
 import numpy as np
-from os import path
-
+import pyglet
+# import string
+import requests
 
 # Advent of Code
 # Never did spend the time to work out how to get oAuth to work so this code expects you to
@@ -125,11 +126,103 @@ def get_input(day, seperator, cast, override=False):
     return puzzle_input
 
 
+class Viz(pyglet.window.Window):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def on_draw(self):
+        self.clear()
+        label = pyglet.text.Label("Hello, world",font_name='Times New Roman',font_size=36, x=self.width//2, y=self.height//2, anchor_x='center',anchor_y='center')
+        label.draw()
+
+def v():
+    #label = pyglet.text.Label("Hello, world",font_name='Times New Roman',font_size=36, anchor_x='center',anchor_y='center')
+    _ = Viz(512, 512, "Test",resizable=False)
+    pyglet.app.run()
+
+
+class Point:
+    """
+    A point object to use with 2D arrays where y/row is the first index and x/column is the second.
+    """
+    def __init__(self, y, x, shape=None, empty_shape="."):
+        self.x = x
+        self.y = y
+        self.contains = shape
+        self.is_empty = True if self.contains == empty_shape else False
+        self.up = None
+        self.down = None
+        self.left = None
+        self.right = None
+        self.up_right = None
+        self.up_left = None
+        self.down_right = None
+        self.down_left = None
+    def move(self, direction, steps=1):
+        if direction in ["u", "n", "up", "north"]:
+            self.y -= steps
+        if direction in ["d", "s", "down", "south"]:
+            self.y += steps
+        if direction in ["r", "e", "right", "east"]:
+            self.x += steps
+        if direction in ["l", "w", "left", "west"]:
+            self.x -= steps
+        if direction in ["ur", "ne", "up_right", "north_east"]:
+            self.y -= steps
+            self.x += steps
+        if direction in ["ul", "nw", "up_left", "north_west"]:
+            self.y -= steps
+            self.x -= steps
+        if direction in ["dr", "se", "down_right", "south_east"]:
+            self.y += steps
+            self.x += steps
+        if direction in ["dl", "sw", "down_left", "south_west"]:
+            self.y += steps
+            self.x -= steps
+    def position(self):
+        return (self.y, self.x)
+    def p(self):
+        return (self.y, self.x)
+    def show(self):
+        print(f"({self.y},{self.x}) {self.contains}")
+        if self.up:
+            print(f"up: ({self.up[0].y}, {self.up[0].x}) {self.up[1]}")
+        if self.down:
+            print(f"down: ({self.down[0].y}, {self.down[0].x}) {self.down[1]}")
+        if self.left:
+            print(f"left: ({self.left[0].y}, {self.left[0].x}) {self.left[1]}")
+        if self.right:
+            print(f"right: ({self.right[0].y}, {self.right[0].x}) {self.right[1]}")
+
+
+def dfs(graph, node):  # Example function for DFS
+    visited = set()
+    if node not in visited:
+        print(node)
+        visited.add(node)
+        for neighbor in graph[node]:
+            dfs(graph, neighbor)
+
+
+def bfs(graph, node):  # Example function for BFS
+  visited = set()
+  queue = [node]
+
+  while queue:          # Creating loop to visit each node
+    this_node = queue.pop(0) 
+    print(this_node)
+
+    for neighbor in graph[this_node]:
+      if neighbor not in visited:
+        visited.add(neighbor)
+        queue.append(neighbor)
+
+
 def day1(example=False):
     """
     So it begins!
     """
-    day = 1
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
     if example == 1:
         day = ("1abc2\n"
                "pqr3stu8vwx\n"
@@ -166,82 +259,16 @@ def day1(example=False):
     print(f"Part 2 the sum of calibration values is {p2_calibration}")
 
 
-def day1_speed(example=0):
-    day = 1
-    if example == 1:
-        day = ("1abc2\n"
-               "pqr3stu8vwx\n"
-               "a1b2c3d4e5f\n"
-               "treb7uchet\n")
-    if example == 2:
-        day = ("two1nine\n"
-               "eightwothree\n"
-               "abcone2threexyz\n"
-               "xtwone3four\n"
-               "4nineeightseven2\n"
-               "zoneight234\n"
-               "7pqrstsixteen\n")
-    calibration_doc = get_input(day, "\n", None, False)
-    p1_calibration = p2_calibration = 0
-    number_set = ("1", "2", "3", "4", "5", "6", "7", "8", "9")
-    number_forward_dict = {"o": [("one", "1")],
-                           "e": [("eight", "8")],
-                           "t": [("two", "2"), ("three","3")],
-                           "f": [("four", "4"), ("five", "5")],
-                           "s": [("six", "6"), ("seven", "7")],
-                           "n": [("nine", "9")]}
-    number_reverse_dict = {"e": [("one", "1"), ("three","3"), ("five", "5"), ("nine", "9")],
-                           "o": [("two", "2")],
-                           "r": [("four", "4")],
-                           "x": [("six", "6")],
-                           "n": [("seven", "7")],
-                           "t": [("eight", "8")]}
-    for new_value in calibration_doc:
-        first_digit = first_word = first_thing = None
-        forward = new_value
-        while forward:
-            if first_digit is None and forward[0] in number_set:
-                first_digit = forward[0]
-                first_thing = first_digit if first_thing is None else first_thing
-            if first_word is None and forward[0] in number_forward_dict.keys():
-                for number_word, value in number_forward_dict[forward[0]]:
-                    if forward.startswith(number_word):
-                        first_word = value
-                        break
-                first_thing = first_word if first_thing is None else first_thing
-            if first_digit is not None and first_word is not None:
-                break
-            forward = forward[1:]
-        last_digit = last_word = last_thing = None
-        backwards = new_value
-        while backwards:
-            if last_digit is None and backwards[-1] in number_set:
-                last_digit = backwards[-1]
-                last_thing = last_digit if last_thing is None else last_thing
-            if last_word is None and backwards[-1] in number_reverse_dict.keys():
-                for number_word, value in number_reverse_dict[backwards[-1]]:
-                    if backwards.endswith(number_word):
-                        last_word = value
-                        break
-                last_thing = last_word if last_thing is None else last_thing
-            #print(backwards, last_digit, last_word)
-            if last_digit is not None and last_word is not None:
-                break
-            backwards = backwards[:-1]
-        # Only need this conditional to avoid an error when running example #2.
-        # p1_calibration += int(f"{first_digit}{last_digit}") if first_digit is not None and last_digit is not None else p1_calibration
-        p1_calibration += int(f"{first_digit}{last_digit}")
-        p2_calibration += int(f"{first_thing}{last_thing}")
-    print(f"Part 1 the sum of calibration values is {p1_calibration}")
-    print(f"Part 2 the sum of calibration values is {p2_calibration}")
-
-
 def day2(example=False, reload=False):
-    day = 2 if not example else ("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green\n"
-                                 "Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue\n"
-                                 "Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red\n"
-                                 "Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red\n"
-                                 "Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green\n")
+    if example:
+        day = ("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green\n"
+               "Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue\n"
+               "Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red\n"
+               "Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red\n"
+               "Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green\n")
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+
     puzzle = get_input(day, "\n", None, reload)
     p1_cubes = {"red":12, "green":13, "blue":14} 
     p1_possible_sum = p2_power_sum = 0
@@ -264,16 +291,19 @@ def day2(example=False, reload=False):
 
 
 def day3(example=False, reload=False):
-    day = 3 if not example else ("467..114..\n"
-                                 "...*......\n"
-                                 "..35..633.\n"
-                                 "......#...\n"
-                                 "617*......\n"
-                                 ".....+.58.\n"
-                                 "..592.....\n"
-                                 "......755.\n"
-                                 "...$.*....\n"
-                                 ".664.598..\n")
+    if example:
+        day = ("467..114..\n"
+               "...*......\n"
+               "..35..633.\n"
+               "......#...\n"
+               "617*......\n"
+               ".....+.58.\n"
+               "..592.....\n"
+               "......755.\n"
+               "...$.*....\n"
+               ".664.598..\n")
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
     schematic = get_input(day, "\n", lambda x: "." + x + ".", None)
     schematic = ["."*len(schematic[0])] + list(schematic) + ["."*len(schematic[0])] 
     schematic_array = np.array(list(map(list, schematic)))
@@ -312,7 +342,7 @@ def day4(example=False, reload=False):
                "Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36\n"
                "Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11\n")
     else:
-        day = 4
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
     puzzle = get_input(day, "\n", None, reload)
     cards = {}
     score = 0
@@ -336,19 +366,18 @@ def day4(example=False, reload=False):
            orig_card_list += list(range(card + 1, (card + cards[card] + 1)))
     print(f"Part 2 the total number of scratchcards is {len(final_list)}")
 
-class Viz(pyglet.window.Window):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
-    def on_draw(self):
-        self.clear()
-        label = pyglet.text.Label("Hello, world",font_name='Times New Roman',font_size=36, x=self.width//2, y=self.height//2, anchor_x='center',anchor_y='center')
-        label.draw()
+def day5(example=False, reload=False):
+    if example:
+        day = """
+"""
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    puzzle = get_input(day, "\n", None, reload)
+    p1 = p2 = 0
+    print(p1)
+    print(p2)
 
-def v():
-    #label = pyglet.text.Label("Hello, world",font_name='Times New Roman',font_size=36, anchor_x='center',anchor_y='center')
-    _ = Viz(512, 512, "Test",resizable=False)
-    pyglet.app.run()
 
 def go(day=1):
     try:

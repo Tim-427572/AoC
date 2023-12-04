@@ -1,19 +1,21 @@
-import socket
-import requests
-import pickle
-import numpy as np
-from os import path
-import statistics
-import math
-import time
-import re
 import copy
-import sys
-from collections import defaultdict
-import itertools
-from functools import lru_cache
-from string import ascii_lowercase
 import hashlib
+import inspect
+import itertools
+import math
+import pickle
+import re
+import socket
+import statistics
+import sys
+import time
+from collections import defaultdict
+from functools import lru_cache
+from os import path
+from string import ascii_lowercase
+
+import numpy as np
+import requests
 
 # Advent of Code
 # Never did spend the time to work out how to get oAuth to work so this code expects you to
@@ -393,10 +395,46 @@ def _day7_p2(example=False):
         #print(ip, ssl, p2_count)
     print(p2_count)
 
+def print_np(array):
+    """
+    Dumb helper function to print numpy arrays.
+    """
+    for row in array:
+        print("".join(row))
+
+
+def day8(example=False, reload=False):
+    if example:
+        day = ("rect 3x2\n"
+               "rotate column x=1 by 1\n"
+               "rotate row y=0 by 4\n"
+               "rotate column x=1 by 1\n")
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    instructions = get_input(day, "\n", None, reload)
+    screen = np.full((6,50), " ", dtype=np.str)
+    for instruction in instructions:
+        if "rect" in instruction:
+            rows = int(instruction.split("x")[1])
+            cols = int(instruction.split("x")[0].split()[1])
+            screen[:rows,:cols] = "#"
+        elif "column" in instruction:
+            col = int(instruction.split("=")[1].split()[0])
+            amount = int(instruction.split("by")[1].strip())
+            screen[:, col] = np.roll(screen[:, col], amount)
+        elif "row" in instruction:
+            row = int(instruction.split("=")[1].split()[0])
+            amount = int(instruction.split("by")[1].strip())
+            screen[row] = np.roll(screen[row], amount)
+        else:
+            raise Exception(instruction)
+    print(f"Part 1, {np.count_nonzero(screen=='#')} pixels are lit")
+    print("Part 2 the code is:")
+    print_np(screen)
 
 def go(day=1):
     try:
-        return eval("_day{}".format(day))
+        return eval("day{}".format(day))
     except Exception as e:
         print(e)
 
