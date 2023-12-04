@@ -7,6 +7,7 @@ import re
 import pickle
 import socket
 import pyglet
+import random
 import hashlib
 # import string
 import requests
@@ -263,7 +264,6 @@ def day2(example=False, reload=False):
 
 
 def day3(example=False, reload=False):
-    from numpy.lib import stride_tricks
     day = 3 if not example else ("467..114..\n"
                                  "...*......\n"
                                  "..35..633.\n"
@@ -274,137 +274,45 @@ def day3(example=False, reload=False):
                                  "......755.\n"
                                  "...$.*....\n"
                                  ".664.598..\n")
-    schematic = get_input(day, "\n", None)
+    schematic = get_input(day, "\n", lambda x: "." + x + ".", None)
+    schematic = ["."*len(schematic[0])] + list(schematic) + ["."*len(schematic[0])] 
     schematic_array = np.array(list(map(list, schematic)))
-    schematic_array = np.pad(schematic_array, 1, 'constant', constant_values = ".")
-    shape = (schematic_array.shape[0] - 2, schematic_array.shape[1] - 4, 3, 5)
-    stride = schematic_array.strides * 2
-    patches = stride_tricks.as_strided(schematic_array, shape=shape, strides=stride)
-    #return patches
-    engine_part_sum = 0
-    for row in patches:
-        for patch in row:
-            if np.char.isdigit(patch[1,3]) and not np.char.isdigit(patch[1,4]):  # Found the left edge of a number
-                print(patch)
-                if not patch[1, 2].isdigit():  # one digit number
-                    possible_num = int("".join(patch[1,3:4]))
-                    patch = patch[:,2:]
-                elif not patch[1, 1].isdigit():  # two digit number
-                    possible_num = int("".join(patch[1,2:4]))
-                    patch = patch[:,1:]
-                else:
-                    possible_num = int("".join(patch[1,1:4]))
-                #np.place(patch, np.char.isdigit(patch), ".")
-                non_digit = patch[~np.char.isdigit(patch)]
-                if np.count_nonzero( non_digit=="." ) != non_digit.size:
-                    #print(possible_num)
-                    engine_part_sum += int(possible_num)
-    print(engine_part_sum)
-    #return patches
-
-
-def day3_p2(example=False, reload=False):
-    from numpy.lib import stride_tricks
-    day = 3 if not example else ("467..114..\n"
-                                 "...*......\n"
-                                 "..35..633.\n"
-                                 "......#...\n"
-                                 "617*......\n"
-                                 ".....+.58.\n"
-                                 "..592.....\n"
-                                 "......755.\n"
-                                 "...$.*....\n"
-                                 ".664.598..\n")
-    schematic = get_input(day, "\n", None)
-    schematic_array = np.array(list(map(list, schematic)))
-    schematic_array = np.pad(schematic_array, 1, 'constant', constant_values = ".")
-    shape = (schematic_array.shape[0] - 2, schematic_array.shape[1] - 6, 3, 7)
-    stride = schematic_array.strides * 2
-    patches = stride_tricks.as_strided(schematic_array, shape=shape, strides=stride)
-    gear_ratio_sum = 0
-    for thing in patches:
-        for patch in thing:
-            if patch[1,3] == "*":
-                test = patch[:,2:5]
-                numbers = 0
-                for row in test:
-                    digit_count = np.count_nonzero(np.char.isdigit(row))
-                    if digit_count:
-                        if digit_count > 1 and not np.char.isdigit(row[1]):
-                            numbers += 2
-                        else:
-                            numbers += 1
-                if numbers == 2:
-                    #print(patch)
-                    gears = []
-                    for row in patch:
-                        if np.char.isdigit(row[3]):
-                            num = row[3]
-                            for l in row[4:6]:
-                                if l.isdigit():
-                                    num += l
-                                else:
-                                    break
-                            for l in np.flip(row[1:3]):
-                                if l.isdigit():
-                                    num = l+num
-                                else:
-                                    break
-                            gears.append(int(num))
-                        if not np.char.isdigit(row[3]):
-                            if np.char.isdigit(row[2]):
-                                num = ""
-                                for l in np.flip(row[:3]):
-                                    if l.isdigit():
-                                        num = l + num
-                                    else:
-                                        break
-                                gears.append(int(num))
-                            if np.char.isdigit(row[4]):
-                                num = ""
-                                for l in row[4:]:
-                                    if l.isdigit():
-                                        num += l
-                                    else:
-                                        break
-                                gears.append(int(num))
-                    #print(gears)
-                    gear_ratio_sum += np.prod(gears)
-    print(gear_ratio_sum)
-    #return patches
-
-
-def day3(example=False, reload=False):
-    day = 3 if not example else ("467..114..\n"
-                                 "...*......\n"
-                                 "..35..633.\n"
-                                 "......#...\n"
-                                 "617*......\n"
-                                 ".....+.58.\n"
-                                 "..592.....\n"
-                                 "......755.\n"
-                                 "...$.*....\n"
-                                 ".664.598..\n")
-    schematic = get_input(day, "\n", None)
-    schematic_array = np.array(list(map(list, schematic)))
-    schematic_array = np.pad(schematic_array, 1, 'constant', constant_values = ".")
-    number_positions = {}
-    number_hashes = {}
-    num_regex = re.compile("[0-9]\w+")
+    number_positions = number_hashes = {}
+    p1_sum = p2_sum = 0
+    num_regex = re.compile("[0-9]+")
     for row_idx, row in enumerate(schematic): 
         numbers = num_regex.finditer(row)
+        for number in numbers:
+            num_hash = random.getrandbits(128)
+            number_hashes[num_hash] = int(number.group())
+            for i in range(*number.span()):
+                number_positions[(row_idx, i)] = num_hash
+    p1_adj_numbers = set()
+    for symbol_r, symbol_c in zip(*np.where(~np.char.equal(schematic_array, ".") & ~np.char.isdigit(schematic_array))):
+        p2_adj_gears = set()
+        for row in range(symbol_r - 1, symbol_r + 2):
+            for col in range(symbol_c - 1, symbol_c + 2):
+                if (row, col) in number_positions.keys():
+                    p1_adj_numbers.add(number_positions[(row, col)])
+                    p2_adj_gears.add(number_positions[(row, col)])
+        if len(p2_adj_gears) == 2:
+            p2_sum += np.prod(list(map(lambda x: number_hashes[x], p2_adj_gears)))
+    p1_sum = sum(list(map(lambda x: number_hashes[x], p1_adj_numbers)))
 
+    print(f"Part 1 the sum of engine part numbers is {p1_sum}")
+    print(f"Part 2 the sum of engine gears ratio {p2_sum}")
 
-    
 
 def day4(example=False, reload=False):
-    day = 4 if not example else """Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
-Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
-Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1
-Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
-Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
-Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
-"""
+    if example:
+        day = ("Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53\n"
+               "Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19\n"
+               "Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1\n"
+               "Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83\n"
+               "Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36\n"
+               "Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11\n")
+    else:
+        day = 4
     puzzle = get_input(day, "\n", None, reload)
     cards = {}
     score = 0
