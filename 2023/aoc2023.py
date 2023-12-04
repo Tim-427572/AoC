@@ -406,40 +406,27 @@ Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
 Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
 """
     puzzle = get_input(day, "\n", None, reload)
-    v = 0
     cards = {}
-    for l in puzzle:
-        card, val = l.split(":")
-        win, have = val.split("|")
-        w_set = set()
-        h_set = set()
-        for w in win.split():
-            w_set.add(int(w))
-        for h in have.split():
-            h_set.add(int(h))
-        m = len(w_set.intersection(h_set))
-        s = 0
-        if m:
-            s = 1
-            for i in range(m-1):
-                s=s*2
-            v += s
-        print(w_set, h_set, s)
-        cards[int(card.split()[1])] = (m, s)
-    print(v)
-    print(cards)
-    v=0
-    card_list = list(cards.keys())
+    score = 0
+    for card in puzzle:
+        card_number, values = card.split(":")
+        winning, have = values.split("|")
+        card_number = int(card_number.split()[1])
+        win_set = set(map(int, winning.split()))
+        have_set = set(map(int, have.split()))
+        matches = len(win_set.intersection(have_set))
+        if matches:
+            score += 2**(matches-1)
+        cards[card_number] = matches
+    print(f"Part 1 the cards are worth {score}")
+    orig_card_list = list(cards.keys())
     final_list = []
-    while card_list:
-        c = card_list.pop()
-        final_list.append(c)
-        if cards[c][0]:
-            for i in range(1,cards[c][0]+1):
-                card_list.append(c+i)
-    #print(card_list)
-    #print(final_list)
-    print(len(final_list))
+    while orig_card_list:
+        card = orig_card_list.pop()
+        final_list.append(card)
+        if cards[card]:
+           orig_card_list += list(range(card + 1, (card + cards[card] + 1)))
+    print(f"Part 2 the total number of scratchcards is {len(final_list)}")
 
 class Viz(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
