@@ -1,3 +1,4 @@
+import re
 import requests
 import numpy
 import pickle
@@ -8,6 +9,7 @@ import random
 import socket
 import string
 import requests
+import collections
 # The Value from the session cookie used to make the webaccess.
 # You could hardcode this with your value or set it at the interactive prompt.
 # This is because I am lazy and didn't want to figure out how to scrape the cookie or work with the OAuth.
@@ -865,42 +867,44 @@ def _day19():
                 #print(f" new molecule = {new}")
                 molecule_set.add(new)
     print(f"Part 1 there are {len(molecule_set)} distinct molecules")
-    #prev_molecule = molecule
-    #machine_in.pop(5)
-    #machine_out.pop(5)
-    found = False
-    search = 1
-    print("Searching")
-    while found is False:
-        print(f" {search}")
-        order = list(range(len(machine_in)))
-        random.shuffle(order)
-        steps = 0
-        while len(molecule) > 0:
-            modified = False
-            machine_zip = zip(machine_in, machine_out)
-            for machine_input, machine_output in machine_zip:
-                this_round = molecule.count(machine_output)
-                if this_round:
-                    modified = True
-                steps += this_round
-                molecule = molecule.replace(machine_output, machine_input)
-                #print(f" Performing {machine_output} => {machine_input} {this_round} times transformation count {steps}")
-                #print(molecule)
-                #print()
-            # CaCa phase:
-            #print("CaCa => Ca")
-            #for i in range(0, len(molecule), 4):
-            #    if molecule[i:i+4] == "CaCa":
-            #        molecule = molecule[:i] + molecule[i+2:]
-            #print(molecule)
-            #print()
-            if molecule == "e":
-                found = True
-                break
-            if modified is False:
-                break
-        search += 1
+
+
+def _day19_p2(example=False):
+    """
+    Randomly try to reverse the molecule...
+    """
+    if example:
+        day = ("e => H\n"
+               "e => O\n"
+               "H => HO\n"
+               "H => OH\n"
+               "O => HH\n"
+               "\n"
+               "HOHOHO\n")
+    else:
+        day = 19
+    replacements = get_input(day, "\n", None)
+    molecule = replacements[-1]
+    replacements = replacements[:-1]
+    transforms = []
+    for replacement in replacements:
+        if "=>" in replacement:
+            frm, to = replacement.split(" => ")
+            transforms.append((frm, to))
+    count = tries = 0
+    working_mol = molecule
+    while len(working_mol) > 1:
+        start = working_mol
+        for frm, to in transforms:
+            while to in working_mol:
+                count += working_mol.count(to)
+                working_mol = working_mol.replace(to, frm)
+        if start == working_mol:  # no progress
+            random.shuffle(transforms)
+            working_mol = molecule
+            count = 0
+            tries += 1
+    print(f"{count} transformation after {tries} tries")
 
 
 def _visiting_elves(house):
@@ -949,7 +953,6 @@ def _day20():
     print(f"There were {numpy.nonzero(part1_houses >= goal)[0].size} houses that were >= {goal}")
     print("Part 1 - {}".format(numpy.nonzero(part1_houses >= goal)[0][0]))
     print("Part 2 - {}".format(numpy.nonzero(part2_houses >= goal)[0][0]))
-
 
 def _day21():
     """

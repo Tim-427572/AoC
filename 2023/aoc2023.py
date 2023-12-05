@@ -373,6 +373,8 @@ def day5(example=False, reload=False):
 """
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    print(day)
+    return
     puzzle = get_input(day, "\n", None, reload)
     p1 = p2 = 0
     print(p1)
