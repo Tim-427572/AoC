@@ -19,6 +19,7 @@ import numpy as np
 import pyglet
 # import string
 import requests
+from functools import lru_cache
 
 # Advent of Code
 # Never did spend the time to work out how to get oAuth to work so this code expects you to
@@ -367,18 +368,115 @@ def day4(example=False, reload=False):
     print(f"Part 2 the total number of scratchcards is {len(final_list)}")
 
 
+def _day5_fwd(seed, ranges):
+    for dest, src, size in ranges:
+        if src <= seed < src + size:
+            return seed + dest - src
+    return seed
+
+def _day5_range(ranges, this_map):
+    result = []
+    for dest, src, size in this_map:
+        src_end = src + size
+        new_ranges = []
+        # Look for ranges that overlap this mapping section
+        # If it does overlap, remap the range based on the rules.
+        while ranges:
+            start, end = ranges.pop()
+            left = (start, min(end, src))
+            inside = (max(start, src), min(src_end, end))
+            right = (max(src_end, start), end)
+            if left[1] > left[0]:
+                new_ranges.append(left)
+            if inside[1] > inside[0]:
+                result.append((inside[0] - src + dest, inside[1] - src + dest))
+            if right[1] > right[0]:
+                new_ranges.append(right)
+        ranges = new_ranges
+    return result + ranges
+
+
 def day5(example=False, reload=False):
     if example:
-        day = """
-"""
+        day = ("seeds: 79 14 55 13\n"
+               "\n"
+               "seed-to-soil map:\n"
+               "50 98 2\n"
+               "52 50 48\n"
+               "\n"
+               "soil-to-fertilizer map:\n"
+               "0 15 37\n"
+               "37 52 2\n"
+               "39 0 15\n"
+               "\n"
+               "fertilizer-to-water map:\n"
+               "49 53 8\n"
+               "0 11 42\n"
+               "42 0 7\n"
+               "57 7 4\n"
+               "\n"
+               "water-to-light map:\n"
+               "88 18 7\n"
+               "18 25 70\n"
+               "\n"
+               "light-to-temperature map:\n"
+               "45 77 23\n"
+               "81 45 19\n"
+               "68 64 13\n"
+               "\n"
+               "temperature-to-humidity map:\n"
+               "0 69 1\n"
+               "1 0 69\n"
+               "\n"
+               "humidity-to-location map:\n"
+               "60 56 37\n"
+               "56 93 4\n")
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    print(day)
-    return
     puzzle = get_input(day, "\n", None, reload)
-    p1 = p2 = 0
-    print(p1)
-    print(p2)
+    maps = []
+    ranges = []
+    i = 0
+    while i < len(puzzle):
+        line = puzzle[i]
+        if "seeds" in line:
+            seeds = list(map(int, (line.split(":")[1].split())))
+            i += 1
+        elif line == "":
+            if ranges:
+                ranges.sort()
+                maps.append(ranges.copy())
+                ranges = []
+            i+=1
+        elif ":" in line: # one of the map names.
+            i+=1
+        else:
+            dest, src, size = map(int, line.split())
+            ranges.append((dest, src, size))
+            i+=1
+    if ranges:  # Final range at the end of the input.
+        ranges.sort()
+        maps.append(ranges.copy())
+
+    p1_min = None
+    for seed in seeds:
+        for ranges in maps:
+            seed = _day5_fwd(seed, ranges)
+        p1_min = seed if( p1_min is None or seed < p1_min) else p1_min
+    print(f"Part 1 the minimum location is {p1_min}")
+
+    p2_min = None
+    seed_ranges = list(zip(*[iter(seeds)]*2))
+    # Walk the seed ranges
+    for start, size in seed_ranges:
+        ranges = [(start, start+size)]
+        for this_map in maps:
+            ranges = _day5_range(ranges, this_map)
+        range_min = min(ranges)[0]
+        p2_min = range_min if p2_min is None or range_min < p2_min else p2_min
+    print(f"Part 2 the minimum location is {p2_min}")
+            
+
 
 
 def go(day=1):
