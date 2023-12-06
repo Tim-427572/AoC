@@ -478,10 +478,30 @@ def day5(example=False, reload=False):
             
 
 
+def day6(example=False, reload=False):
+    if example:
+        day = ("Time:      7 15 30\n"
+               "Distance:  9 40 200\n")
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    puzzle = get_input(day, "\n", None, reload)
+    p1_answer = p2_answer = 1
+    times = list(map(int, puzzle[0].split(":")[1].split()))
+    distances = list(map(int, puzzle[1].split(":")[1].split()))
+    times.append(int(puzzle[0].split(":")[1].replace(" ", "")))
+    distances.append(int(puzzle[1].split(":")[1].replace(" ","")))
+    for race_time, distance in zip(times, distances):
+        ways = 0
+        for hold in range(race_time):
+            if hold * (race_time - hold) > distance:
+                ways += 1
+            elif ways != 0:
+                break
+        if race_time == times[-1]:
+            p2_answer *= ways
+        else:
+            p1_answer *= ways
+    print(f"The part 1 answer is {p1_answer}")
+    print(f"The part 2 answer is {p2_answer}")
 
-def go(day=1):
-    try:
-        return eval("day{}".format(day))
-    except Exception as e:
-        print(e)
 
