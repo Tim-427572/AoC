@@ -505,30 +505,25 @@ def day6(example=False, reload=False):
 
 
 def _day7_check_type(hand):
-    hand_set = set(hand)
-    if len(hand_set) == 1: # five kind
-        return "five of a kind"
-    elif len(hand_set) == 2: # four of a kind or full
-        for i in hand:
-            if hand.count(i) == 2 or hand.count(i) == 3:
-                k="full house"
-                break
-            if hand.count(i) == 4: # four of a k
-                k="four of a kind"
-                break
-    elif len(hand_set) == 3: # two pair or three of a kind
-        for i in hand:
-            if hand.count(i) == 2:
-                k="two pair"
-                break
-            if hand.count(i) == 3:
-                k="three of a kind"
-                break
-    elif len(hand_set) == 4: # one pair
-        k="one pair"
+    counts = collections.Counter(hand).most_common(2)
+    most = counts[0][1]
+    if most == 5:  # Five of a kind
+        return "five of a  kind"
     else:
-        k="high card"
-    return k
+        second_most = counts[1][1]
+        if most == 4:
+            return "four of a kind"
+        elif most == 3 and second_most == 2:
+            return "full house"
+        elif most == 3:
+            return "three of a kind"
+        elif most == 2 and second_most == 2:
+            return "two pair"
+        elif most == 2:
+            return "one pair"
+        else:
+            return "high card"
+
 
 def _day7_hand_sort(left, right):
     """
@@ -557,11 +552,11 @@ def day7(example=False, reload=False):
     p1_answer = p2_answer = 0
     p1_hands_of_each_type = collections.defaultdict(list)
     p2_hands_of_each_type = collections.defaultdict(list)
-    hand_score = {}
+    hand_bid = {}
     for line in puzzle:
         hand = line.split()[0]
         score = int(line.split()[1])
-        hand_score[hand] = score
+        hand_bid[hand] = score
         p1_hands_of_each_type[_day7_check_type(hand)].append(hand)
         # Replace the J wild cards to match the most common other card.
         if "J" in hand and hand.count("J") < 5:
@@ -578,8 +573,8 @@ def day7(example=False, reload=False):
     # Ok we have the hands in order, time to score them.
     rank = 1
     for p1_hand, p2_hand in zip(p1_strengths, p2_strengths):
-        p1_answer += rank * hand_score[p1_hand]
-        p2_answer += rank * hand_score[p2_hand.replace("1", "J")]  # Put the J back so we can look up the score.
+        p1_answer += rank * hand_bid[p1_hand]
+        p2_answer += rank * hand_bid[p2_hand.replace("1", "J")]  # Put the J back so we can look up the score.
         rank += 1
     
     print(f"The part 1 total winnings is {p1_answer}")
