@@ -505,24 +505,15 @@ def day6(example=False, reload=False):
 
 
 def _day7_check_type(hand):
-    counts = collections.Counter(hand).most_common(2)
-    most = counts[0][1]
-    if most == 5:  # Five of a kind
-        return "five of a  kind"
-    else:
-        second_most = counts[1][1]
-        if most == 4:
-            return "four of a kind"
-        elif most == 3 and second_most == 2:
-            return "full house"
-        elif most == 3:
-            return "three of a kind"
-        elif most == 2 and second_most == 2:
-            return "two pair"
-        elif most == 2:
-            return "one pair"
-        else:
-            return "high card"
+    hand_decode = {(5,1):"five of a kind",
+                   (4,1):"four of a kind",
+                   (3,2):"full house",
+                   (3,1):"three of a kind",
+                   (2,2):"two pair",
+                   (2,1):"one pair",
+                   (1,1):"high card"}
+    counts = collections.Counter(hand + "!").most_common(2) # Padd with ! to handle the five of a kind case.
+    return hand_decode[list(zip(*counts))[1]]
 
 
 def _day7_hand_sort(left, right):
