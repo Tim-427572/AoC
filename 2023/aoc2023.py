@@ -14,12 +14,11 @@ from os import path
 # import functools
 # import itertools
 # import statistics
-# import collections
+import collections
 import numpy as np
 import pyglet
 # import string
 import requests
-from functools import lru_cache
 import functools
 
 # Advent of Code
@@ -505,180 +504,87 @@ def day6(example=False, reload=False):
     print(f"The part 2 answer is {p2_answer}")
 
 
+def _day7_check_type(hand):
+    hand_set = set(hand)
+    if len(hand_set) == 1: # five kind
+        return "five of a kind"
+    elif len(hand_set) == 2: # four of a kind or full
+        for i in hand:
+            if hand.count(i) == 2 or hand.count(i) == 3:
+                k="full house"
+                break
+            if hand.count(i) == 4: # four of a k
+                k="four of a kind"
+                break
+    elif len(hand_set) == 3: # two pair or three of a kind
+        for i in hand:
+            if hand.count(i) == 2:
+                k="two pair"
+                break
+            if hand.count(i) == 3:
+                k="three of a kind"
+                break
+    elif len(hand_set) == 4: # one pair
+        k="one pair"
+    else:
+        k="high card"
+    return k
 
-def hand_sort(left, right):
-    c="23456789TJQKA"
-    for i in range(len(left)):
-        if c.index(left[i]) > c.index(right[i]):
+def _day7_hand_sort(left, right):
+    """
+    Custom sorting function for the strength of the hands
+    going to use 1 for the J when scoring part instead of having two of these functions.
+    """
+    card_value = {"1":1, "2":2, "3":3, "4":4, "5":5, "6":6, "7":7, "8":8, "9":9, "T":10, "J":11, "Q":12, "K":13, "A":14}
+    for left_char, right_char in zip(left, right):
+        if card_value[left_char] > card_value[right_char]:
             return 1
-        elif c.index(left[i]) < c.index(right[i]):
+        if card_value[left_char] < card_value[right_char]:
             return -1
     return 0
 
 def day7(example=False, reload=False):
     if example:
-        day = """32T3K 765
-T55J5 684
-KK677 28
-KTJJT 220
-QQQJA 483
-"""        
+        day = ("32T3K 765\n"
+               "T55J5 684\n"
+               "KK677 28\n"
+               "KTJJT 220\n"
+               "QQQJA 483\n")
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
     puzzle = get_input(day, "\n", None, reload)
-    scores = {5:1, 4:2, 1:7}
+    type_order = ["high card", "one pair", "two pair", "three of a kind", "full house", "four of a kind", "five of a kind"]
     p1_answer = p2_answer = 0
-    hands = {}
-    S = {}
-    for l in puzzle:
-        hand, score = l.split()
-        score = int(score)
-        S[hand] = score
-        h_s = set(list(hand))
-        if len(h_s) in scores:
-            print(hand, scores[len(h_s)])
-            hands.setdefault(scores[len(h_s)], [])
-            hands[scores[len(h_s)]].append(hand)
-        elif len(h_s) == 3: # two pair or three
-            for i in hand:
-                if hand.count(i) == 2:
-                    print(hand, "two pair")
-                    hands.setdefault(3, [])
-                    hands[3].append(hand)
-                    break
-                if hand.count(i) == 3:
-                    print(hand, "three")
-                    hands.setdefault(4, [])
-                    hands[4].append(hand)
-                    break
-                    
-        elif len(h_s) == 2: # full h or four
-            for i in hand:
-                if hand.count(i) == 2 or hand.count(i) == 3:
-                    print(hand, "full")
-                    hands.setdefault(5, [])
-                    hands[5].append(hand)
-                    break
-                if hand.count(i) == 4:
-                    print(hand, "four")
-                    hands.setdefault(6, [])
-                    hands[6].append(hand)
-                    break
-    ordering = []
-    print(hands)
-    for key in sorted(list(hands.keys())):
-        #print(key)
-        ordering += sorted(hands[key], key=functools.cmp_to_key(hand_sort))
-    print(ordering)
-    for i, h in enumerate(ordering):
-        p1_answer += ((i+1)*S[h])
-
-def hand_sort_2(left, right):
-    c="J23456789TQKA"
-    for i in range(len(left)):
-        if c.index(left[i]) > c.index(right[i]):
-            return 1
-        elif c.index(left[i]) < c.index(right[i]):
-            return -1
-    return 0
-
-
-def day7_p2(example=False, reload=False):
-    import collections
-    if example:
-        day = """32T3K 765
-T55J5 684
-KK677 28
-KTJJT 220
-QQQJA 483
-"""        
-    else:
-        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    puzzle = get_input(day, "\n", None, reload)
-    p1_answer = p2_answer = 0
-    hands = {}
-    S = {}
-    o = ["h","1","2","3","f","4","5"]
-    for l in puzzle:
-        hand, score = l.split()
-        score = int(score)
-        S[hand] = score
-        ohand = hand
-        foo = hand.replace("J","")
-        if "J" in hand and len(foo) > 0:
-            most = collections.Counter(foo).most_common(1)[0][0]
-            hand = hand.replace("J",most)
-        hs = set(hand)
-        if ohand == "5J4J4":
-            print(hand)
-            input()
-        if len(hs) == 1: # five kind
-            k="5"
-            hands.setdefault(k, [])        
-            hands[k].append(ohand)
-        elif len(hs) == 2: # four of a k or full
-            for i in hand:
-                if hand.count(i) == 2 or hand.count(i) == 3:
-                    k="f"
-                    hands.setdefault(k, [])        
-                    hands[k].append(ohand)
-                    break
-                if hand.count(i) == 4: # four of a k
-                    k="4"
-                    hands.setdefault(k, [])        
-                    hands[k].append(ohand)
-                    break
-        elif len(hs) == 3: # two pair or three
-            for i in hand:
-                if hand.count(i) == 2:
-                    k="2"
-                    hands.setdefault(k, [])        
-                    hands[k].append(ohand)
-                    break
-                if hand.count(i) == 3:
-                    k="3"
-                    hands.setdefault(k, [])        
-                    hands[k].append(ohand)
-                    break
-        elif len(hs) == 4: # one pair
-            k="1"
-            hands.setdefault(k, [])        
-            hands[k].append(ohand)
+    p1_hands_of_each_type = collections.defaultdict(list)
+    p2_hands_of_each_type = collections.defaultdict(list)
+    hand_score = {}
+    for line in puzzle:
+        hand = line.split()[0]
+        score = int(line.split()[1])
+        hand_score[hand] = score
+        p1_hands_of_each_type[_day7_check_type(hand)].append(hand)
+        # Replace the J wild cards to match the most common other card.
+        if "J" in hand and hand.count("J") < 5:
+            new_hand = hand.replace("J", collections.Counter(hand.replace("J", "")).most_common(1)[0][0])
         else:
-            k="h"
-            hands.setdefault(k, [])        
-            hands[k].append(ohand)            
+            new_hand = hand
+        p2_hands_of_each_type[_day7_check_type(new_hand)].append(hand.replace("J", "1"))  # Replace J with 1 so I don't need two sorting functions.
+    p1_strengths = []
+    p2_strengths = []
+    for hand_type in type_order:
+        p1_strengths += sorted(p1_hands_of_each_type[hand_type], key=functools.cmp_to_key(_day7_hand_sort))
+        p2_strengths += sorted(p2_hands_of_each_type[hand_type], key=functools.cmp_to_key(_day7_hand_sort))
 
-
-    print(hands)
-    ordering = []
-    for t in o:
-        if t in hands:
-            temp = sorted(hands[t], key=functools.cmp_to_key(hand_sort_2))
-            print(t)
-            gg=[]
-            for g in temp:
-                if "J" in g:
-                    gg.append(g)
-            print(gg)
-            ordering += temp
-    #print(ordering)
-    for i, h in enumerate(ordering):
-        p2_answer += ((i+1)*S[h])            
-
-    print(f"The part 2 answer is {p2_answer}")
-
-""" 
+    # Ok we have the hands in order, time to score them.
+    rank = 1
+    for p1_hand, p2_hand in zip(p1_strengths, p2_strengths):
+        p1_answer += rank * hand_score[p1_hand]
+        p2_answer += rank * hand_score[p2_hand.replace("1", "J")]  # Put the J back so we can look up the score.
+        rank += 1
+    
+    print(f"The part 1 total winnings is {p1_answer}")
+    print(f"The part 2 total winnings is {p2_answer}")
 
 
 
-    ordering = []
-    print(hands)
-    for key in sorted(list(hands.keys())):
-        #print(key)
-        ordering += sorted(hands[key], key=functools.cmp_to_key(hand_sort))
-    print(ordering)
-    for i, h in enumerate(ordering):
-        p1_answer += ((i+1)*S[h])
-"""
 
