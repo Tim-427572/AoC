@@ -20,6 +20,7 @@ import pyglet
 # import string
 import requests
 from functools import lru_cache
+import functools
 
 # Advent of Code
 # Never did spend the time to work out how to get oAuth to work so this code expects you to
@@ -475,7 +476,6 @@ def day5(example=False, reload=False):
         range_min = min(ranges)[0]
         p2_min = range_min if p2_min is None or range_min < p2_min else p2_min
     print(f"Part 2 the minimum location is {p2_min}")
-            
 
 
 def day6(example=False, reload=False):
@@ -504,4 +504,181 @@ def day6(example=False, reload=False):
     print(f"The part 1 answer is {p1_answer}")
     print(f"The part 2 answer is {p2_answer}")
 
+
+
+def hand_sort(left, right):
+    c="23456789TJQKA"
+    for i in range(len(left)):
+        if c.index(left[i]) > c.index(right[i]):
+            return 1
+        elif c.index(left[i]) < c.index(right[i]):
+            return -1
+    return 0
+
+def day7(example=False, reload=False):
+    if example:
+        day = """32T3K 765
+T55J5 684
+KK677 28
+KTJJT 220
+QQQJA 483
+"""        
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    puzzle = get_input(day, "\n", None, reload)
+    scores = {5:1, 4:2, 1:7}
+    p1_answer = p2_answer = 0
+    hands = {}
+    S = {}
+    for l in puzzle:
+        hand, score = l.split()
+        score = int(score)
+        S[hand] = score
+        h_s = set(list(hand))
+        if len(h_s) in scores:
+            print(hand, scores[len(h_s)])
+            hands.setdefault(scores[len(h_s)], [])
+            hands[scores[len(h_s)]].append(hand)
+        elif len(h_s) == 3: # two pair or three
+            for i in hand:
+                if hand.count(i) == 2:
+                    print(hand, "two pair")
+                    hands.setdefault(3, [])
+                    hands[3].append(hand)
+                    break
+                if hand.count(i) == 3:
+                    print(hand, "three")
+                    hands.setdefault(4, [])
+                    hands[4].append(hand)
+                    break
+                    
+        elif len(h_s) == 2: # full h or four
+            for i in hand:
+                if hand.count(i) == 2 or hand.count(i) == 3:
+                    print(hand, "full")
+                    hands.setdefault(5, [])
+                    hands[5].append(hand)
+                    break
+                if hand.count(i) == 4:
+                    print(hand, "four")
+                    hands.setdefault(6, [])
+                    hands[6].append(hand)
+                    break
+    ordering = []
+    print(hands)
+    for key in sorted(list(hands.keys())):
+        #print(key)
+        ordering += sorted(hands[key], key=functools.cmp_to_key(hand_sort))
+    print(ordering)
+    for i, h in enumerate(ordering):
+        p1_answer += ((i+1)*S[h])
+
+def hand_sort_2(left, right):
+    c="J23456789TQKA"
+    for i in range(len(left)):
+        if c.index(left[i]) > c.index(right[i]):
+            return 1
+        elif c.index(left[i]) < c.index(right[i]):
+            return -1
+    return 0
+
+
+def day7_p2(example=False, reload=False):
+    import collections
+    if example:
+        day = """32T3K 765
+T55J5 684
+KK677 28
+KTJJT 220
+QQQJA 483
+"""        
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    puzzle = get_input(day, "\n", None, reload)
+    p1_answer = p2_answer = 0
+    hands = {}
+    S = {}
+    o = ["h","1","2","3","f","4","5"]
+    for l in puzzle:
+        hand, score = l.split()
+        score = int(score)
+        S[hand] = score
+        ohand = hand
+        foo = hand.replace("J","")
+        if "J" in hand and len(foo) > 0:
+            most = collections.Counter(foo).most_common(1)[0][0]
+            hand = hand.replace("J",most)
+        hs = set(hand)
+        if ohand == "5J4J4":
+            print(hand)
+            input()
+        if len(hs) == 1: # five kind
+            k="5"
+            hands.setdefault(k, [])        
+            hands[k].append(ohand)
+        elif len(hs) == 2: # four of a k or full
+            for i in hand:
+                if hand.count(i) == 2 or hand.count(i) == 3:
+                    k="f"
+                    hands.setdefault(k, [])        
+                    hands[k].append(ohand)
+                    break
+                if hand.count(i) == 4: # four of a k
+                    k="4"
+                    hands.setdefault(k, [])        
+                    hands[k].append(ohand)
+                    break
+        elif len(hs) == 3: # two pair or three
+            for i in hand:
+                if hand.count(i) == 2:
+                    k="2"
+                    hands.setdefault(k, [])        
+                    hands[k].append(ohand)
+                    break
+                if hand.count(i) == 3:
+                    k="3"
+                    hands.setdefault(k, [])        
+                    hands[k].append(ohand)
+                    break
+        elif len(hs) == 4: # one pair
+            k="1"
+            hands.setdefault(k, [])        
+            hands[k].append(ohand)
+        else:
+            k="h"
+            hands.setdefault(k, [])        
+            hands[k].append(ohand)            
+
+
+    print(hands)
+    ordering = []
+    for t in o:
+        if t in hands:
+            temp = sorted(hands[t], key=functools.cmp_to_key(hand_sort_2))
+            print(t)
+            gg=[]
+            for g in temp:
+                if "J" in g:
+                    gg.append(g)
+            print(gg)
+            ordering += temp
+    #print(ordering)
+    for i, h in enumerate(ordering):
+        p2_answer += ((i+1)*S[h])            
+
+    print(f"The part 2 answer is {p2_answer}")
+
+""" 
+
+
+
+    ordering = []
+    print(hands)
+    for key in sorted(list(hands.keys())):
+        #print(key)
+        ordering += sorted(hands[key], key=functools.cmp_to_key(hand_sort))
+    print(ordering)
+    for i, h in enumerate(ordering):
+        p1_answer += ((i+1)*S[h])
+"""
 
