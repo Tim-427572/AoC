@@ -12,7 +12,7 @@ import socket
 from os import path
 
 # import functools
-# import itertools
+import itertools
 # import statistics
 import collections
 import numpy as np
@@ -587,32 +587,26 @@ def day8(example=False, reload=False):
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
     puzzle = get_input(day, "\n", None, reload)
-    instructions = puzzle[0]
+    instructions = list(map(int, puzzle[0].replace("R","1").replace("L","0")))
+    instructions = itertools.cycle(instructions)
     puzzle = puzzle[2:]
     p1_answer = 0
     nodes = {}
-    for line in puzzle:
-        nodes[line.split("=")[0].strip()] = (line.split("=")[1].split(",")[0].strip().strip("("), line.split("=")[1].split(",")[1].strip(")").strip())
     a_elements = []
     step_list = []
-    for element in nodes.keys():
-        if element[-1] == "A":
-            a_elements.append(element)
+    for line in puzzle:
+        this_element, left, right = re.findall("[0-9A-Z]+", line)
+        nodes[this_element] = (left, right)
+        if this_element[-1] == "A":
+            a_elements.append(this_element)
     for element in a_elements:
         steps = 0
-        i = 0
         while True:
-            i = i % len(instructions)
-            if instructions[i] == "R":
-                element = nodes[element][1]
-            else:
-                element = nodes[element][0]
+            element = nodes[element][next(instructions)]
             steps += 1
-            i+= 1
+            p1_answer = steps if element == "ZZZ" else p1_answer
             if element[-1] == "Z":
                 step_list.append(steps)
-                if element == "ZZZ":
-                    p1_answer = steps
                 break
     print(f"The totals steps for part 1 is {p1_answer}")
     print(f"The part 2 answer is {np.lcm.reduce(step_list, dtype='int64')}")
