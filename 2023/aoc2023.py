@@ -512,7 +512,7 @@ def _day7_check_type(hand):
                    (2,2):"two pair",
                    (2,1):"one pair",
                    (1,1):"high card"}
-    counts = collections.Counter(hand + "!").most_common(2) # Padd with ! to handle the five of a kind case.
+    counts = collections.Counter(hand + "!").most_common(2) # Pad with ! to handle the five of a kind case.
     return hand_decode[list(zip(*counts))[1]]
 
 
@@ -571,6 +571,51 @@ def day7(example=False, reload=False):
     print(f"The part 1 total winnings is {p1_answer}")
     print(f"The part 2 total winnings is {p2_answer}")
 
+
+def day8(example=False, reload=False):
+    if example:
+        day = ("LR\n"
+                "\n"
+                "11A = (11B, XXX)\n"
+                "11B = (XXX, 11Z)\n"
+                "11Z = (11B, XXX)\n"
+                "22A = (22B, XXX)\n"
+                "22B = (22C, 22C)\n"
+                "22C = (22Z, 22Z)\n"
+                "22Z = (22B, 22B)\n"
+                "XXX = (XXX, XXX)\n")
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    puzzle = get_input(day, "\n", None, reload)
+    instructions = puzzle[0]
+    puzzle = puzzle[2:]
+    p1_answer = 0
+    nodes = {}
+    for line in puzzle:
+        nodes[line.split("=")[0].strip()] = (line.split("=")[1].split(",")[0].strip().strip("("), line.split("=")[1].split(",")[1].strip(")").strip())
+    a_elements = []
+    step_list = []
+    for element in nodes.keys():
+        if element[-1] == "A":
+            a_elements.append(element)
+    for element in a_elements:
+        steps = 0
+        i = 0
+        while True:
+            i = i % len(instructions)
+            if instructions[i] == "R":
+                element = nodes[element][1]
+            else:
+                element = nodes[element][0]
+            steps += 1
+            i+= 1
+            if element[-1] == "Z":
+                step_list.append(steps)
+                if element == "ZZZ":
+                    p1_answer = steps
+                break
+    print(f"The totals steps for part 1 is {p1_answer}")
+    print(f"The part 2 answer is {np.lcm.reduce(step_list, dtype='int64')}")
 
 
 
