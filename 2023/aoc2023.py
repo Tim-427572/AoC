@@ -613,3 +613,32 @@ def day8(example=False, reload=False):
 
 
 
+def day9(example=False, reload=False):
+    if example:
+        day = ("0 3 6 9 12 15\n"
+               "1 3 6 10 15 21\n"
+               "10 13 16 21 30 45\n")
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    puzzle = get_input(day, "\n", None, reload)
+    p1_answer = []
+    p2_answer = []
+    value_histories = []
+    for line in puzzle:
+        value_histories.append([list(map(int, line.split()))])
+    for value_history in value_histories:
+        while True:
+            value_history.append(np.diff(value_history[-1]))
+            if all(x ==0 for x in value_history[-1]):
+                break
+    for value_history in value_histories:
+        p1 = p2 = 0
+        for i in range(len(value_history) - 1, -1, -1):
+            p1=value_history[i][0] + p1
+            p2=value_history[i][0] - p2
+        p1_answer.append(p1)
+        p2_answer.append(p2)
+    print(f"Part 1 sum is {sum(p1_answer)}")
+    print(f"Part 2 sum is {sum(p2_answer)}")
+
+
