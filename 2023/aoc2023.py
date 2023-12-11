@@ -752,21 +752,16 @@ def day11(universe_expansion = 2, example=False, reload=False,):
     empty_rows = np.where(~(universe == "#").any(axis=1))[0].tolist()
     empty_columns = np.where(~(universe == "#").any(axis=0))[0].tolist()
     galaxies = np.argwhere(universe == "#").tolist()
-    universe_expansion -= 1
+    universe_expansion -= 1  # Accound for the one existing empty line in the universe map.
     answer = 0
-    for pair in itertools.combinations(galaxies, 2):
-        p1, p2 = pair
-        row_delta = abs(p1[0] - p2[0])
+    for p1, p2 in itertools.combinations(galaxies, 2):
         row_range = range(*sorted([p1[0], p2[0]]))
-        for row in empty_rows:
-            if row in row_range:
-                row_delta += universe_expansion
-        col_delta = abs(p1[1]-p2[1])
+        row_delta = len(row_range)
+        row_delta += sum([universe_expansion for row in empty_rows if row in row_range])
         col_range = range(*sorted([p1[1], p2[1]]))
-        for col in empty_columns:
-            if col in col_range:
-                col_delta += universe_expansion
-        # print(pair, (row_delta + col_delta))
+        col_delta = len(col_range)
+        row_delta += sum([universe_expansion for col in empty_columns if col in col_range])
+        # print(pair, (row_delta + col_delta))  # Was helping Max debug.
         answer += (row_delta + col_delta)
     print(f"The sum of the distances between galaxies is {answer}")
 
