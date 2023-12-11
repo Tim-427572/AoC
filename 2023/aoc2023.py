@@ -47,7 +47,7 @@ def _check_internet(host="8.8.8.8", port=53, timeout=2):
         return False
 
 
-def _pull_puzzle_input(day, seperator, cast):
+def _pull_puzzle_input(day, seperator, cast=None):
     """
     Pull the puzzle data from the AOC website.
 
@@ -97,7 +97,7 @@ def _pull_puzzle_input(day, seperator, cast):
 
 
 # Cache the data in a pickle file.
-def get_input(day, seperator, cast, override=False):
+def get_input(day, seperator, cast=None, override=False):
     """
     Helper function for the daily puzzle information.
     If the puzzle data does not exist it attempts to pull it from the website.
@@ -127,6 +127,30 @@ def get_input(day, seperator, cast, override=False):
     return puzzle_input
 
 
+def get_np_input(day, seperator, cast=None, splitter=None, dtype=None, override=False):
+    """
+    Wrap get_input and cast the allow casting the data type too.
+    """
+    day_input = get_input(day, seperator, cast, override)
+    if splitter is None:
+        return np.array(day_input, dtype=dtype)
+    else:
+        temp = []
+        for r in day_input:
+            temp.append(splitter(r))
+        return np.array(temp, dtype=dtype)
+
+
+def print_np(array):
+    if array.dtype == np.dtype("<U1"):
+        for row in array:
+            print("".join(row))
+    else:
+        for row in array:
+            print(np.array2string(row, separator="")[1:-1])
+
+
+
 class Viz(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -142,7 +166,7 @@ def v():
     pyglet.app.run()
 
 
-class Point:
+class Point_Object:
     """
     A point object to use with 2D arrays where y/row is the first index and x/column is the second.
     """
@@ -194,6 +218,26 @@ class Point:
             print(f"left: ({self.left[0].y}, {self.left[0].x}) {self.left[1]}")
         if self.right:
             print(f"right: ({self.right[0].y}, {self.right[0].x}) {self.right[1]}")
+
+
+class Coordinate(tuple):
+    def __add__(self, other):
+        return Coordinate(x + y for x, y in zip(self, other))
+    def __setitem__(self, key, value):
+        l = list(self)
+        l[key] = value
+        print(l)
+        return Coordinate(tuple(l))
+
+
+move_dict = {"u":(-1, 0), "n":(-1, 0), "up":(-1, 0), "north":(-1, 0),
+             "d":(1, 0), "s":(1, 0), "down":(1,0), "south":(1, 0),
+             "r":(0, 1), "e":(0, 1), "right":(0, 1), "east":(0, 1),
+             "l":(0, -1), "w":(0, -1), "left":(0, -1), "west":(0, -1),
+             "ur":(-1, 1), "ne":(-1, 1), "up-right":(-1, 1), "north-east":(-1, 1),
+             "dr":(1, 1), "se":(1, 1), "down-right":(1, 1), "south-east":(1, 1),
+             "ul":(-1, -1), "nw":(-1, -1), "up-left":(-1, -1), "north-west":(-1, -1),
+             "dl":(1, -1), "sw":(1, -1), "down-left":(1, -1), "south-west":(1, -1)}
 
 
 def dfs(graph, node):  # Example function for DFS
@@ -644,30 +688,24 @@ def day9(example=False, reload=False):
 
 
 
-def d10_bfs(board, pos, node, dist):  # Example function for DFS
-    queue = [(node,dist)]
+def d10_bfs(field, loop, coordinate, dist):  # BFS search? realy only takes the two paths around the loop.
+    global move_dict
+    queue = [(coordinate, dist)]
     """
-    valid_up = {"|":"|7F",
-                "S":"|F7",
-                "J":"|F7",
-                "L":"|"
-    valid_down = {"|":"|JL",
-                  "S"
     """
     while queue:
-        this_node,d = queue.pop(0)
-        pos[this_node] = d
-        for move in [(-1,0,"|SJL","|7F"), (1,0,"S|7F","|LJ"), (0,-1,"S-J7","-FL"),(0,1,"S-FL","-J7")]:
-            neighbor = (this_node[0]+move[0], this_node[1]+move[1])
+        this_node, this_distance = queue.pop(0)
+        loop[this_node] = this_distance
+        for direction, here, there in [("up","|SJL","S|7F"),
+                                       ("down","S|7F","S|LJ"),
+                                       ("left","S-J7","S-FL"),
+                                       ("right","S-FL","S-J7")]:
+            neighbor = ths_node + move_dict[direction]
             #print(this_node, neighbor)
-            if (neighbor not in pos and
-                board[neighbor[0]][neighbor[1]] in move[3] and
-                board[this_node[0]][this_node[1]] in move[2]):
-                queue.append((neighbor,pos[this_node]+1))
-
-
-
-
+            if (neighbor not in loop and
+                field[this_node] in here and
+                field[neighbor] in there):
+                queue.append((neighbor, this_distance + 1))
 
 
 def day10(example=False, reload=False):
@@ -684,139 +722,102 @@ def day10(example=False, reload=False):
 """        
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    puzzle = get_input(day, "\n", None, reload)
-    pos = {}
-    board = ["."*(len(puzzle[0])+2)]
-    animal = None
-    for r,l in enumerate(puzzle):
-        board.append("."+l+".")
-        if "S" in l:
-            animal = (r+1,l.index("S")+1)
-            #pos[animal] = 0
-    board.append("."*len(board[0]))
-    d10_bfs(board, pos, animal, 0)
-    d10_bfs2(board, pos, (0,0))
-    #for c in range(len(board[0])):
-    #    d10_bfs2(board, pos, (0,c))
-    #    d10_bfs2(board, pos, (len(board)-1,c))
-    #for r in range(len(board)):
-    #    d10_bfs2(board, pos, (r,0))
-    #    d10_bfs2(board, pos, (r,len(board[0])-1))
-    e=[]
-    for r in board:
-        print(r)
-    print()
-    for i in range(len(board)):
-        e.append("."*len(board[0]))
-    for k,v in pos.items():
-        #print(k,v)
-        if v == "O":
-            e[k[0]] = e[k[0]][:k[1]] + str(v)[0] + e[k[0]][k[1]+1:]
-        else:
-            e[k[0]] = e[k[0]][:k[1]] + board[k[0]][k[1]]+ e[k[0]][k[1]+1:]
-    for r in e:
-        print(r)
-    #print(max(list([x for x in pos.values() if x is not None])))
-    n=[]
-    for b in e:
-        n.append(list(b))
-    n=np.array(n)
-    #print(n)
-    print(np.count_nonzero(n=="."))
+    field = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    field = np.pad(field, 1, mode="constant", constant_values=".")
+    #print_np(field)
+    start = Coordinate(np.argwhere(field == "S")[0])
+    print(start)
+    loop = {}
+    d10_bfs(field, loop, start, 0)
+    print(loop)
+    return field
 
 
-def dfs(board, pos, node):  # Example function for DFS
-    if node not in pos:
-        visited.add(node)
-        for neighbor in graph[node]:
-            dfs(graph, neighbor)
-
-def next_pos(board, loop, cur_pos):
-    for r,c,h,v in [(-1,0,"|JL","|SF7"), (1,0,"|F7","|SJL"), (0,-1,"-J7","S-FL"),(0,1,"-FL","S-J7")]:
-        n_pos = (cur_pos[0]+r,cur_pos[1]+c)
-        if n_pos in loop:
-            continue
-        if board[cur_pos[0]][cur_pos[1]] not in h:
-            continue
-        if n_pos[0] not in range(len(board)) or n_pos[1] not in range(len(board[0])):
-            continue
-        if board[n_pos[0]][n_pos[1]] in v:
-            return n_pos
-
-def check(board, r,c):
-    cross = 0
-    while c > -1:
-        if board[r][c] in "|JL":
-            cross+=1
-        c-=1
-    if cross % 2: # outside
-        return True
-    else:
-        return False
-        
-
-def day10_2(example=False, reload=False):
+def day11(example=False, reload=False):
+    import math
     if example:
-        day = """FF7FSF7F7F7F7F7F---7
-L|LJ||||||||||||F--J
-FL-7LJLJ||||||LJL-77
-F--JF--7||LJLJIF7FJ-
-L---JF-JLJIIIIFJLJJ7
-|F|F-JF---7IIIL7L|7|
-|FFJF7L7F-JF7IIL---7
-7-L-JL7||F7|L7F-7F7|
-L.L7LFJ|||||FJL7||LJ
-L7JLJL-JLJLJL--JLJ.L
-"""        
+        day = """...#......
+.......#..
+#.........
+..........
+......#...
+.#........
+.........#
+..........
+.......#..
+#...#.....
+"""
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    puzzle = get_input(day, "\n", None, reload)
-    pos = set()
-    board = []
-    for r,l in enumerate(puzzle):
-        board.append(l)
-        if "S" in l:
-            animal = (r, l.index("S"))
-            #pos[animal] = 0
-    cur_pos = animal
-    loop = set([animal])
-    for r,c,v in [(-1,0,"|7F"), (1,0,"|LJ"), (0,-1,"-FL"),(0,1,"-J7")]:
-        cur_pos = (animal[0]+r,animal[1]+c)
-        if board[cur_pos[0]][cur_pos[1]] in v:
-            break
-    while True:
-        loop.add(cur_pos)
-        #print(cur_pos
-        #print(cur_pos, board[cur_pos[0]][cur_pos[1]])
-        cur_pos = next_pos(board, loop, cur_pos)
-        if cur_pos is None:
-            break
-    #print(loop)
-    for r,row in enumerate(board):
-        for c, col in enumerate(row):
-            if (r,c) in loop:
-                continue
-            else:
-                board[r]= board[r][:c] + "." + board[r][c+1:]
-    inside = 0
-    in_set = set()
-    for r,row in enumerate(board):
-        for c, col in enumerate(row):
-            if (r,c) in loop:
-                continue
-            if check(board,r,c):
-                in_set.add((r,c))
-                inside += 1
-    for r,row in enumerate(board):
-        for c, col in enumerate(row):
-            if (r,c) in in_set:
-                board[r]= board[r][:c] + "I" + board[r][c+1:]
-    for r in board:
+    u = get_np_input(day, "\n", splitter=list, dtype=str, override= reload)
+    print_np(u)
+    rows = []
+    for i,r in enumerate(u):
+        if np.count_nonzero(r=="#") == 0:
+            rows.append(i)
+    for r in sorted(rows, reverse=True):
         print(r)
-    print(inside)
+        u = np.insert(u, r, u[r], axis=0)
+    cols = []
+    for i, c in enumerate(u.T):
+        if np.count_nonzero(c=="#") == 0:
+            cols.append(i)
+    for c in sorted(cols, reverse=True):
+        u = np.insert(u, c, u.T[c], axis=1)
+    print()
+    print_np(u)
+    g = np.argwhere(u=="#").tolist()
+    print(g)
+    p1_ans = 0
+    for i,p in enumerate(itertools.combinations(g, 2)):
+        p1, p2 = p
+        d = abs(p1[0]-p2[0]) + abs(p1[1]-p2[1]) + 10
+        print(i,p,d)
+        p1_ans += d
+    print(p1_ans)
+    return g
+        
 
-
-        
-        
-        
+def day11_p2(expand=1,example=False, reload=False,):
+    import math
+    if example:
+        day = """...#......
+.......#..
+#.........
+..........
+......#...
+.#........
+.........#
+..........
+.......#..
+#...#.....
+"""
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    u = get_np_input(day, "\n", splitter=list, dtype=str, override= reload)
+    rows = []
+    for i,r in enumerate(u):
+        if np.count_nonzero(r=="#") == 0:
+            rows.append(i)
+    cols = []
+    for i, c in enumerate(u.T):
+        if np.count_nonzero(c=="#") == 0:
+            cols.append(i)
+    print_np(u)
+    g = np.argwhere(u=="#").tolist()
+    #print(g)
+    p1_ans = 0
+    for i,p in enumerate(itertools.combinations(g, 2)):
+        p1, p2 = p
+        rd = abs(p1[0]-p2[0])
+        for r in rows:
+            if r in range(*sorted([p1[0],p2[0]])):
+                rd+=expand-1
+        cd = abs(p1[1]-p2[1])
+        for c in cols:
+            if c in range(*sorted([p1[1],p2[1]])):
+                cd += expand-1
+        #print(i,p,rd+cd)
+        p1_ans += (rd+cd)
+    print(p1_ans)
 
