@@ -626,6 +626,7 @@ def day9(example=False, reload=False):
     value_histories = []
     for line in puzzle:
         value_histories.append([list(map(int, line.split()))])
+    # Fill in each value hist
     for value_history in value_histories:
         while True:
             value_history.append(np.diff(value_history[-1]))
@@ -641,4 +642,181 @@ def day9(example=False, reload=False):
     print(f"Part 1 sum is {sum(p1_answer)}")
     print(f"Part 2 sum is {sum(p2_answer)}")
 
+
+
+def d10_bfs(board, pos, node, dist):  # Example function for DFS
+    queue = [(node,dist)]
+    """
+    valid_up = {"|":"|7F",
+                "S":"|F7",
+                "J":"|F7",
+                "L":"|"
+    valid_down = {"|":"|JL",
+                  "S"
+    """
+    while queue:
+        this_node,d = queue.pop(0)
+        pos[this_node] = d
+        for move in [(-1,0,"|SJL","|7F"), (1,0,"S|7F","|LJ"), (0,-1,"S-J7","-FL"),(0,1,"S-FL","-J7")]:
+            neighbor = (this_node[0]+move[0], this_node[1]+move[1])
+            #print(this_node, neighbor)
+            if (neighbor not in pos and
+                board[neighbor[0]][neighbor[1]] in move[3] and
+                board[this_node[0]][this_node[1]] in move[2]):
+                queue.append((neighbor,pos[this_node]+1))
+
+
+
+
+
+
+def day10(example=False, reload=False):
+    if example:
+        day = """..........
+.S------7.
+.|F----7|.
+.||....||.
+.||....||.
+.|L-7F-J|.
+.|..||..|.
+.L--JL--J.
+..........
+"""        
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    puzzle = get_input(day, "\n", None, reload)
+    pos = {}
+    board = ["."*(len(puzzle[0])+2)]
+    animal = None
+    for r,l in enumerate(puzzle):
+        board.append("."+l+".")
+        if "S" in l:
+            animal = (r+1,l.index("S")+1)
+            #pos[animal] = 0
+    board.append("."*len(board[0]))
+    d10_bfs(board, pos, animal, 0)
+    d10_bfs2(board, pos, (0,0))
+    #for c in range(len(board[0])):
+    #    d10_bfs2(board, pos, (0,c))
+    #    d10_bfs2(board, pos, (len(board)-1,c))
+    #for r in range(len(board)):
+    #    d10_bfs2(board, pos, (r,0))
+    #    d10_bfs2(board, pos, (r,len(board[0])-1))
+    e=[]
+    for r in board:
+        print(r)
+    print()
+    for i in range(len(board)):
+        e.append("."*len(board[0]))
+    for k,v in pos.items():
+        #print(k,v)
+        if v == "O":
+            e[k[0]] = e[k[0]][:k[1]] + str(v)[0] + e[k[0]][k[1]+1:]
+        else:
+            e[k[0]] = e[k[0]][:k[1]] + board[k[0]][k[1]]+ e[k[0]][k[1]+1:]
+    for r in e:
+        print(r)
+    #print(max(list([x for x in pos.values() if x is not None])))
+    n=[]
+    for b in e:
+        n.append(list(b))
+    n=np.array(n)
+    #print(n)
+    print(np.count_nonzero(n=="."))
+
+
+def dfs(board, pos, node):  # Example function for DFS
+    if node not in pos:
+        visited.add(node)
+        for neighbor in graph[node]:
+            dfs(graph, neighbor)
+
+def next_pos(board, loop, cur_pos):
+    for r,c,h,v in [(-1,0,"|JL","|SF7"), (1,0,"|F7","|SJL"), (0,-1,"-J7","S-FL"),(0,1,"-FL","S-J7")]:
+        n_pos = (cur_pos[0]+r,cur_pos[1]+c)
+        if n_pos in loop:
+            continue
+        if board[cur_pos[0]][cur_pos[1]] not in h:
+            continue
+        if n_pos[0] not in range(len(board)) or n_pos[1] not in range(len(board[0])):
+            continue
+        if board[n_pos[0]][n_pos[1]] in v:
+            return n_pos
+
+def check(board, r,c):
+    cross = 0
+    while c > -1:
+        if board[r][c] in "|JL":
+            cross+=1
+        c-=1
+    if cross % 2: # outside
+        return True
+    else:
+        return False
+        
+
+def day10_2(example=False, reload=False):
+    if example:
+        day = """FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJIF7FJ-
+L---JF-JLJIIIIFJLJJ7
+|F|F-JF---7IIIL7L|7|
+|FFJF7L7F-JF7IIL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L
+"""        
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    puzzle = get_input(day, "\n", None, reload)
+    pos = set()
+    board = []
+    for r,l in enumerate(puzzle):
+        board.append(l)
+        if "S" in l:
+            animal = (r, l.index("S"))
+            #pos[animal] = 0
+    cur_pos = animal
+    loop = set([animal])
+    for r,c,v in [(-1,0,"|7F"), (1,0,"|LJ"), (0,-1,"-FL"),(0,1,"-J7")]:
+        cur_pos = (animal[0]+r,animal[1]+c)
+        if board[cur_pos[0]][cur_pos[1]] in v:
+            break
+    while True:
+        loop.add(cur_pos)
+        #print(cur_pos
+        #print(cur_pos, board[cur_pos[0]][cur_pos[1]])
+        cur_pos = next_pos(board, loop, cur_pos)
+        if cur_pos is None:
+            break
+    #print(loop)
+    for r,row in enumerate(board):
+        for c, col in enumerate(row):
+            if (r,c) in loop:
+                continue
+            else:
+                board[r]= board[r][:c] + "." + board[r][c+1:]
+    inside = 0
+    in_set = set()
+    for r,row in enumerate(board):
+        for c, col in enumerate(row):
+            if (r,c) in loop:
+                continue
+            if check(board,r,c):
+                in_set.add((r,c))
+                inside += 1
+    for r,row in enumerate(board):
+        for c, col in enumerate(row):
+            if (r,c) in in_set:
+                board[r]= board[r][:c] + "I" + board[r][c+1:]
+    for r in board:
+        print(r)
+    print(inside)
+
+
+        
+        
+        
 
