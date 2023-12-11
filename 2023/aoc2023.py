@@ -130,6 +130,7 @@ def get_input(day, seperator, cast=None, override=False):
 def get_np_input(day, seperator, cast=None, splitter=None, dtype=None, override=False):
     """
     Wrap get_input and cast the allow casting the data type too.
+    returns a numpy array instead of the tuple array that get_input does.
     """
     day_input = get_input(day, seperator, cast, override)
     if splitter is None:
@@ -142,6 +143,9 @@ def get_np_input(day, seperator, cast=None, splitter=None, dtype=None, override=
 
 
 def print_np(array):
+    """
+    Small script to print a numpy array to the console visually similar to the puzzles in AoC.
+    """
     if array.dtype == np.dtype("<U1"):
         for row in array:
             print("".join(row))
@@ -150,7 +154,8 @@ def print_np(array):
             print(np.array2string(row, separator="")[1:-1])
 
 
-
+"""
+# Some code experiments in a visualization module instead of using curses.
 class Viz(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -164,11 +169,12 @@ def v():
     #label = pyglet.text.Label("Hello, world",font_name='Times New Roman',font_size=36, anchor_x='center',anchor_y='center')
     _ = Viz(512, 512, "Test",resizable=False)
     pyglet.app.run()
-
+"""
 
 class Point_Object:
     """
     A point object to use with 2D arrays where y/row is the first index and x/column is the second.
+    Useful when you want to turn the 2D map into a graph.
     """
     def __init__(self, y, x, shape=None, empty_shape="."):
         self.x = x
@@ -220,6 +226,7 @@ class Point_Object:
             print(f"right: ({self.right[0].y}, {self.right[0].x}) {self.right[1]}")
 
 
+# A thing that isn't really a tuple which makes tracking 2D points easier.
 class Coordinate(tuple):
     def __add__(self, other):
         return Coordinate(x + y for x, y in zip(self, other))
@@ -230,6 +237,7 @@ class Coordinate(tuple):
         return Coordinate(tuple(l))
 
 
+# Dictionary to make walking the 2D maps easier.
 move_dict = {"u":(-1, 0), "n":(-1, 0), "up":(-1, 0), "north":(-1, 0),
              "d":(1, 0), "s":(1, 0), "down":(1,0), "south":(1, 0),
              "r":(0, 1), "e":(0, 1), "right":(0, 1), "east":(0, 1),
@@ -305,6 +313,9 @@ def day1(example=False):
 
 
 def day2(example=False, reload=False):
+    """
+    Minimum cube set for the games.
+    """
     if example:
         day = ("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green\n"
                "Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue\n"
@@ -336,6 +347,9 @@ def day2(example=False, reload=False):
 
 
 def day3(example=False, reload=False):
+    """
+    Finding numbers adjacent to things, then finding pairs which touch the * character.
+    """
     if example:
         day = ("467..114..\n"
                "...*......\n"
@@ -379,6 +393,9 @@ def day3(example=False, reload=False):
 
 
 def day4(example=False, reload=False):
+    """
+    Lottery cards!
+    """
     if example:
         day = ("Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53\n"
                "Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19\n"
@@ -437,10 +454,13 @@ def _day5_range(ranges, this_map):
             if right[1] > right[0]:
                 new_ranges.append(right)
         ranges = new_ranges
-    return result + ranges
+    return result + rangespython -m pip install --proxy http://proxy-dmz.intel.com:911
 
 
 def day5(example=False, reload=False):
+    """
+    Translate seeds into locations. Then translate ranges of seeds into ranges of locations.
+    """
     if example:
         day = ("seeds: 79 14 55 13\n"
                "\n"
@@ -522,6 +542,9 @@ def day5(example=False, reload=False):
 
 
 def day6(example=False, reload=False):
+    """
+    Boat races! Didn't bother trying to do the actual math, brute force FTW.
+    """
     if example:
         day = ("Time:      7 15 30\n"
                "Distance:  9 40 200\n")
@@ -549,6 +572,9 @@ def day6(example=False, reload=False):
 
 
 def _day7_check_type(hand):
+    """
+    Helper function which takes a camel card hand and returns a string describing its type.
+    """
     hand_decode = {(5,1):"five of a kind",
                    (4,1):"four of a kind",
                    (3,2):"full house",
@@ -573,7 +599,11 @@ def _day7_hand_sort(left, right):
             return -1
     return 0
 
+
 def day7(example=False, reload=False):
+    """
+    Scoring camel card hands, used a custom sort function to make the code easier to read.
+    """
     if example:
         day = ("32T3K 765\n"
                "T55J5 684\n"
@@ -617,6 +647,10 @@ def day7(example=False, reload=False):
 
 
 def day8(example=False, reload=False):
+    """
+    Moving from A to Z.
+    Used LCM in part 2 but made the assumption that the cycle period from *A to *Z is the same as from *Z back to *z
+    """
     if example:
         day = ("LR\n"
                 "\n"
@@ -656,8 +690,10 @@ def day8(example=False, reload=False):
     print(f"The part 2 answer is {np.lcm.reduce(step_list, dtype='int64')}")
 
 
-
 def day9(example=False, reload=False):
+    """
+    Weird subtraction puzzle.
+    """
     if example:
         day = ("0 3 6 9 12 15\n"
                "1 3 6 10 15 21\n"
@@ -670,7 +706,7 @@ def day9(example=False, reload=False):
     value_histories = []
     for line in puzzle:
         value_histories.append([list(map(int, line.split()))])
-    # Fill in each value hist
+    # Fill in each value history
     for value_history in value_histories:
         while True:
             value_history.append(np.diff(value_history[-1]))
@@ -687,8 +723,10 @@ def day9(example=False, reload=False):
     print(f"Part 2 sum is {sum(p2_answer)}")
 
 
-
-def d10_bfs(field, loop, coordinate, dist):  # BFS search? realy only takes the two paths around the loop.
+def d10_bfs(field, loop, coordinate, dist):
+    """
+    A BFS search? realy only takes the two paths in opposite directions around the loop.
+    """
     global move_dict
     queue = [(coordinate, dist)]
     """
@@ -700,7 +738,7 @@ def d10_bfs(field, loop, coordinate, dist):  # BFS search? realy only takes the 
                                        ("down","S|7F","S|LJ"),
                                        ("left","S-J7","S-FL"),
                                        ("right","S-FL","S-J7")]:
-            neighbor = ths_node + move_dict[direction]
+            neighbor = this_node + move_dict[direction]
             #print(this_node, neighbor)
             if (neighbor not in loop and
                 field[this_node] in here and
@@ -709,32 +747,66 @@ def d10_bfs(field, loop, coordinate, dist):  # BFS search? realy only takes the 
 
 
 def day10(example=False, reload=False):
-    if example:
-        day = """..........
-.S------7.
-.|F----7|.
-.||....||.
-.||....||.
-.|L-7F-J|.
-.|..||..|.
-.L--JL--J.
-..........
-"""        
+    """
+    I am not 100% sure the P2 algorithm would work on any input but it works on the examples and my input which is good enough.
+    """
+    if example == 1:
+        day = ("-L|F7\n"
+               "7S-7|\n"
+               "L|7||\n"
+               "-L-J|\n"
+               "L|-JF\n")
+    elif example == 2:
+        day = ("...........\n"
+               ".S-------7.\n"
+               ".|F-----7|.\n"
+               ".||.....||.\n"
+               ".||.....||.\n"
+               ".|L-7.F-J|.\n"
+               ".|..|.|..|.\n"
+               ".L--J.L--J.\n"
+               "...........\n")
+    elif example == 3:
+        day = (".F----7F7F7F7F-7....\n"
+               ".|F--7||||||||FJ....\n"
+               ".||.FJ||||||||L7....\n"
+               "FJL7L7LJLJ||LJ.L-7..\n"
+               "L--J.L7...LJS7F-7L7.\n"
+               "....F-J..F7FJ|L7L7L7\n"
+               "....L7.F7||L7|.L7L7|\n"
+               ".....|FJLJ|FJ|F7|.LJ\n"
+               "....FJL-7.||.||||...\n"
+               "....L---J.LJ.LJLJ...\n")
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
     field = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
     field = np.pad(field, 1, mode="constant", constant_values=".")
     #print_np(field)
     start = Coordinate(np.argwhere(field == "S")[0])
-    print(start)
     loop = {}
     d10_bfs(field, loop, start, 0)
-    print(loop)
-    return field
+    print(f"Part 1: it is {max(loop.values())} steps to the farthest point in the loop")
+    loop_only = np.full(field.shape, fill_value = ".", dtype=str)
+    inside_points = []
+    for point in loop:
+        loop_only[point] = field[point]
+    for y, row in enumerate(loop_only):
+        for x, col in enumerate(row):
+            if (y, x) in loop:
+                continue
+            crossings = np.count_nonzero(np.in1d(row[:x], ["S","J","L","|"]))
+            if crossings % 2 != 0:
+                inside_points.append((y,x))
+                loop_only[y,x] = "I"
+    # print_np(loop_only)
+    print(f"Part 2 the number of points inside the loop is {len(inside_points)}")
 
 
 
 def day11(universe_expansion = 2, example=False, reload=False,):
+    """
+    Mapping the universe.
+    """
     if example:
         day = ("...#......\n"
                ".......#..\n"
