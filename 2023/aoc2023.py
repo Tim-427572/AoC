@@ -733,91 +733,40 @@ def day10(example=False, reload=False):
     return field
 
 
-def day11(example=False, reload=False):
-    import math
-    if example:
-        day = """...#......
-.......#..
-#.........
-..........
-......#...
-.#........
-.........#
-..........
-.......#..
-#...#.....
-"""
-    else:
-        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    u = get_np_input(day, "\n", splitter=list, dtype=str, override= reload)
-    print_np(u)
-    rows = []
-    for i,r in enumerate(u):
-        if np.count_nonzero(r=="#") == 0:
-            rows.append(i)
-    for r in sorted(rows, reverse=True):
-        print(r)
-        u = np.insert(u, r, u[r], axis=0)
-    cols = []
-    for i, c in enumerate(u.T):
-        if np.count_nonzero(c=="#") == 0:
-            cols.append(i)
-    for c in sorted(cols, reverse=True):
-        u = np.insert(u, c, u.T[c], axis=1)
-    print()
-    print_np(u)
-    g = np.argwhere(u=="#").tolist()
-    print(g)
-    p1_ans = 0
-    for i,p in enumerate(itertools.combinations(g, 2)):
-        p1, p2 = p
-        d = abs(p1[0]-p2[0]) + abs(p1[1]-p2[1]) + 10
-        print(i,p,d)
-        p1_ans += d
-    print(p1_ans)
-    return g
-        
 
-def day11_p2(expand=1,example=False, reload=False,):
-    import math
+def day11(universe_expansion = 2, example=False, reload=False,):
     if example:
-        day = """...#......
-.......#..
-#.........
-..........
-......#...
-.#........
-.........#
-..........
-.......#..
-#...#.....
-"""
+        day = ("...#......\n"
+               ".......#..\n"
+               "#.........\n"
+               "..........\n"
+               "......#...\n"
+               ".#........\n"
+               ".........#\n"
+               "..........\n"
+               ".......#..\n"
+               "#...#.....\n")
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    u = get_np_input(day, "\n", splitter=list, dtype=str, override= reload)
-    rows = []
-    for i,r in enumerate(u):
-        if np.count_nonzero(r=="#") == 0:
-            rows.append(i)
-    cols = []
-    for i, c in enumerate(u.T):
-        if np.count_nonzero(c=="#") == 0:
-            cols.append(i)
-    print_np(u)
-    g = np.argwhere(u=="#").tolist()
-    #print(g)
-    p1_ans = 0
-    for i,p in enumerate(itertools.combinations(g, 2)):
-        p1, p2 = p
-        rd = abs(p1[0]-p2[0])
-        for r in rows:
-            if r in range(*sorted([p1[0],p2[0]])):
-                rd+=expand-1
-        cd = abs(p1[1]-p2[1])
-        for c in cols:
-            if c in range(*sorted([p1[1],p2[1]])):
-                cd += expand-1
-        #print(i,p,rd+cd)
-        p1_ans += (rd+cd)
-    print(p1_ans)
+    universe = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    empty_rows = np.where(~(universe == "#").any(axis=1))[0].tolist()
+    empty_columns = np.where(~(universe == "#").any(axis=0))[0].tolist()
+    galaxies = np.argwhere(universe == "#").tolist()
+    universe_expansion -= 1
+    answer = 0
+    for pair in itertools.combinations(galaxies, 2):
+        p1, p2 = pair
+        row_delta = abs(p1[0] - p2[0])
+        row_range = range(*sorted([p1[0], p2[0]]))
+        for row in empty_rows:
+            if row in row_range:
+                row_delta += universe_expansion
+        col_delta = abs(p1[1]-p2[1])
+        col_range = range(*sorted([p1[1], p2[1]]))
+        for col in empty_columns:
+            if col in col_range:
+                col_delta += universe_expansion
+        # print(pair, (row_delta + col_delta))
+        answer += (row_delta + col_delta)
+    print(f"The sum of the distances between galaxies is {answer}")
 
