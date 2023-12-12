@@ -884,7 +884,6 @@ def day12(example=False, reload=False,):
 
 
 # Memoization FTW!
-import functools
 @functools.lru_cache(maxsize=None)
 def day12_recursion(s, in_a_spring, sizes):
     if s == "":  # end of the string.
