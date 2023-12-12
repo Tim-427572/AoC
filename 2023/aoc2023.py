@@ -454,7 +454,7 @@ def _day5_range(ranges, this_map):
             if right[1] > right[0]:
                 new_ranges.append(right)
         ranges = new_ranges
-    return result + rangespython -m pip install --proxy http://proxy-dmz.intel.com:911
+    return result + ranges
 
 
 def day5(example=False, reload=False):
@@ -837,3 +837,114 @@ def day11(universe_expansion = 2, example=False, reload=False,):
         answer += (row_delta + col_delta)
     print(f"The sum of the distances between galaxies is {answer}")
 
+
+def day12(example=False, reload=False,):
+    """
+    """
+    if example:
+        day = ("???.### 1,1,3\n"
+               ".??..??...?##. 1,1,3\n"
+               "?#?#?#?#?#?#?#? 1,3,1,6\n"
+               "????.#...#... 4,1,1\n"
+               "????.######..#####. 1,6,5\n"
+               "?###???????? 3,2,1\n")
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    p = get_input(day, "\n", cast=None, override=reload)
+    #n = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    p1 = p2 = 0
+    for l in p:
+        #print(l)
+        sol_set = set()
+        test_set = set()
+        m,a = l.split(" ")
+        a = list(map(int, a.split(",")))
+        for r in itertools.product([".","#"], repeat=m.count("?")):
+            t=m
+            for i in r:
+                t= t[:t.index("?")] + i + t[t.index("?")+1:]
+            if t in test_set:
+                continue
+            test_set.add(t)
+            s = re.findall("[#]+", t)
+            #print(t,s)
+            #input()
+            if len(s) != len(a):
+                continue
+            si = [len(x) for x in s]
+            if si == a:
+                sol_set.add(t)
+        #print(sol_set)
+        print(m, a, len(sol_set))
+        p1 += len(sol_set)
+        #input()
+            
+    print(f"p1 {p1}")
+    print(f"p2 {p2}")
+
+
+# Memoization FTW!
+import functools
+@functools.lru_cache(maxsize=None)
+def day12_recursion(s, in_a_spring, sizes):
+    if s == "":  # end of the string.
+        if in_a_spring is None and len(sizes) == 0: # Not in a spring and nothing left in the sizes list, success
+            return 1
+        elif in_a_spring is not None and len(sizes) == 1 and in_a_spring == sizes[0]:  # Ending on a spring and the size matches.
+            return 1
+        else:
+            return 0
+    possible_springs = s.count("#") + s.count("?")
+    this_chr = s[0]
+    remaining_str = s[1:]
+    # Attempt early abort to increase speed.
+    if in_a_spring is None:
+        if possible_springs < sum(sizes): # Not enough room.
+            return 0
+    else:
+        if (len(sizes) == 0 or  # Abort if we are in a spring but there are no more sizes.
+            possible_springs + in_a_spring < sum(sizes) or  # Not enough characters which could be # left.
+            this_chr == "." and in_a_spring != sizes[0]):  # This is the end of a spring section but the size does not match.
+            return 0
+    remaining_sizes = sizes[1:]
+    possible_arrangements = 0
+    if in_a_spring is None:  # In between springs
+        if this_chr in ["#","?"]:  # Starting a new spring.
+            possible_arrangements += day12_recursion(remaining_str, 1, sizes)
+        if this_chr in ["?","."]:  # Search for the next spring.
+            possible_arrangements += day12_recursion(remaining_str, None, sizes)    
+    else:  # Inside the run of a spring.
+        if this_chr == ".":  # End of this spring, start the next search.
+            possible_arrangements += day12_recursion(remaining_str, None, remaining_sizes)
+        if this_chr == "?" and in_a_spring == sizes[0]: # End of this spring because the size matches, start the next.
+            possible_arrangements += day12_recursion(remaining_str, None, remaining_sizes)
+        if this_chr in ["#","?"]:  # Continue along this spring.
+            possible_arrangements += day12_recursion(remaining_str, in_a_spring+1, sizes)
+
+    return possible_arrangements
+
+
+def day12_p2(example=False, reload=False,):
+    """
+    """
+    if example:
+        day = ("???.### 1,1,3\n"
+               ".??..??...?##. 1,1,3\n"
+               "?#?#?#?#?#?#?#? 1,3,1,6\n"
+               "????.#...#... 4,1,1\n"
+               "????.######..#####. 1,6,5\n"
+               "?###???????? 3,2,1\n")
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    p = get_input(day, "\n", cast=None, override=reload)
+    #n = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    p2 = 0
+    for l in p:
+        s, sizes = l.split(" ")
+        sizes = list(map(int, sizes.split(",")))
+        sizes = tuple(sizes * 5)  # Need this to be hashable for memoization!
+        unfolded = s
+        for _ in range(4):
+            unfolded += "?" + s
+        p2 += day12_recursion(unfolded, None, sizes)
+    print(p2)

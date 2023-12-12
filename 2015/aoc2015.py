@@ -10,6 +10,7 @@ import socket
 import string
 import requests
 import collections
+import heapq
 # The Value from the session cookie used to make the webaccess.
 # You could hardcode this with your value or set it at the interactive prompt.
 # This is because I am lazy and didn't want to figure out how to scrape the cookie or work with the OAuth.
@@ -1004,6 +1005,116 @@ def _day21():
     print(f"Part 2 - The most expensive losing fight was {max(cost_of_losing_fights)}")
 
 
+class Spell(collections.namedtuple("base_spell", "name cost effect turns damage heal armor mana")):
+    def __new__(cls, name, cost, effect=False, turns=None, damage=0, heal=0, armor=0, mana=0):
+        return super().__new__(cls, name, cost, effect, turns, damage, heal, armor, mana)
+
+
+spells = (
+    Spell('Magic Missile', 53,  damage=4),
+    Spell('Drain',         73,  damage=2, heal=2),
+    Spell('Shield',        113, effect=True, turns=6, armor=7),
+    Spell('Poison',        173, effect=True, turns=6, damage=3),
+    Spell('Recharge',      229, effect=True, turns=5, mana=101),
+)
+
+
+class State(object):
+    def __init__(self, hp, mana, boss_hp, boss_damage, mana_spent=0, effects=None, hard=False, parent=None, spell_cast=None):
+        self.hp = hp
+        self.mana = mana
+        self.boss_hp = boss_hp
+        self.boss_damage = boss_damage
+        self.mana_spent = mana_spent
+        self.effects = effects or ()
+        self.hard = hard
+        self._parent = parent
+        self._spell_cast = spell_cast
+    def __eq__(self, other):
+        if not isinstance(other, State):
+            return NotImplemented
+        return all(getattr(self, k) == getattr(other, k) for k in vars(self) if k[0] != "_")
+
+    def __hash__(self):
+        return reduce(lambda a, b: a ^ hash(b), (v for k, v in vars(self).items() if k[0] != "_"), 0)
+
+    def iter_path(self):
+        if self._parent is None:
+            return
+        yield from self._parent.iter_path()
+        yield self._spell_cast
+
+    def process_effects(self, effects, hp, mana, boss_hp):
+        remaining_effects = []
+        armor = 0
+        for timer, effect in self.effects:
+            hp += effect.heal
+            mana += effect.mana
+            boss_hp -= effect.damage
+            armor = max(armor, effect.armor)
+            if timer > 1:
+                remaining_effects.append((timer - 1, effect))
+        return tuple(remaining_effects), hp, mana, boss_hp, armor
+
+    def boss_turn(self):
+        self.effects, self.hp, self.mana, self.boss_hp, armor = (self.process_effects(self.effects, self.hp, self.mana, self.boss_hp))
+        if self.boss_hp > 0:
+            self.hp -= max(1, self.boss_damage - armor)
+
+    def transitions(self):
+        # Plater first
+        effects, hp, mana, boss_hp, __ = self.process_effects(self.effects, self.hp - int(self.hard), self.mana, self.boss_hp)
+        for spell in spells:
+            if spell.cost > mana or any(spell is s for t, s in effects):
+                continue  # Skip if not enough mana or in effect.
+            new_state = State(hp, mana - spell.cost, boss_hp, self.boss_damage, self.mana_spent + spell.cost, effects, hard=self.hard, parent=self, spell_cast=spell.name)
+            if not spell.effect:
+                new_state.hp += spell.heal
+                new_state.boss_hp -= spell.damage
+            else:
+                new_state.effects = new_state.effects + ((spell.turns, spell),)
+            # Boss turn
+            new_state.boss_turn()
+            # Stop if dead.
+            if new_state.hp > 0:
+                yield new_state
+
+
+def search_a_star(start):
+    open_states = {start}
+    pqueue = [(0,start)]
+    closed_states = set()
+    unique = itertools.count()
+    while open_states:
+        current = heapq.heappop(pqueue)[-1]
+        if current.boss_hp < 1:
+            return current
+        open_states.remove(current)
+        closed_states.add(current)
+        for state in current.transitions():
+            if state in closed_states or state in open_states:
+                continue
+            open_states.add(state)
+            heapq.heappush(pqueue, (state.mana_spent, next(unique), state))
+
+
+def day22():
+    boss_hp = 55
+    boss_damage = 8
+    player_hp = 50
+    player_mana = 500
+    start = State(player_hp, player_mana, boss_hp, boss_damage)
+    end = search_a_star(start)
+    print(f"Part 1: {end.mana_spent}")
+    
+    start.hard = True
+    end = search_a_star(start)
+    print(f"Part 2: {end.mana_spent}")
+
+
+
+
+
 class Computer:
     def __init__(self, **kwargs):
         self.registers = {"a":0, "b":0}
@@ -1090,6 +1201,28 @@ def _day24():
     W = 50
     n = 1
     print(_knapSack(W, wt, val, n)) 
+
+
+def day25():
+    y=1
+    x=1
+    cur_val = 20151125
+    mul = 252533
+    div = 33554393
+    while True:
+        if y == 1:
+            y = x + 1
+            x = 1
+        else:
+            y -= 1
+            x += 1
+        cur_val = (cur_val * mul) % div
+        if y % 100 == 0 and x == 1:
+            print(y, x, cur_val)
+        if y == 2947 and x == 3029:
+            print(y, x, cur_val)
+            break
+
 
 
 def go(day=6):
