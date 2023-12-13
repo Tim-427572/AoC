@@ -947,3 +947,206 @@ def day12_p2(example=False, reload=False,):
             unfolded += "?" + s
         p2 += day12_recursion(unfolded, None, sizes)
     print(p2)
+
+
+def day13(example=False, reload=False,):
+    if example:
+        day = """#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#.
+
+#...##..#
+#....#..#
+..##..###
+#####.##.
+#####.##.
+..##..###
+#....#..#
+"""
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    p = get_input(day, "\n", cast=None, override=reload)
+    temp = []
+    maps = []
+    for l in p:
+        if l == "":
+            maps.append(np.array(temp, dtype=str))
+            temp = []
+        else:
+            temp.append(list(l))
+    maps.append(np.array(temp))
+    
+    p1r = p1c = 0
+    #for i in maps:
+    #    print_np(i)
+    #    print("foo")
+    for n in maps:
+        print_np(n)
+        found = False
+        for c in range(1,len(n[0])):
+            m = 0
+            for r in n:
+                #print(r, c)
+                if c < len(r)//2 + 1:
+                    #print("a",r[:c], np.flip(r[c:c+len(r[:c])]))
+                    if np.array_equal(r[:c], np.flip(r[c:c+len(r[:c])])):
+                        m += 1
+                else:
+                    #print("b",r[c-len(r[c:]):c], np.flip(r[c:]))
+                    if np.array_equal(r[c-len(r[c:]):c], np.flip(r[c:])):
+                        m += 1
+            if m == len(n):
+                p1c += c
+                print("col",c)
+                found = True
+                #print("found",c)
+                break
+            #input()
+        t = n.T
+        for c in range(1,len(t[0])):
+            m = 0
+            for r in t:
+                #print(r, c)
+                if c < len(r)//2 + 1:
+                    #print("a",r[:c], np.flip(r[c:c+len(r[:c])]))
+                    if np.array_equal(r[:c], np.flip(r[c:c+len(r[:c])])):
+                        m += 1
+                else:
+                    #print("b",r[c-len(r[c:]):c], np.flip(r[c:]))
+                    if np.array_equal(r[c-len(r[c:]):c], np.flip(r[c:])):
+                        m += 1
+            if m == len(t):
+                p1r += c
+                print("row",c)
+                found = True
+                #print("found",c)
+                break
+            #input()
+        print(p1c, p1r)
+        if found == False:
+            input()
+
+    print(p1c)
+    print(p1r)
+    print(p1r*100 + p1c)
+
+
+def ref(n,old_c=None,old_r=None):
+    p1r = p1c = 0
+    for c in range(1,len(n[0])):
+        m = 0
+        for r in n:
+            #print(r, c)
+            if c < len(r)//2 + 1:
+                #print("a",r[:c], np.flip(r[c:c+len(r[:c])]))
+                if np.array_equal(r[:c], np.flip(r[c:c+len(r[:c])])):
+                    m += 1
+            else:
+                #print("b",r[c-len(r[c:]):c], np.flip(r[c:]))
+                if np.array_equal(r[c-len(r[c:]):c], np.flip(r[c:])):
+                    m += 1
+        if m == len(n):
+            if old_c is None or c != old_c:
+                p1c += c
+                #print("col",c)
+                found = True
+                #print("found",c)
+                break
+        #input()
+    t = n.T
+    for c in range(1,len(t[0])):
+        m = 0
+        for r in t:
+            #print(r, c)
+            if c < len(r)//2 + 1:
+                #print("a",r[:c], np.flip(r[c:c+len(r[:c])]))
+                if np.array_equal(r[:c], np.flip(r[c:c+len(r[:c])])):
+                    m += 1
+            else:
+                #print("b",r[c-len(r[c:]):c], np.flip(r[c:]))
+                if np.array_equal(r[c-len(r[c:]):c], np.flip(r[c:])):
+                    m += 1
+        if m == len(t):
+            if old_r is None or old_r != c:
+                p1r += c
+                #print("row",c)
+                found = True
+                #print("found",c)
+                break
+        #input()
+    #print(p1c, p1r)
+    #if found == False:
+    #    input()
+    return(p1c,p1r)
+
+
+def day13_p2(example=False, reload=False,):
+    import copy
+    if example:
+        day = """#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#.
+
+#...##..#
+#....#..#
+..##..###
+#####.##.
+#####.##.
+..##..###
+#....#..#
+"""
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    p = get_input(day, "\n", cast=None, override=reload)
+    temp = []
+    maps = []
+    for l in p:
+        if l == "":
+            maps.append(np.array(temp, dtype=str))
+            temp = []
+        else:
+            temp.append(list(l))
+    maps.append(np.array(temp))
+    
+    p1r = p1c = 0
+    #for i in maps:
+    #    print_np(i)
+    #    print("foo")
+    d={".":"#","#":"."}
+    for n in maps:
+        
+        print("!!!")
+        print_np(n)
+        tc, tr = ref(n)
+        print("old", tr, tc)
+        for r,c in itertools.product(range(len(n)), range(len(n[0]))):
+            #print("row",r,"col",c)
+            tmp = copy.deepcopy(n)
+            #print(r,c)
+            tmp[r,c] = d[tmp[r,c]]
+            #print_np(tmp)
+            nc, nr = ref(tmp,tc,tr)
+            #print(nr,nc)
+            #input()
+            if nc == 0 and nr == 0:
+                continue
+            #input()
+            if nc != tc or nr != tr:
+                print("new", nr, nc)
+                print("smudge", r, c)
+                if nc != tc:
+                    p1c += nc
+                if nr != tr:
+                    p1r += nr
+                break
+        print(p1r, p1c)
+        #input()
+    print(p1c + p1r*100)
