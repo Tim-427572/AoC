@@ -1014,6 +1014,37 @@ def day13(example=False, reload=False):
     print(f"Part 2 answer: {p2_answer}")
 
 
+@functools.lru_cache(maxsize=None)
+def tilt_day14(round_tup, cube_tup, size, directions):
+    global move_dict
+    rock_set = set(round_tup)
+    for direction in directions:
+        moving = True
+        while moving:
+            moving = False
+            new_rocks = set()
+            while rock_set:
+                prev_y, prev_x = rock_set.pop()
+                while True:
+                    new_y = prev_y + move_dict[direction][0]
+                    new_x = prev_x + move_dict[direction][1]
+                    new_pos = (new_y, new_x)
+                    if (new_y < 0 or new_y >= size[0] or
+                        new_x < 0 or new_x >= size[1] or
+                        new_pos in cube_tup or
+                        new_pos in new_rocks or
+                        new_pos in rock_set):
+                        new_y = prev_y
+                        new_x = prev_x
+                        break
+                    prev_y = new_y
+                    prev_x = new_x
+                    moving = True
+                new_rocks.add((new_y, new_x))
+            rock_set = new_rocks
+    return tuple(rock_set)
+
+
 def day14(example=False, reload=False):
     """
     """
@@ -1034,52 +1065,43 @@ O.#..O.#.#
     p = get_input(day, "\n", cast=list, override=reload)
     # n = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
     rocks = []
+    cubes = []
+    size = (len(p), len(p[0]))
     for r,l in enumerate(p):
         for c,ch in enumerate(l):
             if ch == "O":
-                this_rock = Point_Object(x=c,y=r,shape="O")
-                rocks.append(this_rock)
-    move = itertools.cycle("nwse")
-    op = {"n":"s","s":"n","e":"w","w":"e"}
+                rocks.append((r,c))
+            elif ch == "#":
+                cubes.append((r,c))
+    rock_tup = tuple(rocks)
+    cube_tup = tuple(cubes)
     cycle = {}
-    for spin in range(1,1000000000):
-        for d in "nwse":
-            #print(d)
-            moving = True
-            while moving:
-                moving = False
-                for rock in rocks:
-                    while True:
-                        p[rock.position()[0]][rock.position()[1]] = "."
-                        rock.move(d)
-                        #print(rock.position())
-                        if rock.position()[0] in range(len(p)) and rock.position()[1] in range(len(p[0])) and p[rock.position()[0]][rock.position()[1]] != ".":
-                            rock.move(op[d])
-                            p[rock.position()[0]][rock.position()[1]] = "O"
-                            break
-                        elif rock.position()[0] not in range(len(p)) or rock.position()[1] not in range(len(p[0])):
-                            rock.move(op[d])
-                            p[rock.position()[0]][rock.position()[1]] = "O"
-                            break
-                        else:
-                            p[rock.position()[0]][rock.position()[1]] = "O"
-                            moving = True
-        r_tup = tuple(r.position() for r in rocks)
+    # for spin in range(1, 5):
+    for spin in range(1, 1000000000):
+        rock_tup = tilt_day14(rock_tup, cube_tup, size, "nwse")
+
+        """
+        print("spin",spin)
+        o = [list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),]
+        for r in rock_tup:
+            o[r[0]][r[1]] = "O"
+        for c in cube_tup:
+            o[c[0]][c[1]] = "#"
+        for r in o:
+            print("".join(r))
+        input()
+        """
+
+
         # Found cycle and final result is evenly divisible by our current location.
-        if r_tup in cycle and (1000000000 - spin) % (spin - cycle[r_tup]) == 0:
+        if rock_tup in cycle and (1000000000 - spin) % (spin - cycle[rock_tup]) == 0:
             p1 = 0
-            for r in rocks:
-                p1 += len(p) - r.position()[0]
+            for r in rock_tup:
+                p1 += size[0] - r[0]
             print(p1)
-            break
-        cycle[r_tup] = spin
+            break            
+        cycle[rock_tup] = spin
         print("spin",spin)
 
-    """
-    o = [list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),]
-    for r in rocks:
-        o[r.position()[0]][r.position()[1]] = "O"
-    for r in o:
-        print("".join(r))
-    """
+
 
