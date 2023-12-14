@@ -936,7 +936,7 @@ def day12_p2(example=False, reload=False,):
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
     p = get_input(day, "\n", cast=None, override=reload)
-    #n = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    # n = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
     p2 = 0
     for l in p:
         s, sizes = l.split(" ")
@@ -951,6 +951,7 @@ def day12_p2(example=False, reload=False,):
 
 def _day13_reflection(array):
     reflection_row = smudge_row = 0  # Using 0 makes the math work.
+    # Walk the array rows and get equal sizes slices (remove anything that does not overlap)
     for row in range(1, array.shape[0]):
         top = array[:row]
         bottom = array[row:]
@@ -958,16 +959,21 @@ def _day13_reflection(array):
             bottom = bottom[:top.shape[0]]
         else:
             top = top[bottom.shape[0] * -1:]
+        # Subtract the top from the flipped bottom
         diff = top - np.flip(bottom, axis=0)
-        if np.count_nonzero(diff) == 0:
+        if np.count_nonzero(diff) == 0:  # Exact match => symmetric
             reflection_row = row
-        if np.count_nonzero(diff) == 1:
+        if np.count_nonzero(diff) == 1:  # Exactly one miss-match => smudge
             smudge_row = row
     return reflection_row, smudge_row
-         
 
 
-def day13(example=False, reload=False,):
+def day13(example=False, reload=False):
+    """
+    Find reflections.
+
+    Uses numpy to find matching arrays.
+    """
     if example:
         day = ("#.##..##.\n"
                "..#.##.#.\n"
@@ -986,24 +992,94 @@ def day13(example=False, reload=False,):
                "#....#..#\n")
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    p = get_input(day, "\n", cast=None, override=reload)
+    puzzle = get_input(day, "\n", cast=None, override=reload)
     temp = []
     maps = []
-    to_int_dict = {".":0, "#":1}
-    for l in p:
-        if l == "":
+    to_int_dict = {".": 0, "#": 1}
+    for line in puzzle:
+        if not line:
             maps.append(np.array(temp))
             temp = []
         else:
-            temp.append(list(map(lambda x: to_int_dict[x], list(l))))
+            temp.append([to_int_dict[x] for x in list(line)])
     maps.append(np.array(temp))
     p1_answer = p2_answer = 0
     for this_map in maps:
-        reflect_row, smudge_row = _day13_reflection(this_map)
-        reflect_col, smudge_col = _day13_reflection(this_map.T)
-        # print("row", reflect_row, smudge_row)
-        # print("col", reflect_col, smudge_col)
+        reflect_row, smudge_row = _day13_reflection(this_map)  # Check horizontal symmetry
+        reflect_col, smudge_col = _day13_reflection(this_map.T)  # Check vertical symmetry
+        # Add the stuff up, because the function returns 0 when it doesn't exist just blindly add.
         p1_answer += (reflect_col + (reflect_row * 100))
         p2_answer += (smudge_col + (smudge_row * 100))
     print(f"Part 1 answer: {p1_answer}")
     print(f"Part 2 answer: {p2_answer}")
+
+
+def day14(example=False, reload=False):
+    """
+    """
+    if example:
+        day = """O....#....
+O.OO#....#
+.....##...
+OO.#O....O
+.O.....O#.
+O.#..O.#.#
+..O..#O..O
+.......O..
+#....###..
+#OO..#....
+"""
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    p = get_input(day, "\n", cast=list, override=reload)
+    # n = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    rocks = []
+    for r,l in enumerate(p):
+        for c,ch in enumerate(l):
+            if ch == "O":
+                this_rock = Point_Object(x=c,y=r,shape="O")
+                rocks.append(this_rock)
+    move = itertools.cycle("nwse")
+    op = {"n":"s","s":"n","e":"w","w":"e"}
+    cycle = {}
+    for spin in range(1,1000000000):
+        for d in "nwse":
+            #print(d)
+            moving = True
+            while moving:
+                moving = False
+                for rock in rocks:
+                    while True:
+                        p[rock.position()[0]][rock.position()[1]] = "."
+                        rock.move(d)
+                        #print(rock.position())
+                        if rock.position()[0] in range(len(p)) and rock.position()[1] in range(len(p[0])) and p[rock.position()[0]][rock.position()[1]] != ".":
+                            rock.move(op[d])
+                            p[rock.position()[0]][rock.position()[1]] = "O"
+                            break
+                        elif rock.position()[0] not in range(len(p)) or rock.position()[1] not in range(len(p[0])):
+                            rock.move(op[d])
+                            p[rock.position()[0]][rock.position()[1]] = "O"
+                            break
+                        else:
+                            p[rock.position()[0]][rock.position()[1]] = "O"
+                            moving = True
+        r_tup = tuple(r.position() for r in rocks)
+        # Found cycle and final result is evenly divisible by our current location.
+        if r_tup in cycle and (1000000000 - spin) % (spin - cycle[r_tup]) == 0:
+            p1 = 0
+            for r in rocks:
+                p1 += len(p) - r.position()[0]
+            print(p1)
+            break
+        cycle[r_tup] = spin
+        print("spin",spin)
+
+    """
+    o = [list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),list(".........."),]
+    for r in rocks:
+        o[r.position()[0]][r.position()[1]] = "O"
+    for r in o:
+        print("".join(r))
+    """
+
