@@ -1126,18 +1126,19 @@ def day15(example=False, reload=False):
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
     p = get_input(day, ",", cast=None, override=reload)
     p1 = 0
+    # Note: this solution only works in later versions of python where the dictionary keys are ordered.
     boxes = collections.defaultdict(dict)
     for l in p:
         p1 += hashit(l.strip("\n"))
         if "=" in l:
             name, num = l.split("=")
             box = hashit(name)
-            boxes[box][name] = num
+            boxes[box][name] = num  # If it exists replace it, if it's not there append it at the end.
         if "-" in l:
             name = l.split("-")[0]
             box = hashit(name)
-            if name in boxes[box]:
-                boxes[box].pop(name)
+            if name in boxes[box]:  # Is there some way to pop without checking if it is there first?
+                boxes[box].pop(name)  # Pop will remove the key, effectively re-ordering the lenses in the box.
     p2 = []
     for b in boxes:
         t = 0
