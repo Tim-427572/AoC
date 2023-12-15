@@ -1077,7 +1077,7 @@ O.#..O.#.#
     cube_tup = tuple(cubes)
     cycle = {}
     # for spin in range(1, 5):
-    for spin in range(1, 1000000000):
+    for spin in range(1, 1000):
         rock_tup = tilt_day14(rock_tup, cube_tup, size, "nwse")
 
         """
@@ -1092,16 +1092,69 @@ O.#..O.#.#
         input()
         """
 
-
+        p1 = 0
+        for r in rock_tup:
+            p1 += size[0] - r[0]
         # Found cycle and final result is evenly divisible by our current location.
-        if rock_tup in cycle and (1000000000 - spin) % (spin - cycle[rock_tup]) == 0:
-            p1 = 0
-            for r in rock_tup:
-                p1 += size[0] - r[0]
+        if rock_tup in cycle and (1000000000 - spin) % (spin - cycle[rock_tup]) == 0 and False:
             print(p1)
             break            
         cycle[rock_tup] = spin
-        print("spin",spin)
+        print("step",spin, "value", p1)
 
 
+@functools.lru_cache(maxsize=None)
+def hashit(string):
+    """
+    HASH - Holiday ASCII String Helper function.
+
+    Day 15 lens name hashing function.
+    """
+    i = 0
+    for l in string:
+        i += ord(l)
+        i = i * 17
+        i = i % 256
+    return i
+
+
+def day15(example=False, reload=False):
+    """Make a hash and put the lenses into the correct box."""
+    if example:  # noqa: SIM108
+        day = """rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7"""
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    p = get_input(day, ",", cast=None, override=reload)
+    p1 = 0
+    boxes = collections.defaultdict(dict)
+    for l in p:
+        p1 += hashit(l.strip("\n"))
+        if "=" in l:
+            name, num = l.split("=")
+            box = hashit(name)
+            boxes[box][name] = num
+        if "-" in l:
+            name = l.split("-")[0]
+            box = hashit(name)
+            if name in boxes[box]:
+                boxes[box].pop(name)
+    p2 = []
+    for b in boxes:
+        t = 0
+        if boxes[b]:
+            x = b + 1
+            for j, l in enumerate(boxes[b]):
+                y = j + 1
+                z = int(boxes[b][l])
+                t += x * y * z
+                # print(x,y,z,t)
+
+            p2.append(t)
+    print("Part 1", p1)
+    # print(p2)
+    print("Part 2", sum(p2))
+
+
+
+    # n = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
 
