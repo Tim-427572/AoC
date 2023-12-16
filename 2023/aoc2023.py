@@ -1111,8 +1111,8 @@ def hashit(string):
     Day 15 lens name hashing function.
     """
     i = 0
-    for l in string:
-        i += ord(l)
+    for char in string:
+        i += ord(char)
         i = i * 17
         i = i % 256
     return i
@@ -1124,38 +1124,23 @@ def day15(example=False, reload=False):
         day = """rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7"""
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    p = get_input(day, ",", cast=None, override=reload)
-    p1 = 0
-    # Note: this solution only works in later versions of python where the dictionary keys are ordered.
+    puzzle = get_input(day, ",", cast=None, override=reload)
+    p1_answer = 0
+    # Note: this solution only works in Python 3.7+ where the dictionary keys are insertion ordered.
     boxes = collections.defaultdict(dict)
-    for l in p:
-        p1 += hashit(l.strip("\n"))
-        if "=" in l:
-            name, num = l.split("=")
-            box = hashit(name)
-            boxes[box][name] = num  # If it exists replace it, if it's not there append it at the end.
-        if "-" in l:
-            name = l.split("-")[0]
-            box = hashit(name)
-            if name in boxes[box]:  # Is there some way to pop without checking if it is there first?
-                boxes[box].pop(name)  # Pop will remove the key, effectively re-ordering the lenses in the box.
-    p2 = []
-    for b in boxes:
-        t = 0
-        if boxes[b]:
-            x = b + 1
-            for j, l in enumerate(boxes[b]):
-                y = j + 1
-                z = int(boxes[b][l])
-                t += x * y * z
-                # print(x,y,z,t)
-
-            p2.append(t)
-    print("Part 1", p1)
-    # print(p2)
-    print("Part 2", sum(p2))
-
-
-
-    # n = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    for line in puzzle:
+        p1_answer += hashit(line.strip("\n"))
+        label, number = re.split("[=-]", line.strip("\n"))
+        box = hashit(label)
+        if number:
+            boxes[box][label] = int(number)
+        else:
+            boxes[box].pop(label, None)
+    p2_answer = 0
+    for box, labels in boxes.items():
+        if labels:
+            for index, (_, value) in enumerate(labels.items()):
+                p2_answer += ((box + 1) * (index + 1) * value)
+    print("Part 1", p1_answer)
+    print("Part 2", p2_answer)
 
