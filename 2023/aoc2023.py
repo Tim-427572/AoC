@@ -138,7 +138,10 @@ def get_np_input(day, seperator, cast=None, splitter=None, dtype=None, override=
     else:
         temp = []
         for r in day_input:
-            temp.append(splitter(r))
+            foo = splitter(r)
+            #print(foo)
+            temp.append(foo)
+            #temp.append(splitter(r))
         return np.array(temp, dtype=dtype)
 
 
@@ -151,7 +154,7 @@ def print_np(array):
             print("".join(row))
     else:
         for row in array:
-            print(np.array2string(row, separator="")[1:-1])
+            print(np.array2string(row, separator="", max_line_width=120)[1:-1])
 
 
 """
@@ -227,25 +230,58 @@ class Point_Object:
 
 
 # A thing that isn't really a tuple which makes tracking 2D points easier.
-class Coordinate(tuple):
+class Coordinate(tuple):  # noqa: SLOT001
+    """
+    Like a tuple but not.
+
+    Used to store 2D position but still allow hashing and (x,y) notation which I like.
+    """
+
     def __add__(self, other):
+        """Add two coordinates or a coordinate and a tuple."""
         return Coordinate(x + y for x, y in zip(self, other))
+    def __lt__(self, other):
+        """Use to test if coordinate in 2D array."""
+        return all(x < y for x, y in zip(self, other))
+    def __le__(self, other):
+        """Use to test if coordinate in 2D array."""
+        return all(x <= y for x, y in zip(self, other))
+    def __gt__(self, other):
+        """Use to test if coordinate in 2D array."""
+        return all(x > y for x, y, in zip(self, other))
+    def __ge__(self, other):
+        """Use to test if coordinate in 2D array."""
+        return all(x >= y for x, y, in zip(self, other))
     def __setitem__(self, key, value):
-        l = list(self)
-        l[key] = value
-        print(l)
-        return Coordinate(tuple(l))
+        """Ok, look it really isn't a tuple."""
+        self_list = list(self)
+        self_list[key] = value
+        # print(l)
+        return Coordinate(tuple(self_list))
 
 
 # Dictionary to make walking the 2D maps easier.
-move_dict = {"u":(-1, 0), "n":(-1, 0), "up":(-1, 0), "north":(-1, 0),
-             "d":(1, 0), "s":(1, 0), "down":(1,0), "south":(1, 0),
-             "r":(0, 1), "e":(0, 1), "right":(0, 1), "east":(0, 1),
-             "l":(0, -1), "w":(0, -1), "left":(0, -1), "west":(0, -1),
-             "ur":(-1, 1), "ne":(-1, 1), "up-right":(-1, 1), "north-east":(-1, 1),
-             "dr":(1, 1), "se":(1, 1), "down-right":(1, 1), "south-east":(1, 1),
-             "ul":(-1, -1), "nw":(-1, -1), "up-left":(-1, -1), "north-west":(-1, -1),
-             "dl":(1, -1), "sw":(1, -1), "down-left":(1, -1), "south-west":(1, -1)}
+move_dict = {"u": (-1, 0), "n": (-1, 0), "up": (-1, 0), "north": (-1, 0),
+             "d": (1, 0), "s": (1, 0), "down": (1, 0), "south": (1, 0),
+             "r": (0, 1), "e": (0, 1), "right": (0, 1), "east": (0, 1),
+             "l": (0, -1), "w": (0, -1), "left": (0, -1), "west": (0, -1),
+             "ur": (-1, 1), "ne": (-1, 1), "up-right": (-1, 1), "north-east": (-1, 1),
+             "dr": (1, 1), "se": (1, 1), "down-right": (1, 1), "south-east": (1, 1),
+             "ul": (-1, -1), "nw": (-1, -1), "up-left": (-1, -1), "north-west": (-1, -1),
+             "dl": (1, -1), "sw": (1, -1), "down-left": (1, -1), "south-west": (1, -1)}
+
+_right = {"r": "d", "e": "s", "right": "down", "east": "south",
+          "l": "u", "w": "n", "left": "up", "west": "north",
+          "u": "r", "n": "e", "up": "right", "north": "east",
+          "d": "l", "s": "w", "down": "left", "south": "west"}
+
+_left = {"r": "u", "e": "n", "right": "up", "east": "north",
+         "l": "d", "w": "s", "left": "down", "west": "south",
+          "u": "l", "n": "w", "up": "left", "north": "west",
+          "d": "r", "s": "e", "down": "right", "south": "east"}
+
+turn_dict = {"r": _right, "right": _right, "cw": _right, "clockwise": _right,
+             "l": _left, "left": _left, "ccw": _left, "counterclockwise": _left}
 
 
 def dfs(graph, node):  # Example function for DFS
@@ -1124,23 +1160,110 @@ def day15(example=False, reload=False):
         day = """rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7"""
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    puzzle = get_input(day, ",", cast=None, override=reload)
-    p1_answer = 0
+    puzzle = get_input(day, ",", cast=lambda x: x.strip("\n"), override=reload)
+    p1_answer = p2_answer = 0
     # Note: this solution only works in Python 3.7+ where the dictionary keys are insertion ordered.
     boxes = collections.defaultdict(dict)
     for line in puzzle:
-        p1_answer += hashit(line.strip("\n"))
-        label, number = re.split("[=-]", line.strip("\n"))
+        p1_answer += hashit(line)
+        label, number = re.split("[=-]", line)
         box = hashit(label)
         if number:
             boxes[box][label] = int(number)
         else:
             boxes[box].pop(label, None)
-    p2_answer = 0
     for box, labels in boxes.items():
         if labels:
             for index, (_, value) in enumerate(labels.items()):
                 p2_answer += ((box + 1) * (index + 1) * value)
     print("Part 1", p1_answer)
     print("Part 2", p2_answer)
+
+
+def d16_bfs(contraption, energized, beam, position_set):
+    """
+    Perform a BFS search.
+
+    contraption - A numpy array containing the puzzle map.
+    energized - A numpy array counting beams through each location.
+    beam - tuple ((y,x), direction)
+    """
+    global move_dict, turn_dict  # noqa: PLW0602
+    queue = [beam]
+    while queue:
+        this_pos, this_dir = queue.pop(0)
+        if (this_pos, this_dir) not in position_set:
+            position_set.add((this_pos, this_dir))
+            next_pos = this_pos + move_dict[this_dir]
+            #print(this_pos, this_dir, move_dict[this_dir], next_pos)
+            #print_np(contraption)
+            #print_np(energized)
+            #print(this_pos, this_dir, queue)
+            if (0, 0) <= next_pos < contraption.shape:  # Array bounds check
+                energized[next_pos] += 1
+                next_shape = contraption[next_pos]
+                if this_dir in "rl" and next_shape == "\\":  # Turn right
+                    queue.append((next_pos, turn_dict["right"][this_dir]))
+                elif this_dir in "rl" and next_shape == "/":  # Turn left
+                    queue.append((next_pos, turn_dict["left"][this_dir]))
+                elif this_dir in "ud" and next_shape == "/":  # Turn right
+                    queue.append((next_pos, turn_dict["right"][this_dir]))
+                elif this_dir in "ud" and next_shape == "\\":  # Turn left
+                    queue.append((next_pos, turn_dict["left"][this_dir]))
+                elif this_dir in "rl" and next_shape == "|":  # Split
+                    queue.append((next_pos, turn_dict["right"][this_dir]))
+                    queue.append((next_pos, turn_dict["left"][this_dir]))
+                elif this_dir in "ud" and next_shape == "-":  # Split
+                    queue.append((next_pos, turn_dict["right"][this_dir]))
+                    queue.append((next_pos, turn_dict["left"][this_dir]))
+                else:
+                    queue.append((next_pos, this_dir))
+            #print(queue)
+            #input()
+
+
+
+def day16(example=False, reload=False):
+    """
+    """
+    if example:  # noqa: SIM108
+        day = r""".|...\....
+|.-.\.....
+.....|-...
+........|.
+..........
+.........\
+..../.\\..
+.-.-/..|..
+.|....-|.\
+..//.|....
+"""
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    contraption = get_np_input(day, "\n", cast=None, splitter=list, dtype=str, override=reload)
+    energized = np.zeros(contraption.shape, dtype=int)
+    p1_answer = p2_answer = 0
+    #print_np(contraption)
+    #print()
+    d16_bfs(contraption, energized, (Coordinate((0,-1)),'r'), set())
+    
+    #print_np(energized)
+    print("Part 1",np.count_nonzero(energized))
+    for d in "rl":
+        for r in range(contraption.shape[0]):
+            energized = np.zeros(contraption.shape, dtype=int)
+            d16_bfs(contraption, energized, (Coordinate((r,-1)), d), set())
+            e = np.count_nonzero(energized)
+            if e > p2_answer:
+                p2_answer = e
+    for d in "ud":
+        for r in range(contraption.shape[1]):
+            energized = np.zeros(contraption.shape, dtype=int)
+            d16_bfs(contraption, energized, (Coordinate((-1,r)), d), set())
+            e = np.count_nonzero(energized)
+            if e > p2_answer:
+                p2_answer = e                
+    print("Part 2",p2_answer)
+
+            
 
