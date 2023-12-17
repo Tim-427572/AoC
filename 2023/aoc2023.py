@@ -237,6 +237,8 @@ class Coordinate(tuple):  # noqa: SLOT001
     Used to store 2D position but still allow hashing and (x,y) notation which I like.
     """
 
+    def __neg__(self):
+        return Coordinate(-1 * x for x in self)
     def __add__(self, other):
         """Add two coordinates or a coordinate and a tuple."""
         return Coordinate(x + y for x, y in zip(self, other))
@@ -258,6 +260,8 @@ class Coordinate(tuple):  # noqa: SLOT001
         self_list[key] = value
         # print(l)
         return Coordinate(tuple(self_list))
+    def man_dist(self, other):
+        return abs(self[0] - other[0]) + abs(self[1] - other[1])
 
 
 # Dictionary to make walking the 2D maps easier.
@@ -1262,8 +1266,80 @@ def day16(example=False, reload=False):
             d16_bfs(contraption, energized, (Coordinate((-1,r)), d), set())
             e = np.count_nonzero(energized)
             if e > p2_answer:
-                p2_answer = e                
+                p2_answer = e
     print("Part 2",p2_answer)
 
+
+def day17_A(start, goal, min_chain, max_chain, n):
+    import heapq
+    queue = []
+    dist = {start: 0}  # No heat loss.
+    heapq.heappush(queue, (dist[start] + goal.man_dist(start[0]), start))
+
+    while queue:
+        f_dist, cur = heapq.heappop(queue)
+        #print(f_dist, cur)
+        #print(dist)
+        if cur[0] == goal:
+            return dist[cur]
+        if f_dist > dist[cur] + goal.man_dist(cur[0]):
+            continue
+        # Rules for valid neighbor positions.
+        neighbors = []
+        position, direction, length = cur
+        for d in "nsew":
+            if direction is not None:
+                if d == turn_dict["left"][turn_dict["left"][direction]]:
+                    continue
+                if d == direction and length == max_chain:
+                    continue
+                if (d not in [direction, turn_dict["left"][turn_dict["left"][direction]]] and
+                    length < min_chain):
+                    continue
+            new_pos = position + move_dict[d]
+            if not ((0, 0) <= new_pos < n.shape):  # Array bounds check
+                continue
+            new_dir = d
+            if new_dir != direction:
+                new_chain = 1
+            else:
+                new_chain = length + 1
+            neighbors.append((new_pos, new_dir, new_chain))
+        # The search...
+        for neighbor in neighbors:
+            #print(neighbor[0])
+            goal_dist = dist[cur] + n[neighbor[0]]
+            if neighbor in dist and dist[neighbor] <= goal_dist:
+                continue
+            dist[neighbor] = goal_dist
+            #print(dist[cur], neighbor)
+            heapq.heappush(queue, (dist[neighbor] + goal.man_dist(neighbor[0]), neighbor))
             
 
+
+def day17(example=False, reload=False):
+    """
+    """
+    if example:  # noqa: SIM108
+        day = """2413432311323
+3215453535623
+3255245654254
+3446585845452
+4546657867536
+1438598798454
+4457876987766
+3637877979653
+4654967986887
+4564679986453
+1224686865563
+2546548887735
+4322674655533"""
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    #p= get_input(day, ",", cast=lambda x: x.strip("\n"), override=reload)
+    n = get_np_input(day, "\n", cast=None, splitter=list, dtype=int, override=reload)
+    #print_np(n)
+    start = (Coordinate((0,0)), None, 1)
+    end = Coordinate(n.shape) + (-1,-1)
+    print("Part 1", day17_A(start, end, 0, 3, n))
+    print("Part 2", day17_A(start, end, 4, 10, n))
