@@ -1338,31 +1338,6 @@ def day17(example=False, reload=False):
     print("Part 2", day17_a_star(start, end, 4, 10, n))
 
 
-def day18_bfs(graph, coordinate, visited):
-    """
-    A BFS search? realy only takes the two paths in opposite directions around the loop.
-    """
-    global move_dict
-    queue = [coordinate]
-    """
-    """
-    while queue:
-        this_node = queue.pop(0)
-        if this_node in visited:
-            continue
-        graph[this_node] = 1
-        visited.add(this_node)
-        for d in "udlr":
-            neighbor = this_node + move_dict[d]
-            #print(this_node, neighbor)
-            if neighbor in visited:
-                continue
-            if graph[neighbor] == 1:
-                continue
-            #print(neighbor)
-            queue.append(neighbor)
-
-
 def day18(example=False, reload=False):
     # Got really tired of shoelace algorithms and just pip installed a polygon package.
     from shapely.geometry import Polygon
