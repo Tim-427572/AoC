@@ -20,6 +20,7 @@ import pyglet
 # import string
 import requests
 import functools
+import heapq
 
 # Advent of Code
 # Never did spend the time to work out how to get oAuth to work so this code expects you to
@@ -154,7 +155,7 @@ def print_np(array):
             print("".join(row))
     else:
         for row in array:
-            print(np.array2string(row, separator="", max_line_width=120)[1:-1])
+            print(np.array2string(row, separator="", max_line_width=600)[1:-1])
 
 
 """
@@ -237,7 +238,11 @@ class Coordinate(tuple):  # noqa: SLOT001
     Used to store 2D position but still allow hashing and (x,y) notation which I like.
     """
 
+    def __mul__(self, other):
+        """Multiply a scaler with this coordinate."""
+        return Coordinate(x * other for x in self)
     def __neg__(self):
+        """Turn the coordinate negative."""
         return Coordinate(-1 * x for x in self)
     def __add__(self, other):
         """Add two coordinates or a coordinate and a tuple."""
@@ -260,7 +265,8 @@ class Coordinate(tuple):  # noqa: SLOT001
         self_list[key] = value
         # print(l)
         return Coordinate(tuple(self_list))
-    def man_dist(self, other):
+    def manhattan_dist(self, other):
+        """Calculate the manhattan distance between this coordinate and another."""
         return abs(self[0] - other[0]) + abs(self[1] - other[1])
 
 
@@ -1228,60 +1234,53 @@ def d16_bfs(contraption, energized, beam, position_set):
 
 
 def day16(example=False, reload=False):
-    """
-    """
+    """Make floor wil be lava."""
     if example:  # noqa: SIM108
-        day = r""".|...\....
-|.-.\.....
-.....|-...
-........|.
-..........
-.........\
-..../.\\..
-.-.-/..|..
-.|....-|.\
-..//.|....
-"""
+        day = (".|...\\....\n"
+               "|.-.\\.....\n"
+               ".....|-...\n"
+               "........|.\n"
+               "..........\n"
+               ".........\\\n"
+               "..../.\\\\..\n"
+               ".-.-/..|..\n"
+               ".|....-|.\\\n"
+               "..//.|....\n")
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
     contraption = get_np_input(day, "\n", cast=None, splitter=list, dtype=str, override=reload)
     energized = np.zeros(contraption.shape, dtype=int)
-    p1_answer = p2_answer = 0
-    #print_np(contraption)
-    #print()
-    d16_bfs(contraption, energized, (Coordinate((0,-1)),'r'), set())
-    
-    #print_np(energized)
-    print("Part 1",np.count_nonzero(energized))
+    d16_bfs(contraption, energized, (Coordinate((0, -1)), "r"), set())
+    print("Part 1", np.count_nonzero(energized))
+    p2_answer = 0
     for d in "rl":
         for r in range(contraption.shape[0]):
             energized = np.zeros(contraption.shape, dtype=int)
-            d16_bfs(contraption, energized, (Coordinate((r,-1)), d), set())
+            d16_bfs(contraption, energized, (Coordinate((r, -1)), d), set())
             e = np.count_nonzero(energized)
             if e > p2_answer:
                 p2_answer = e
     for d in "ud":
         for r in range(contraption.shape[1]):
             energized = np.zeros(contraption.shape, dtype=int)
-            d16_bfs(contraption, energized, (Coordinate((-1,r)), d), set())
+            d16_bfs(contraption, energized, (Coordinate((-1, r)), d), set())
             e = np.count_nonzero(energized)
             if e > p2_answer:
                 p2_answer = e
-    print("Part 2",p2_answer)
+    print("Part 2", p2_answer)
 
 
-def day17_A(start, goal, min_chain, max_chain, n):
-    import heapq
+def day17_a_star(start, goal, min_chain, max_chain, n):
+    """Perform an A* search for the path with the least heat loss."""
     queue = []
     dist = {start: 0}  # No heat loss.
     heapq.heappush(queue, (dist[start] + goal.man_dist(start[0]), start))
 
-    while queue:
+    while queue:  # noqa: RET503
         f_dist, cur = heapq.heappop(queue)
-        #print(f_dist, cur)
-        #print(dist)
         if cur[0] == goal:
             return dist[cur]
+        # Heuristic?
         if f_dist > dist[cur] + goal.man_dist(cur[0]):
             continue
         # Rules for valid neighbor positions.
@@ -1293,53 +1292,201 @@ def day17_A(start, goal, min_chain, max_chain, n):
                     continue
                 if d == direction and length == max_chain:
                     continue
-                if (d not in [direction, turn_dict["left"][turn_dict["left"][direction]]] and
+                if (d not in {direction, turn_dict["left"][turn_dict["left"][direction]]} and
                     length < min_chain):
                     continue
             new_pos = position + move_dict[d]
             if not ((0, 0) <= new_pos < n.shape):  # Array bounds check
                 continue
             new_dir = d
-            if new_dir != direction:
+            if new_dir != direction:  # noqa: SIM108
                 new_chain = 1
             else:
                 new_chain = length + 1
             neighbors.append((new_pos, new_dir, new_chain))
         # The search...
         for neighbor in neighbors:
-            #print(neighbor[0])
             goal_dist = dist[cur] + n[neighbor[0]]
             if neighbor in dist and dist[neighbor] <= goal_dist:
                 continue
             dist[neighbor] = goal_dist
-            #print(dist[cur], neighbor)
             heapq.heappush(queue, (dist[neighbor] + goal.man_dist(neighbor[0]), neighbor))
-            
 
 
 def day17(example=False, reload=False):
-    """
-    """
+    """Find the path of least heat loss."""
     if example:  # noqa: SIM108
-        day = """2413432311323
-3215453535623
-3255245654254
-3446585845452
-4546657867536
-1438598798454
-4457876987766
-3637877979653
-4654967986887
-4564679986453
-1224686865563
-2546548887735
-4322674655533"""
+        day = ("2413432311323\n"
+               "3215453535623\n"
+               "3255245654254\n"
+               "3446585845452\n"
+               "4546657867536\n"
+               "1438598798454\n"
+               "4457876987766\n"
+               "3637877979653\n"
+               "4654967986887\n"
+               "4564679986453\n"
+               "1224686865563\n"
+               "2546548887735\n"
+               "4322674655533\n")
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    #p= get_input(day, ",", cast=lambda x: x.strip("\n"), override=reload)
     n = get_np_input(day, "\n", cast=None, splitter=list, dtype=int, override=reload)
-    #print_np(n)
-    start = (Coordinate((0,0)), None, 1)
-    end = Coordinate(n.shape) + (-1,-1)
-    print("Part 1", day17_A(start, end, 0, 3, n))
-    print("Part 2", day17_A(start, end, 4, 10, n))
+    start = (Coordinate((0, 0)), None, 1)
+    end = Coordinate(n.shape) + (-1, -1)  # noqa: RUF005
+    print("Part 1", day17_a_star(start, end, 0, 3, n))
+    print("Part 2", day17_a_star(start, end, 4, 10, n))
+
+
+def day18_bfs(graph, coordinate, visited):
+    """
+    A BFS search? realy only takes the two paths in opposite directions around the loop.
+    """
+    global move_dict
+    queue = [coordinate]
+    """
+    """
+    while queue:
+        this_node = queue.pop(0)
+        if this_node in visited:
+            continue
+        graph[this_node] = 1
+        visited.add(this_node)
+        for d in "udlr":
+            neighbor = this_node + move_dict[d]
+            #print(this_node, neighbor)
+            if neighbor in visited:
+                continue
+            if graph[neighbor] == 1:
+                continue
+            #print(neighbor)
+            queue.append(neighbor)
+
+
+def day18(example=False, reload=False):
+    if example:  # noqa: SIM108
+        day = """R 6 (#70c710)
+D 5 (#0dc571)
+L 2 (#5713f0)
+D 2 (#d2c081)
+R 2 (#59c680)
+D 2 (#411b91)
+L 5 (#8ceee2)
+U 2 (#caa173)
+L 1 (#1b58a2)
+U 2 (#caa171)
+R 2 (#7807d2)
+U 3 (#a77fa3)
+L 2 (#015232)
+U 2 (#7a21e3)
+"""
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    p = get_input(day, "\n", cast=None, override=reload)
+    # n = get_np_input(day, "\n", cast=None, splitter=list, dtype=int, override=reload)
+    edge_dict = {}
+    cur = Coordinate((0,0))
+    for l in p:
+        d, steps, color = l.split(" ")
+        steps = int(steps)
+        while steps:
+            edge_dict[cur] = color
+            cur = cur + move_dict[d.lower()]
+            steps -= 1
+    max_y = 0
+    max_x =0
+    min_y = 0
+    min_x = 0
+    for y,x in edge_dict:
+        if y > max_y:
+            max_y = y
+        if x > max_x:
+            max_x = x
+        if x < min_x:
+            min_x = x
+        if y < min_y:
+            min_y = y
+    print(max_y,max_x,min_x, min_y)
+    x_shift = abs(min_x)
+    y_shift = abs(min_y)
+    shift = Coordinate((y_shift, x_shift))
+    shifted = {}
+    for k,v in edge_dict.items():
+        shifted[k+shift] = v
+    n = np.zeros((max_y+y_shift+1,max_x+ x_shift+1),dtype=int)
+    b = np.zeros((max_y+y_shift+1,max_x+ x_shift+1),dtype=int)
+    for k,v in shifted.items():
+        n[k] = 1
+        b[k] = 1
+    visited = set()
+    with open(r"c:\aoc\2023\in.log", "w") as fp:
+        for r in n:
+            fp.write(np.array2string(r,  separator="", max_line_width=600000)[1:-1]+"\n")
+    y=int(input("y: "))
+    x=int(input("x: "))
+    start = Coordinate((y,x))
+    day18_bfs(n,start,visited)
+    with open(r"c:\aoc\2023\out.log", "w") as fp:
+        for r in n:
+            fp.write(np.array2string(r,  separator="", max_line_width=600000)[1:-1]+"\n")
+    #print_np(n) 
+    p1_answer = p2_answer = 0
+    print("Part 1", np.count_nonzero(n))
+    print("Part 2", p2_answer)
+
+
+# Shoelace formula to calculate the area of a polygon
+# the points must be sorted anticlockwise (or clockwise)
+def _area_(coords):
+    t=0
+    for count in range(len(coords)-1):
+        y = coords[count+1][1] + coords[count][1]
+        x = coords[count+1][0] - coords[count][0]
+        z = y * x
+        t += z
+    return abs(t/2.0)
+
+
+def day18_p2(example=False, reload=False):
+    # Got really tired of shoelace algorithms and just pip installed a polygon package.
+    from shapely.geometry import Polygon
+    if example:  # noqa: SIM108
+        day = ("R 6 (#70c710)\n"
+               "D 5 (#0dc571)\n"
+               "L 2 (#5713f0)\n"
+               "D 2 (#d2c081)\n"
+               "R 2 (#59c680)\n"
+               "D 2 (#411b91)\n"
+               "L 5 (#8ceee2)\n"
+               "U 2 (#caa173)\n"
+               "L 1 (#1b58a2)\n"
+               "U 2 (#caa171)\n"
+               "R 2 (#7807d2)\n"
+               "U 3 (#a77fa3)\n"
+               "L 2 (#015232)\n"
+               "U 2 (#7a21e3)\n")
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    puzzle = get_input(day, "\n", cast=None, override=reload)
+    p1_cur = Coordinate((0, 0))
+    p2_cur = Coordinate((0, 0))
+    p1_vertices = []
+    p2_vertices = []
+    p2_dir_decode = {"0": "r", "1": "d", "2": "l", "3": "u"}
+    for line in puzzle:
+        p1_dir, p1_dist, color = line.split(" ")
+        p1_dist = int(p1_dist)
+        p2_dir = p2_dir_decode[color[-2:-1]]
+        p2_dist = color[2:-2]
+        p2_dist = int(p2_dist, 16)
+        p1_cur = p1_cur + (Coordinate(move_dict[p1_dir.lower()]) * p1_dist)
+        p2_cur = p2_cur + (Coordinate(move_dict[p2_dir]) * p2_dist)
+        p1_vertices.append(p1_cur)
+        p2_vertices.append(p2_cur)
+    # The digger creates a 1m wide trench, need to account for the 1/2m that is outside of the immmaginary polygon line.
+    # Not 100% sure why I need to add 1 though, might have something to do with the fact it starts in a 1m pit.
+    polygon = Polygon(p1_vertices)
+    print(f"Part 1: The lagoon holds {int(polygon.length // 2) + int(polygon.area) + 1} cubic meters of lava")
+    polygon = Polygon(p2_vertices)
+    print(f"Part 2: The lagoon holds {int(polygon.length // 2) + int(polygon.area) + 1} cubic meters of lava")
+
