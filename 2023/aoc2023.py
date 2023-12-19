@@ -1385,158 +1385,101 @@ def day18(example=False, reload=False):
     print(f"Part 2: The lagoon holds {int(polygon.length // 2) + int(polygon.area) + 1} cubic meters of lava")
 
 
-def day19(example=False, reload=False):
-    if example:
-        day = """px{a<2006:qkq,m>2090:A,rfg}
-pv{a>1716:R,A}
-lnx{m>1548:A,A}
-rfg{s<537:gd,x>2440:R,A}
-qs{s>3448:A,lnx}
-qkq{x<1416:A,crn}
-crn{x>2662:A,R}
-in{s<1351:px,qqz}
-qqz{s>2770:qs,m<1801:hdj,R}
-gd{a>3333:R,R}
-hdj{m>838:A,pv}
+def day19_bfs(workflows, rejected_paths):
+    """
+    Find the path to R starting from in.
 
-{x=787,m=2655,a=1222,s=2876}
-{x=1679,m=44,a=2067,s=496}
-{x=2036,m=264,a=79,s=2244}
-{x=2461,m=1339,a=466,s=291}
-{x=2127,m=1623,a=2188,s=1013}
-"""
-    else:
-        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    p = get_input(day, "\n", cast=None, override=reload)
-    # n = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
-    load = True
-    d= {}
-    parts = []
-    p1 = p2 = 0
-    for l in p:
-        if l == "":
-            load = False
-            continue
-        if load:
-            name, inst = l.split("{")
-            inst = inst.strip("}").split(",")
-            d[name] = inst
-        else:
-            parts.append(l.strip("{").strip("}").split(","))
-    for part in parts:
-        x = int(part[0].split("=")[1])
-        m = int(part[1].split("=")[1])
-        a = int(part[2].split("=")[1])
-        s = int(part[3].split("=")[1])
-        w = "in"
-        while True:
-            for r in d[w]:
-                if ":" in r:
-                    e,dest = r.split(":")
-                    if eval(e):
-                        w = dest
-                        break
-                else:
-                    w = r
-            if w in ["A","R"]:
-                break
-        if w == "A":
-            p1+= (x+m+a+s)
-    print(d)
-    print(parts)
-    print(p1)
-    print(p2)
-
-
-def day19_bfs(d,paths):
-    visited = set()
-    queue = [{"p":["in"],"i":"in","x":[1,4000],"m":[1,4000],"a":[1,4000],"s":[1,4000]}]
-
-    while queue:          # Creating loop to visit each node
-        #this_path = queue.pop(0) 
-        #print(queue)
-        #input()
+    Record the path (used for debug)
+    Record the x,m,a,s value ranges that would result in taking this rejected path.
+    """
+    queue = [{"path": ["in"],
+              "current":"in",
+              "x":[1, 4000], "m":[1, 4000],
+              "a":[1, 4000], "s":[1, 4000]}]
+    while queue:
         this_node = queue.pop(0)
-        else_node = copy.deepcopy(this_node)
-        for i in d[this_node["i"]]:
-            if ":" in i:
+        else_node = copy.deepcopy(this_node)  # This node tracks the else condition for each instruction.
+        for instruction in workflows[this_node["current"]]:
+            if ":" in instruction:
+                # This node starts with all the previous else conditions and then will add the next if condition.
                 temp_node = copy.deepcopy(else_node)
-                equation,next_inst = i.split(":")
-                var,num = re.split("[<>]", equation)
+                equation, next_inst = instruction.split(":")
+                var, num = re.split("[<>]", equation)
                 num = int(num)
                 if "<" in equation:
                     temp_node[var][1] = min(temp_node[var][1], num - 1)
                     else_node[var][0] = max(else_node[var][0], num)
-                else:
+                else:  # it was >
                     temp_node[var][0] = max(temp_node[var][0], num + 1)
                     else_node[var][1] = min(else_node[var][1], num)
-                temp_node["i"]=next_inst
-                temp_node["p"].append(next_inst)
-                print("next",temp_node)
-                if temp_node["i"] == "R":
-                    paths.append(temp_node)
-                elif temp_node["i"] != "A":
+                # Update this node for next instruction name.
+                temp_node["current"] = next_inst
+                temp_node["path"].append(next_inst)
+                if temp_node["current"] == "R":  # Found R this is a complete rejected path
+                    rejected_paths.append(temp_node)
+                elif temp_node["current"] != "A":  # Haven't found R or A yet (drop the path if we get to A)
                     queue.append(temp_node)
-            else:
-                else_node["i"]=i
-                else_node["p"].append(i)
-                print("else", else_node)
-
-                if else_node["i"] == "R":
-                    paths.append(else_node)
-                elif else_node["i"] != "A":
+            else:  # This is the else condition, the next instruction we go to if all the conditions fail.
+                else_node["current"] = instruction
+                else_node["path"].append(instruction)
+                if else_node["current"] == "R":
+                    rejected_paths.append(else_node)
+                elif else_node["current"] != "A":
                     queue.append(else_node)
 
-def day19_p2(example=False, reload=False):
-    if example:
-        day = """px{a<2006:qkq,m>2090:A,rfg}
-pv{a>1716:R,A}
-lnx{m>1548:A,A}
-rfg{s<537:gd,x>2440:R,A}
-qs{s>3448:A,lnx}
-qkq{x<1416:A,crn}
-crn{x>2662:A,R}
-in{s<1351:px,qqz}
-qqz{s>2770:qs,m<1801:hdj,R}
-gd{a>3333:R,R}
-hdj{m>838:A,pv}
 
-{x=787,m=2655,a=1222,s=2876}
-{x=1679,m=44,a=2067,s=496}
-{x=2036,m=264,a=79,s=2244}
-{x=2461,m=1339,a=466,s=291}
-{x=2127,m=1623,a=2188,s=1013}
-"""
+def day19(example=False, reload=False):
+    """Sort the machine parts."""
+    if example:
+        day = ("px{a<2006:qkq,m>2090:A,rfg}\n"
+               "pv{a>1716:R,A}\n"
+               "lnx{m>1548:A,A}\n"
+               "rfg{s<537:gd,x>2440:R,A}\n"
+               "qs{s>3448:A,lnx}\n"
+               "qkq{x<1416:A,crn}\n"
+               "crn{x>2662:A,R}\n"
+               "in{s<1351:px,qqz}\n"
+               "qqz{s>2770:qs,m<1801:hdj,R}\n"
+               "gd{a>3333:R,R}\n"
+               "hdj{m>838:A,pv}\n"
+               "\n"
+               "{x=787,m=2655,a=1222,s=2876}\n"
+               "{x=1679,m=44,a=2067,s=496}\n"
+               "{x=2036,m=264,a=79,s=2244}\n"
+               "{x=2461,m=1339,a=466,s=291}\n"
+               "{x=2127,m=1623,a=2188,s=1013}\n")
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    p = get_input(day, "\n", cast=None, override=reload)
-    # n = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
-    load = True
-    d= {}
-    parts = []
-    p1 = p2 = 0
-    for l in p:
-        if l == "":
-            load = False
+    puzzle = get_input(day, "\n", cast=None, override=reload)
+    load_workflow = True
+    workflows = {}
+    part_ratings = []
+    rejection_paths = []
+    all_combinations = 4000**4
+    rejected_combinations = rating_numbers = 0
+    # Puzzle parsing, put things into dictionaries.
+    for line in puzzle:
+        if not line:
+            load_workflow = False
             continue
-        if load:
-            name, inst = l.split("{")
-            inst = inst.strip("}").split(",")
-            d[name] = inst
-    paths = []
-    day19_bfs(d, paths)
-    print()
-    #print(d)
-    p2 = 1
-    for q in paths:
-        s = 1
-        print(q)
-        for k in "xmas":
-            t = q[k][1]-q[k][0]+1
-            #print(t)
-            s *= t
-        p2 += s
-    a = 4000*4000*4000*4000
-    print(p2)
-    print(a-p2+1)
+        if load_workflow:
+            name, instruction = re.split("[{}]", line)[:-1]
+            workflows[name] = instruction.split(",")
+        else:
+            ratings = line.strip("{").strip("}").split(",")
+            part_ratings.append({key: int(value) for key, value in (pair.split("=") for pair in ratings)})
+
+    # Use a BFS to find and record all the rejection paths and the x,m,a,s ranges that would result in rejection.
+    day19_bfs(workflows, rejection_paths)
+    #  If the part matched any rejection path range it is not accepted.
+    for part in part_ratings:
+        if not any(all(part[key] in range(rejection[key][0], rejection[key][1] + 1) for key in "xmas") for rejection in rejection_paths):
+            rating_numbers += sum(part.values())
+    print(f"Part 1 the sum of rating numbers for all accepted parts is {rating_numbers}")
+    #  For each rejection path calculate the number of combinations by multiplying each range together.
+    for rejection in rejection_paths:
+        failed = [np.diff(x)[0] + 1 for x in (rejection[key] for key in "xmas")]
+        rejected_combinations += np.prod(failed, dtype="uint64")
+    accepted_combinations = all_combinations - rejected_combinations
+    print(f"Part 2 there are {accepted_combinations:.0f} accepted combinations")
 
