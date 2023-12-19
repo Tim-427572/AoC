@@ -1394,8 +1394,8 @@ def day19_bfs(workflows, rejected_paths):
     """
     queue = [{"path": ["in"],
               "current":"in",
-              "x":[1, 4000], "m":[1, 4000],
-              "a":[1, 4000], "s":[1, 4000]}]
+              "x":[1, 4001], "m":[1, 4001],
+              "a":[1, 4001], "s":[1, 4001]}]
     while queue:
         this_node = queue.pop(0)
         else_node = copy.deepcopy(this_node)  # This node tracks the else condition for each instruction.
@@ -1406,12 +1406,13 @@ def day19_bfs(workflows, rejected_paths):
                 equation, next_inst = instruction.split(":")
                 var, num = re.split("[<>]", equation)
                 num = int(num)
+                # Carefully adjusting the rangees of rejected parts so the format works with python range.
                 if "<" in equation:
-                    temp_node[var][1] = min(temp_node[var][1], num - 1)
+                    temp_node[var][1] = min(temp_node[var][1], num)
                     else_node[var][0] = max(else_node[var][0], num)
                 else:  # it was >
                     temp_node[var][0] = max(temp_node[var][0], num + 1)
-                    else_node[var][1] = min(else_node[var][1], num)
+                    else_node[var][1] = min(else_node[var][1], num + 1)
                 # Update this node for next instruction name.
                 temp_node["current"] = next_inst
                 temp_node["path"].append(next_inst)
@@ -1454,9 +1455,6 @@ def day19(example=False, reload=False):
     load_workflow = True
     workflows = {}
     part_ratings = []
-    rejection_paths = []
-    all_combinations = 4000**4
-    rejected_combinations = rating_numbers = 0
     # Puzzle parsing, put things into dictionaries.
     for line in puzzle:
         if not line:
@@ -1466,19 +1464,24 @@ def day19(example=False, reload=False):
             name, instruction = re.split("[{}]", line)[:-1]
             workflows[name] = instruction.split(",")
         else:
-            ratings = line.strip("{").strip("}").split(",")
+            ratings = line[1:-1].split(",")
             part_ratings.append({key: int(value) for key, value in (pair.split("=") for pair in ratings)})
 
+    rejection_paths = []
+    all_combinations = 4000**4
+    rejected_combinations = rating_numbers = 0
     # Use a BFS to find and record all the rejection paths and the x,m,a,s ranges that would result in rejection.
     day19_bfs(workflows, rejection_paths)
     #  If the part matched any rejection path range it is not accepted.
     for part in part_ratings:
-        if not any(all(part[key] in range(rejection[key][0], rejection[key][1] + 1) for key in "xmas") for rejection in rejection_paths):
+        if not any(all(part[key] in range(*rejection[key]) for key in "xmas") for rejection in rejection_paths):
             rating_numbers += sum(part.values())
     print(f"Part 1 the sum of rating numbers for all accepted parts is {rating_numbers}")
     #  For each rejection path calculate the number of combinations by multiplying each range together.
     for rejection in rejection_paths:
-        failed = [np.diff(x)[0] + 1 for x in (rejection[key] for key in "xmas")]
+        if example:
+            print(rejection)
+        failed = [np.diff(x)[0] for x in (rejection[key] for key in "xmas")]
         rejected_combinations += np.prod(failed, dtype="uint64")
     accepted_combinations = all_combinations - rejected_combinations
     print(f"Part 2 there are {accepted_combinations:.0f} accepted combinations")
