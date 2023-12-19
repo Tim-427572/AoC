@@ -2,7 +2,7 @@ import hashlib
 # import sys
 # import math
 # import time
-# import copy
+import copy
 # import curses # pip install windows-curses
 import inspect
 import pickle
@@ -1339,6 +1339,7 @@ def day17(example=False, reload=False):
 
 
 def day18(example=False, reload=False):
+    """Calculate the size of the lagoon."""
     # Got really tired of shoelace algorithms and just pip installed a polygon package.
     from shapely.geometry import Polygon
     if example:  # noqa: SIM108
@@ -1375,9 +1376,167 @@ def day18(example=False, reload=False):
         p1_vertices.append(p1_cur)
         p2_vertices.append(p2_cur)
     # The digger creates a 1m wide trench, need to account for the 1/2m that is outside of the immmaginary polygon line.
-    # Not 100% sure why I need to add 1 though, might have something to do with the fact it starts in a 1m pit.
+    # Every exterior corner adds 1/4 a unit of the trench width. Every interior corner is subtracts a 1/4 unit.
+    # Because this is a non-overlapping rectangular shape there are 4 more exertior corners than there are interior ones.
+    # 4 * 1/4 = 1 additional unit of area needed.
     polygon = Polygon(p1_vertices)
     print(f"Part 1: The lagoon holds {int(polygon.length // 2) + int(polygon.area) + 1} cubic meters of lava")
     polygon = Polygon(p2_vertices)
     print(f"Part 2: The lagoon holds {int(polygon.length // 2) + int(polygon.area) + 1} cubic meters of lava")
+
+
+def day19(example=False, reload=False):
+    if example:
+        day = """px{a<2006:qkq,m>2090:A,rfg}
+pv{a>1716:R,A}
+lnx{m>1548:A,A}
+rfg{s<537:gd,x>2440:R,A}
+qs{s>3448:A,lnx}
+qkq{x<1416:A,crn}
+crn{x>2662:A,R}
+in{s<1351:px,qqz}
+qqz{s>2770:qs,m<1801:hdj,R}
+gd{a>3333:R,R}
+hdj{m>838:A,pv}
+
+{x=787,m=2655,a=1222,s=2876}
+{x=1679,m=44,a=2067,s=496}
+{x=2036,m=264,a=79,s=2244}
+{x=2461,m=1339,a=466,s=291}
+{x=2127,m=1623,a=2188,s=1013}
+"""
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    p = get_input(day, "\n", cast=None, override=reload)
+    # n = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    load = True
+    d= {}
+    parts = []
+    p1 = p2 = 0
+    for l in p:
+        if l == "":
+            load = False
+            continue
+        if load:
+            name, inst = l.split("{")
+            inst = inst.strip("}").split(",")
+            d[name] = inst
+        else:
+            parts.append(l.strip("{").strip("}").split(","))
+    for part in parts:
+        x = int(part[0].split("=")[1])
+        m = int(part[1].split("=")[1])
+        a = int(part[2].split("=")[1])
+        s = int(part[3].split("=")[1])
+        w = "in"
+        while True:
+            for r in d[w]:
+                if ":" in r:
+                    e,dest = r.split(":")
+                    if eval(e):
+                        w = dest
+                        break
+                else:
+                    w = r
+            if w in ["A","R"]:
+                break
+        if w == "A":
+            p1+= (x+m+a+s)
+    print(d)
+    print(parts)
+    print(p1)
+    print(p2)
+
+
+def day19_bfs(d,paths):
+    visited = set()
+    queue = [{"p":["in"],"i":"in","x":[1,4000],"m":[1,4000],"a":[1,4000],"s":[1,4000]}]
+
+    while queue:          # Creating loop to visit each node
+        #this_path = queue.pop(0) 
+        #print(queue)
+        #input()
+        this_node = queue.pop(0)
+        else_node = copy.deepcopy(this_node)
+        for i in d[this_node["i"]]:
+            if ":" in i:
+                temp_node = copy.deepcopy(else_node)
+                equation,next_inst = i.split(":")
+                var,num = re.split("[<>]", equation)
+                num = int(num)
+                if "<" in equation:
+                    temp_node[var][1] = min(temp_node[var][1], num - 1)
+                    else_node[var][0] = max(else_node[var][0], num)
+                else:
+                    temp_node[var][0] = max(temp_node[var][0], num + 1)
+                    else_node[var][1] = min(else_node[var][1], num)
+                temp_node["i"]=next_inst
+                temp_node["p"].append(next_inst)
+                print("next",temp_node)
+                if temp_node["i"] == "R":
+                    paths.append(temp_node)
+                elif temp_node["i"] != "A":
+                    queue.append(temp_node)
+            else:
+                else_node["i"]=i
+                else_node["p"].append(i)
+                print("else", else_node)
+
+                if else_node["i"] == "R":
+                    paths.append(else_node)
+                elif else_node["i"] != "A":
+                    queue.append(else_node)
+
+def day19_p2(example=False, reload=False):
+    if example:
+        day = """px{a<2006:qkq,m>2090:A,rfg}
+pv{a>1716:R,A}
+lnx{m>1548:A,A}
+rfg{s<537:gd,x>2440:R,A}
+qs{s>3448:A,lnx}
+qkq{x<1416:A,crn}
+crn{x>2662:A,R}
+in{s<1351:px,qqz}
+qqz{s>2770:qs,m<1801:hdj,R}
+gd{a>3333:R,R}
+hdj{m>838:A,pv}
+
+{x=787,m=2655,a=1222,s=2876}
+{x=1679,m=44,a=2067,s=496}
+{x=2036,m=264,a=79,s=2244}
+{x=2461,m=1339,a=466,s=291}
+{x=2127,m=1623,a=2188,s=1013}
+"""
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    p = get_input(day, "\n", cast=None, override=reload)
+    # n = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    load = True
+    d= {}
+    parts = []
+    p1 = p2 = 0
+    for l in p:
+        if l == "":
+            load = False
+            continue
+        if load:
+            name, inst = l.split("{")
+            inst = inst.strip("}").split(",")
+            d[name] = inst
+    paths = []
+    day19_bfs(d, paths)
+    print()
+    #print(d)
+    p2 = 1
+    for q in paths:
+        s = 1
+        print(q)
+        for k in "xmas":
+            t = q[k][1]-q[k][0]+1
+            #print(t)
+            s *= t
+        p2 += s
+    a = 4000*4000*4000*4000
+    print(p2)
+    print(a-p2+1)
 
