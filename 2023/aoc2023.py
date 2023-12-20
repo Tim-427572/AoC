@@ -1584,17 +1584,20 @@ def process_in(modules):
         if hasattr(module, "update"):
             module.update()
 
-def process_out(modules, counters):
+def process_out(modules, button, dumb):
     for name, module in modules.items():
         for k in module.pending_out:
             for x in module.pending_out[k]:
                 modules[k].pending_in[name].append(x)
-                counters[x] += 1
+                if k == "jz" and name in dumb and x is True:
+                    print(name, button-dumb[name])
+                    dumb[name] = button
+                #counters[x] += 1
             module.pending_out[k]=[]
 
-def run_it(modules, counters, debug=False):
+def run_it(modules, button, dumb, debug=False):
     while True:
-        process_out(modules, counters)
+        process_out(modules, button, dumb)
         if debug:
             print("process_out")
             status(modules)
@@ -1612,7 +1615,6 @@ def run_it(modules, counters, debug=False):
                     break
         if not work:
             break
-    return counters
 
 
 
@@ -1661,7 +1663,7 @@ def day20(example=False, reload=False):
     #status(modules)
     counters = {True:0,False:0}
     dumb = {"dh":0,"mk":0,"vf":0,"rn":0}
-    #for i in range(1000):
+    but = 0
     while True:
         #print("Button",i)
         #input()
@@ -1669,9 +1671,8 @@ def day20(example=False, reload=False):
         counters[False] += 1
         modules["broadcaster"].button()
         #status(modules)
-        run_it(modules, counters)
-        print(but)
-        if modules["rx"].started:
+        run_it(modules, but, dumb)
+        if all(v != 0 for v in dumb.values()):
             break
-    print(counters)
-    print(counters[False] * counters[True])
+    print(np.lcm.reduce(list(dumb.values()), dtype="uint64"))
+    
