@@ -1489,190 +1489,161 @@ def day19(example=False, reload=False):
         rejected_combinations += np.prod(failed, dtype="uint64")
     accepted_combinations = all_combinations - rejected_combinations
     print(f"Part 2 there are {accepted_combinations:.0f} accepted combinations")
-    for a in a_p:
-        print(a)
 
+class NodeTemplate:
+    """Template for the communication module."""
 
-class FlipFlop():  # %
-    def __init__(self, children):
+    def __init__(self, children=()):
+        """Set up the nternal state."""
         self.parents = []
         self.children = children
         self.state = False
-        self.pending_in = {}
-        self.pending_out = {}
-    def setup(self):
-        for k in self.parents:
-            self.pending_in[k] = []
-        for k in self.children:
-            self.pending_out[k] = []
-    def update(self):
-        for k in self.pending_in:
-            for x in self.pending_in[k]:
-                if x == False:
-                    self.state = not self.state
-                    for o in self.pending_out:
-                        self.pending_out[o].append(self.state)
-            self.pending_in[k]=[]
-
-
-class Dummy():
-    def __init__(self):
-        self.parents = []
-        self.children = None
-        self.pending_in = {}
-        self.pending_out = {}
-        self.started=False
-    def setup(self):
-        for k in self.parents:
-            self.pending_in[k] = []
-    def update(self):
-        for k in self.pending_in:
-            for x in self.pending_in[k]:
-                if x == False:
-                    self.started=True
-            self.pending_in[k] = []
-
-
-class Broadcast():
-    def __init__(self, children):
-        self.parents = []
-        self.children = children
-        self.pending_in = {}
-        self.pending_out = {}
-    def button(self):
-        for k in self.children:
-            self.pending_out[k].append(False)
-    def setup(self):
-        for k in self.children:
-            self.pending_out[k] = []
-
-
-class Conjunction():  # &
-    def __init__(self, children):
-        self.parents = []
-        self.children = children
         self.memory = {}
-        self.pending_in = {}
-        self.pending_out = {}
-    def setup(self):
+        self.pending_in = collections.defaultdict(list)
+        self.pending_out = collections.defaultdict(list)
+    def init_mem(self):
+        """Initialize the internal memory for conjugate modules."""
         for k in self.parents:
             self.memory[k] = False
-            self.pending_in[k] = []
-        for k in self.children:
-            self.pending_out[k] = []
-    def get_output(self):
-        return not all(v == True for v in self.memory.values())
-    def update(self):
-        for k in self.pending_in:
-            for x in self.pending_in[k]:
-                self.memory[k] = x
-                for o in self.pending_out:
-                    self.pending_out[o].append(self.get_output())
-            self.pending_in[k] = []
 
+class FlipFlop(NodeTemplate):  # %
+    """Extend the template with the flip flop update logic."""
+
+    def update(self):
+        """Process the inputs and set up the output signals."""
+        output_pulses = []
+        for _ in [False for x in itertools.chain(*self.pending_in.values()) if x is False]:
+            self.state = not self.state
+            output_pulses.append(self.state)
+        for child in self.children:
+            self.pending_out[child] += output_pulses
+        self.pending_in = collections.defaultdict(list)  # Clear the input
+
+class Dummy(NodeTemplate):
+    """Extend the template for the output/rx module."""
+
+    def update(self):
+        """Clear the inputs."""
+        self.pending_in = collections.defaultdict(list)  # Clear the input
+
+class Broadcast(NodeTemplate):
+    """Extend the template for the broadcast module."""
+
+    def update(self):
+        """Move the input to the output."""
+        for child in self.children:
+            self.pending_out[child] += self.pending_in["button"]
+        self.pending_in = collections.defaultdict(list)  # Clear the input
+    def button(self):
+        """Someone pushed the button."""
+        self.pending_in = {"buttom": [False]}
+
+class Conjunction(NodeTemplate):  # &
+    """Extend the template for the conjunction module."""
+
+    def update(self):
+        """Process the inputs and set up the outputs based on the memory."""
+        output_pulses = []
+        for k, v in self.pending_in.items():
+            for pulse in v:
+                self.memory[k] = pulse
+                output_pulses.append(not all(v is True for v in self.memory.values()))
+        for child in self.children:
+            self.pending_out[child] += output_pulses
+        self.pending_in = collections.defaultdict(list)  # Clear the input
 
 def status(d):
-    for k,v in d.items():
-        print(k)
-        print(" in:",v.parents, v.pending_in)
-        print(" out:",v.children, v.pending_out)
+    """Print the status for the puzzle, for debug."""
+    for k, v in d.items():
+        if any(x != [] for x in itertools.chain(*v.pending_in.values())):
+            print(f"{k:>11} {v.memory} IN:", dict.__repr__(v.pending_in))
+        elif any(x != [] for x in itertools.chain(*v.pending_out.values())):
+            print(f"{k:>11} {v.memory}OUT:", dict.__repr__(v.pending_out))
+        else:
+            print(f"{k:>11} {v.memory}:")
     print()
 
-
-def process_in(modules):
-    for name, module in modules.items():
-        if hasattr(module, "update"):
-            module.update()
-
-def process_out(modules, button, dumb):
+def process_out(button, counters, dumb, modules):
+    """Move the outputs pulses to the inputs of the module children."""
     for name, module in modules.items():
         for k in module.pending_out:
             for x in module.pending_out[k]:
                 modules[k].pending_in[name].append(x)
+                # Special code for part 2, based on reverse engineering my puzzle input.
+                # Looking to see how many button pushes until the output of specific modules are
+                # a high pulse.
                 if k == "jz" and name in dumb and x is True:
-                    print(name, button-dumb[name])
                     dumb[name] = button
-                #counters[x] += 1
-            module.pending_out[k]=[]
-
-def run_it(modules, button, dumb, debug=False):
-    while True:
-        process_out(modules, button, dumb)
-        if debug:
-            print("process_out")
-            status(modules)
-            input()
-        process_in(modules)
-        if debug:
-            print("process_in")
-            status(modules)
-            input()
-        work = False
-        for m in modules.values():
-            for k,v in m.pending_out.items():
-                if v:
-                    work = True
-                    break
-        if not work:
-            break
+                counters[x] += 1
+            module.pending_out[k] = []
 
 
-
-
-def day20(example=False, reload=False):
+def day20(example=None, reload=False, debug=False):
     """1."""
-    if example:
-        day = """broadcaster -> a
-%a -> inv, con
-&inv -> b
-%b -> con
-&con -> output
-"""        
+    if example == 1:
+        day = ("broadcaster -> a, b, c\n"
+               "%a -> b\n"
+               "%b -> c\n"
+               "%c -> inv\n"
+               "&inv -> a\n")
+    elif example == 2:
+        day = ("broadcaster -> a\n"
+               "%a -> inv, con\n"
+               "&inv -> b\n"
+               "%b -> con\n"
+               "&con -> output\n")
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    p = get_input(day, "\n", cast=None, override=reload)
-    p1 = p2 = 0
-    modules = {}
-    # connect the modules.
-    for l in p:
-        name, connections = l.split(" -> ")
+    puzzle = get_input(day, "\n", cast=None, override=reload)
+    modules = collections.defaultdict(Dummy)
+    # Instantiate the modules.
+    for line in puzzle:
+        name, connections = line.split(" -> ")
         connections = connections.split(", ")
-        if name[1:] in modules:
-            print(name)
-            raise Exception()
         if name == "broadcaster":
             modules["broadcaster"] = Broadcast(connections)
         elif "%" in name:
             modules[name[1:]] = FlipFlop(connections)
         elif "&" in name:
             modules[name[1:]] = Conjunction(connections)
-    # Wire it up
-    for_testing = {}
-    for k, v in modules.items():
-        for c in v.children:
-            if c not in modules:
-                print(c, "not in modules?")
-                for_testing[c] = Dummy()
-                for_testing[c].parents.append(k)
-            else:
-                modules[c].parents.append(k)
-    modules.update(for_testing)
-    # set initial state:
+    # Connect parents to children.
+    for k in list(modules):
+        for child in modules[k].children:
+            modules[child].parents.append(k)
+    # Warm up the module memory
     for v in modules.values():
-        v.setup()
-    #status(modules)
-    counters = {True:0,False:0}
-    dumb = {"dh":0,"mk":0,"vf":0,"rn":0}
-    but = 0
+        v.init_mem()
+    counters = {True: 0, False: 0}
+    dumb = {"dh": 0, "mk": 0, "vf": 0, "rn": 0}
+    button_press = 0
+    # Begin the button pressing loop.
     while True:
-        #print("Button",i)
-        #input()
-        but += 1
+        button_press += 1
         counters[False] += 1
         modules["broadcaster"].button()
-        #status(modules)
-        run_it(modules, but, dumb)
-        if all(v != 0 for v in dumb.values()):
+        if debug:
+            print("Button press #", button_press)
+        while True:
+            process_out(button_press, counters, dumb, modules)  # Process outputs
+            if debug:
+                print("Inputs Ready")
+                status(modules)
+                print(counters)
+                input()
+            for module in modules.values():  # Process inputs
+                module.update()
+            if debug:
+                print("Outputs Ready")
+                status(modules)
+                print(counters)
+                input()
+            # If there are no output pulses waiting for processing, then it's time for another button press.
+            if all(x == [] for x in itertools.chain(*[y.pending_out.values() for y in modules.values()])):
+                break
+        if button_press == 1000:
+            print("Part 1:", np.prod(list(counters.values()), dtype="uint64"))
+        # Keep pushing the button until we find a cycle value for all the special modules.
+        if all(v != 0 for v in dumb.values()) or (example in {1, 2} and button_press > 1000):
             break
-    print(np.lcm.reduce(list(dumb.values()), dtype="uint64"))
-    
+    # LCM again to find the minimum button pushes.
+    print("Part 2:", np.lcm.reduce(list(dumb.values()), dtype="uint64"))
