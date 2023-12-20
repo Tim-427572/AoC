@@ -1385,7 +1385,7 @@ def day18(example=False, reload=False):
     print(f"Part 2: The lagoon holds {int(polygon.length // 2) + int(polygon.area) + 1} cubic meters of lava")
 
 
-def day19_bfs(workflows, rejected_paths):
+def day19_bfs(workflows, rejected_paths, accepted_paths = []):
     """
     Find the path to R starting from in.
 
@@ -1420,6 +1420,8 @@ def day19_bfs(workflows, rejected_paths):
                     rejected_paths.append(temp_node)
                 elif temp_node["current"] != "A":  # Haven't found R or A yet (drop the path if we get to A)
                     queue.append(temp_node)
+                else:
+                    accepted_paths.append(temp_node)
             else:  # This is the else condition, the next instruction we go to if all the conditions fail.
                 else_node["current"] = instruction
                 else_node["path"].append(instruction)
@@ -1427,6 +1429,8 @@ def day19_bfs(workflows, rejected_paths):
                     rejected_paths.append(else_node)
                 elif else_node["current"] != "A":
                     queue.append(else_node)
+                else:
+                    accepted_paths.append(else_node)
 
 
 def day19(example=False, reload=False):
@@ -1485,4 +1489,189 @@ def day19(example=False, reload=False):
         rejected_combinations += np.prod(failed, dtype="uint64")
     accepted_combinations = all_combinations - rejected_combinations
     print(f"Part 2 there are {accepted_combinations:.0f} accepted combinations")
+    for a in a_p:
+        print(a)
 
+
+class FlipFlop():  # %
+    def __init__(self, children):
+        self.parents = []
+        self.children = children
+        self.state = False
+        self.pending_in = {}
+        self.pending_out = {}
+    def setup(self):
+        for k in self.parents:
+            self.pending_in[k] = []
+        for k in self.children:
+            self.pending_out[k] = []
+    def update(self):
+        for k in self.pending_in:
+            for x in self.pending_in[k]:
+                if x == False:
+                    self.state = not self.state
+                    for o in self.pending_out:
+                        self.pending_out[o].append(self.state)
+            self.pending_in[k]=[]
+
+
+class Dummy():
+    def __init__(self):
+        self.parents = []
+        self.children = None
+        self.pending_in = {}
+        self.pending_out = {}
+        self.started=False
+    def setup(self):
+        for k in self.parents:
+            self.pending_in[k] = []
+    def update(self):
+        for k in self.pending_in:
+            for x in self.pending_in[k]:
+                if x == False:
+                    self.started=True
+            self.pending_in[k] = []
+
+
+class Broadcast():
+    def __init__(self, children):
+        self.parents = []
+        self.children = children
+        self.pending_in = {}
+        self.pending_out = {}
+    def button(self):
+        for k in self.children:
+            self.pending_out[k].append(False)
+    def setup(self):
+        for k in self.children:
+            self.pending_out[k] = []
+
+
+class Conjunction():  # &
+    def __init__(self, children):
+        self.parents = []
+        self.children = children
+        self.memory = {}
+        self.pending_in = {}
+        self.pending_out = {}
+    def setup(self):
+        for k in self.parents:
+            self.memory[k] = False
+            self.pending_in[k] = []
+        for k in self.children:
+            self.pending_out[k] = []
+    def get_output(self):
+        return not all(v == True for v in self.memory.values())
+    def update(self):
+        for k in self.pending_in:
+            for x in self.pending_in[k]:
+                self.memory[k] = x
+                for o in self.pending_out:
+                    self.pending_out[o].append(self.get_output())
+            self.pending_in[k] = []
+
+
+def status(d):
+    for k,v in d.items():
+        print(k)
+        print(" in:",v.parents, v.pending_in)
+        print(" out:",v.children, v.pending_out)
+    print()
+
+
+def process_in(modules):
+    for name, module in modules.items():
+        if hasattr(module, "update"):
+            module.update()
+
+def process_out(modules, counters):
+    for name, module in modules.items():
+        for k in module.pending_out:
+            for x in module.pending_out[k]:
+                modules[k].pending_in[name].append(x)
+                counters[x] += 1
+            module.pending_out[k]=[]
+
+def run_it(modules, counters, debug=False):
+    while True:
+        process_out(modules, counters)
+        if debug:
+            print("process_out")
+            status(modules)
+            input()
+        process_in(modules)
+        if debug:
+            print("process_in")
+            status(modules)
+            input()
+        work = False
+        for m in modules.values():
+            for k,v in m.pending_out.items():
+                if v:
+                    work = True
+                    break
+        if not work:
+            break
+    return counters
+
+
+
+
+def day20(example=False, reload=False):
+    """1."""
+    if example:
+        day = """broadcaster -> a
+%a -> inv, con
+&inv -> b
+%b -> con
+&con -> output
+"""        
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    p = get_input(day, "\n", cast=None, override=reload)
+    p1 = p2 = 0
+    modules = {}
+    # connect the modules.
+    for l in p:
+        name, connections = l.split(" -> ")
+        connections = connections.split(", ")
+        if name[1:] in modules:
+            print(name)
+            raise Exception()
+        if name == "broadcaster":
+            modules["broadcaster"] = Broadcast(connections)
+        elif "%" in name:
+            modules[name[1:]] = FlipFlop(connections)
+        elif "&" in name:
+            modules[name[1:]] = Conjunction(connections)
+    # Wire it up
+    for_testing = {}
+    for k, v in modules.items():
+        for c in v.children:
+            if c not in modules:
+                print(c, "not in modules?")
+                for_testing[c] = Dummy()
+                for_testing[c].parents.append(k)
+            else:
+                modules[c].parents.append(k)
+    modules.update(for_testing)
+    # set initial state:
+    for v in modules.values():
+        v.setup()
+    #status(modules)
+    counters = {True:0,False:0}
+    dumb = {"dh":0,"mk":0,"vf":0,"rn":0}
+    #for i in range(1000):
+    while True:
+        #print("Button",i)
+        #input()
+        but += 1
+        counters[False] += 1
+        modules["broadcaster"].button()
+        #status(modules)
+        run_it(modules, counters)
+        print(but)
+        if modules["rx"].started:
+            break
+    print(counters)
+    print(counters[False] * counters[True])
