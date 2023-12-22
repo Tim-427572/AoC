@@ -1579,7 +1579,7 @@ def process_out(button, counters, dumb, modules):
 
 
 def day20(example=None, reload=False, debug=False):
-    """1."""
+    """Perform module communication."""
     if example == 1:
         day = ("broadcaster -> a, b, c\n"
                "%a -> b\n"
@@ -1647,3 +1647,155 @@ def day20(example=None, reload=False, debug=False):
             break
     # LCM again to find the minimum button pushes.
     print("Part 2:", np.lcm.reduce(list(dumb.values()), dtype="uint64"))
+
+
+def day21_bfs(graph, node, max_steps, visited):
+    """
+    """
+    queue = set([(node,0)])
+    while queue:
+        #print(queue)
+        this_node, steps = queue.pop()
+        if steps > max_steps:
+            continue
+        if steps == max_steps:
+            visited.add((this_node,steps))
+            continue
+        for move in "nsew":
+            next_node = this_node + move_dict[move]
+            next_steps = steps + 1
+            if (next_node, next_steps) in visited:
+                continue
+            if (0, 0) <= next_node < graph.shape:  # Array bounds check
+                if graph[next_node] in [".", "S"]:
+                    queue.add((next_node, next_steps))
+    return visited
+
+def day21(example=None, reload=False,debug=False,maxs=6):
+    """Day 21."""
+    if example == 1:
+        day = """...........
+...........
+...........
+...........
+...........
+.....S.....
+...........
+...........
+...........
+...........
+...........
+"""        
+    elif example == 2:
+        day ="""...........
+.....###.#.
+.###.##..#.
+..#.#...#..
+....#.#....
+.##..S####.
+.##..#...#.
+.......##..
+.##.#.####.
+.##..##.##.
+..........."""
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    # p = get_input(day, "\n", cast=None, override=reload)
+    p = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    #start = Coordinate((10,0))
+    m = 0
+    s=65
+    gardens = []
+    while True:
+        c = Coordinate(p.shape)
+        c = c * m
+        ss = s + p.shape[0] * m
+        d = np.pad(p, c, mode="wrap")
+        o = copy.copy(d)
+        start = Coordinate((d.shape[0]//2,d.shape[1]//2))
+        #print(start)
+        visited = set([(start,0)])
+        day21_bfs(d,start,ss,visited)
+        #print(visited)
+        garden = len(set(visited))-1
+        gardens.append(garden)
+        need = 26501365 / 262 -1
+        current = ss / 262 - 1
+        dl = need - current
+        print(ss, need, current, dl)
+        print(gardens)
+        diffs = np.diff(gardens)
+        print("diff",diffs)
+        print(np.diff(diffs))
+        #print(day21_man(d,start,ss,o))
+        #print_np(o)
+        if debug:
+            for c,v in visited:
+                if c == start:
+                    continue
+                d[c]="O"
+            print_np(d)
+        m += 1
+        input()
+    return p
+
+
+def day21_again(example=None, reload=False,debug=False,max_steps=64):
+    """Day 21."""
+    if example == 1:
+        day = """...........
+...........
+...........
+...........
+...........
+.....S.....
+...........
+...........
+...........
+...........
+...........
+"""            
+    elif example == 2:
+        day ="""...........
+......##.#.
+.###..#..#.
+..#.#...#..
+....#.#....
+.....S.....
+.##......#.
+.......##..
+.##.#.####.
+.##...#.##.
+..........."""
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    # p = get_input(day, "\n", cast=None, override=reload)
+    p = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    start = Coordinate(np.argwhere(p=="S")[0])
+    #if p.shape[0] < max_steps:
+    #    d = np.pad(p, [max_steps-p.shape[0]]*2, mode="wrap")
+    queue = set([start])
+    location_count = []
+    for counter in range(1, 1000):
+        next_queue = set()
+        for point in queue:
+            for d in "news":
+                n_p = point + move_dict[d]
+                if p[n_p[0] % p.shape[0],n_p[1] % p.shape[1]] in [".","S"]:
+                    next_queue.add(n_p)
+        queue = next_queue
+        if counter == max_steps:
+            #if counter == 64:
+            print("P1",len(queue))
+        #if counter in [65, 65+131, 65+131+131]:
+        if counter in [5, 5+11, 5+11+11]:
+            location_count.append(len(queue))
+            print(f"x={(max_steps-p.shape[0]//2)//p.shape[0]}")
+            print("Quadratic fit values are")
+            print(location_count)
+            if len(location_count) == 3 and False:
+                break
+
+
+
+
