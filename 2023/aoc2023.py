@@ -1693,7 +1693,7 @@ def day21(example=None, max_steps=64, reload=False):
 
 
 def day22(example=None, reload=False, debug=False):
-    """Perform module communication."""
+    """Vaporize some sand!"""
     if example:
         day = ("1,0,1~1,2,1\n"
                "0,0,2~2,0,2\n"
@@ -1725,46 +1725,26 @@ def day22(example=None, reload=False, debug=False):
         vert_order.append((lowest_z, name))
         name = chr(ord(name) + 1) if example else name + 1
     vert_order.sort()
-    # print(vert_order)
-    # print(space)
     # Collapse the pieces
     for low_p, piece in vert_order:
         if low_p == 1:
             continue
         cur_pos = pieces[piece]["positions"]
-        before = len(space)
         space = space.difference(cur_pos)
-        if len(space) != before-len(cur_pos):
-            print(piece, "removing")
-            return 0,0
         while True:  # Moving down
-            nxt_pos = {p + Coordinate((0,0,-1)) for p in cur_pos}
+            nxt_pos = {p + Coordinate((0, 0, -1)) for p in cur_pos}
             if space.intersection(nxt_pos) or any(z == 0 for x, y, z in nxt_pos):  # Hit something, or the ground
                 # print(piece, space.intersection(nxt_pos))
                 break
             cur_pos = nxt_pos
         pieces[piece]["positions"] = cur_pos
-        pieces[piece]["bottom"] = min(z for x,y,z in pieces[piece]["positions"])
-        before = len(space)
+        pieces[piece]["bottom"] = min(z for x, y, z in pieces[piece]["positions"])
         space = space.union(cur_pos)
-        if len(space) != before + len(cur_pos):
-            print(piece, cur_pos)
-            return 0,0
-
-    # debug double check nothing could move.
-    space = set()
-    for k,v in pieces.items():
-        space = space.union(v["positions"])
-    for k,v in pieces.items():
-        nxt = {p+(0,0,-1) for p in v["positions"]}
-        t = space.difference(v["positions"])
-        if len(t.intersection(nxt)) == 0 and v["bottom"] != 1:
-            print("Error!",k,v)
 
     # Map the support structure
     for this_piece, this in pieces.items():
-        up = {p + (0,0,1) for p in this["positions"]}
-        down = {p + (0,0,-1) for p in this["positions"]}
+        up = {p + (0, 0, 1) for p in this["positions"]}  # noqa: RUF005
+        down = {p + (0, 0, -1) for p in this["positions"]}  # noqa: RUF005
         for other_piece, other in pieces.items():
             if other_piece == this_piece:
                 continue
@@ -1772,8 +1752,8 @@ def day22(example=None, reload=False, debug=False):
                 this["supports"].add(other_piece)
             if other["positions"].intersection(down):
                 this["supported_by"].add(other_piece)
-    # for k,v in pieces.items():
-        # print(k, v["supports"], v["supported_by"])
+
+    # One pass to find the brick with multiple supports and those with nothing above.
     safe_possibles = set()
     support_nothing = set()
     for piece, d in pieces.items():
@@ -1781,46 +1761,47 @@ def day22(example=None, reload=False, debug=False):
             safe_possibles = safe_possibles.union(d["supported_by"])
         if not d["supports"]:
             support_nothing.add(piece)
-    foo = len(safe_possibles)
+    # Check the possible bricks and remove ones where a brick is only supported by it.
     for piece, d in pieces.items():
-        # if piece == 418:
-            # import pdb;pdb.set_trace()
-        # t_u = d["supported_by"].intersection(safe_possibles)
-        #print(piece, d["supported_by"], u)
-        #if t_u and len(t_u) == 1:
         if len(d["supported_by"]) == 1 and safe_possibles.union(d["supported_by"]):
-            #print("checking", piece, d, "removed", d["positions"])
             safe_possibles = safe_possibles.difference(d["supported_by"])
-    #print(safe_possibles)
-    #print(truely_safe)
-    safe_possibles = safe_possibles.union(support_nothing)
-    print("P1:",len(safe_possibles))
-    #for i in support_nothing:
-    #    print(f"{i} supports {pieces[i]['supports']}")
-    for i in []: #safe_possibles:
-        print(f"{i} supports {pieces[i]['supports']} - {sorted(list(pieces[i]['positions']))}")
-        for j in pieces[i]["supports"]:
-            print(f" {j} is supported by {pieces[j]['supported_by']} - {sorted(list(pieces[j]['positions']))}")
 
+    # Combine it all together.
+    safe_possibles = safe_possibles.union(support_nothing)
+    print("Part 1:", len(safe_possibles))
+
+    # If it wasn't safe then it causes something to fall.
     dis_set = set(pieces.keys()).difference(safe_possibles)
+    # Simple search for bircks that would move.
+
     p2 = 0
-    #print(len(dis_set))
-    for p in dis_set:
-        #print("dis_set:",p)
-        move_set = set()
-        queue = list(pieces[p]["supports"])
-        #print(queue, move_set)
+    for brick in dis_set:
+        moving_set = set()
+        queue = list(pieces[brick]["supports"])
         while queue:
             this = queue.pop(0)
-            if this in move_set:
+            if this in moving_set:
                 continue
-            if len(pieces[this]["supported_by"]) == 1 or pieces[this]["supported_by"].issubset(move_set):
-                move_set.add(this)
+            if len(pieces[this]["supported_by"]) == 1 or pieces[this]["supported_by"].issubset(moving_set):
+                moving_set.add(this)
                 p2 += 1
                 queue += list(pieces[this]["supports"])
-            #print(this, p2)
-    print("P2:",p2)
+    print("Part 2:", p2)
 
-    #return safe_possibles, support_nothing, pieces
-                
-            
+
+
+def day23(example=None, reload=False, debug=False):
+    """Do day 23!"""
+    if example:
+        day = """
+"""
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    p = get_input(day, "\n", cast=None, override=reload)
+    # p = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    p1 = p2 = 0
+    d = {}
+    for l in p:
+        d[l] = None
+    print(p1)
+    print(p2)
