@@ -1,7 +1,5 @@
 import hashlib
-# import sys
-# import math
-# import time
+import math
 import copy
 # import curses # pip install windows-curses
 import inspect
@@ -17,10 +15,10 @@ import itertools
 import collections
 import numpy as np
 import pyglet
-# import string
 import requests
 import functools
 import heapq
+import cpmpy
 
 # Advent of Code
 # Never did spend the time to work out how to get oAuth to work so this code expects you to
@@ -1693,7 +1691,7 @@ def day21(example=None, max_steps=64, reload=False):
 
 
 def day22(example=None, reload=False, debug=False):
-    """Vaporize some sand!"""
+    """Vaporize some sand."""
     if example:
         day = ("1,0,1~1,2,1\n"
                "0,0,2~2,0,2\n"
@@ -1709,11 +1707,11 @@ def day22(example=None, reload=False, debug=False):
     name = "A" if example else 1
     vert_order = []
     space = set()
+    # Load the piece dictionary.
     for line in puzzle:
         dimension_start_end = zip(*[map(int, x.split(",")) for x in line.split("~")])
         dimension_ranges = [range(min(x, y), max(x, y) + 1) for x, y in dimension_start_end]
         lowest_z = dimension_ranges[-1][0]
-        # print(line, list(dimension_ranges))
         block_position_set = set()
         for p in itertools.product(*dimension_ranges):
             block_position_set.add(Coordinate(p))
@@ -1724,8 +1722,9 @@ def day22(example=None, reload=False, debug=False):
                         "supported_by": set()}
         vert_order.append((lowest_z, name))
         name = chr(ord(name) + 1) if example else name + 1
-    vert_order.sort()
+
     # Collapse the pieces
+    vert_order.sort()
     for low_p, piece in vert_order:
         if low_p == 1:
             continue
@@ -1761,8 +1760,9 @@ def day22(example=None, reload=False, debug=False):
             safe_possibles = safe_possibles.union(d["supported_by"])
         if not d["supports"]:
             support_nothing.add(piece)
+
     # Check the possible bricks and remove ones where a brick is only supported by it.
-    for piece, d in pieces.items():
+    for d in pieces.values():
         if len(d["supported_by"]) == 1 and safe_possibles.union(d["supported_by"]):
             safe_possibles = safe_possibles.difference(d["supported_by"])
 
@@ -1773,7 +1773,6 @@ def day22(example=None, reload=False, debug=False):
     # If it wasn't safe then it causes something to fall.
     dis_set = set(pieces.keys()).difference(safe_possibles)
     # Simple search for bircks that would move.
-
     p2 = 0
     for brick in dis_set:
         moving_set = set()
@@ -1790,18 +1789,404 @@ def day22(example=None, reload=False, debug=False):
 
 
 
+
+def day23_bfs(graph, start, paths):
+    queue = [(start, tuple())]
+    m = 0
+    while queue:
+        this_node, this_path = queue.pop(0)
+        this_path = list(this_path)
+        this_path.append(this_node)
+        this_path = tuple(this_path)
+
+        #print(this_node, this_path)
+        #print(paths)
+        #input()
+        if graph[this_node]["end"]:
+            paths.append(this_path)
+            d = 0
+            #for i in this_path:
+            #    d += graph[i]["size"]
+            #m = max(m,d)
+            #print(m)            
+        if graph[this_node]["adj"]:
+            for n in graph[this_node]["adj"]:
+                if n in this_path:
+                    continue
+
+                else:
+                    #print(n, this_path)
+                    queue.append( (n, this_path))
+        else:
+            #print(this_path)
+            paths.append(this_path)
+    return paths
+
 def day23(example=None, reload=False, debug=False):
-    """Do day 23!"""
+    """Do day 23."""
     if example:
-        day = """
+        day = """#.#####################
+#.......#########...###
+#######.#########.#.###
+###.....#.>.>.###.#.###
+###v#####.#v#.###.#.###
+###.>...#.#.#.....#...#
+###v###.#.#.#########.#
+###...#.#.#.......#...#
+#####.#.#.#######.#.###
+#.....#.#.#.......#...#
+#.#####.#.#.#########v#
+#.#...#...#...###...>.#
+#.#.#v#######v###.###v#
+#...#.>.#...>.>.#.###.#
+#####v#.#.###v#.#.###.#
+#.....#...#...#.#.#...#
+#.#########.###.#.#.###
+#...###...#...#...#.###
+###.###.#.###v#####v###
+#...#...#.#.>.>.#.>.###
+#.###.###.#.###.#.#v###
+#.....###...###...#...#
+#####################.#
 """
     else:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    p = get_input(day, "\n", cast=None, override=reload)
-    # p = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
-    p1 = p2 = 0
-    d = {}
-    for l in p:
-        d[l] = None
-    print(p1)
+    # p = get_input(day, "\n", cast=None, override=reload)
+    puzzle = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    v = np.zeros(puzzle.shape, dtype=bool)
+    dp = np.full(puzzle.shape, -1, dtype="int64")
+    start = np.argwhere(puzzle[0]==".")[0][0]
+    start = Coordinate((0,start))
+    end = np.argwhere(puzzle[-1]==".")[0][0]
+    end = (puzzle.shape[0]-1, end)
+
+    graph = {start: {"size":0,"adj":[],"vis":set(), "end":False}}
+    c = {">": "e", "^": "n", "v": "s", "<": "w"}
+    queue = [(start, start, 0)]
+    while queue:
+        t,cur,sz = queue.pop(0)
+        if cur[0] == 12 and cur[1] == 13:
+            import pdb;pdb.set_trace()
+        #print(queue)
+        #input()
+
+        graph[cur]["vis"].add(t)
+        neighbors = []
+        edge = False
+        for d in "news":
+            n = t + move_dict[d]
+            if not ((0,0) <= n < puzzle.shape):
+                continue
+            if n in graph[cur]["vis"]:
+                continue
+            if puzzle[n] == "#":
+                continue
+            if puzzle[n] in c.keys() and c[puzzle[n]] != d:
+                continue
+            if puzzle[n] in c.keys() or n == end:
+                edge = True
+            neighbors.append(n)
+        if edge:
+            #if cur[0] == 21 and cur[1] == 19:
+            #    import pdb;pdb.set_trace()
+            graph[cur]["size"] = sz + 2
+            for n in neighbors:
+                if n == end:
+                    graph[cur]["end"]=True
+                if puzzle[n] in c.keys():
+                    w = n + move_dict[c[puzzle[n]]]
+                    graph[cur]["adj"].append(w)
+                    graph[w] = {"size":0,"adj":[],"vis":set(), "end":False}
+                    queue.append((w,w,0))
+            #for k,v in graph.items():
+            #    print(k,v)
+        else:
+            for n in neighbors:
+                queue.append((n,cur,sz+1))
+    # Remove the joints
+    if False:
+        tr= set()
+        for k,v in graph.items():
+            if v["size"] == 2:
+                tr.add(k)
+        #print(tr)
+        for s in tr:
+            for i in graph:
+                if s in graph[i]["adj"]:
+                    graph[i]["size"] += graph[s]["size"]
+                    for x in graph[s]["adj"]:
+                        graph[i]["adj"].append(x)
+                        #print(graph[i]["adj"])
+                        #input()
+        for k in graph:
+            for s in tr:
+                if s in graph[k]["adj"]:
+                    graph[k]["adj"].remove(s)
+        for s in tr:
+            _ = graph.pop(s)
+
+    # backwards
+    #g2 = copy.deepcopy(graph)
+    #for k,v in graph.items():
+    #    for n in v["adj"]:
+    #        g2[n]["adj"].append(k)
+    #graph = copy.deepcopy(g2)
+
+    for k,v in graph.items():
+        print(k,v["adj"], v["size"], v["end"])
+    #g=day23_bfs(graph, start, [])
+    #print()
+    g=[]
+    dd=[]
+    for i in g:
+        d = 0
+        for j in i:
+            d+=graph[j]["size"]
+        #print(d, i)
+        dd.append(d)
+    #print(max(dd))
+    #return graph
+
+    for k,v in graph.items():
+        if v["end"]:
+            e=k
+    stack = [e]
+    queue = [e]
+    visited = set()
+    while queue:
+        c = queue.pop(0)
+        if c not in visited:
+            visited.add(c)
+            for k,v in graph.items():
+                if c in v["adj"]:
+                    if k not in stack:
+                        stack.append(k)
+                    queue.append(k)
+    stack = list(reversed(stack))
+    print(stack)
+    dp[e]=0
+    while stack:
+        u = stack.pop(0)
+        m = None
+        for k,v in graph.items():
+            if u in v["adj"]:
+                if dp[u] < v["size"]:
+                    dp[u] = v["size"]
+                    m = k
+        dp[u] += 1
+
+    np.set_printoptions(edgeitems=1000,linewidth=100000)
+    print(dp)
+
+
+
+    biggest = np.argwhere(dp==np.max(dp)).tolist()
+    print(biggest)
+    queue = []
+    for b in biggest:
+        queue.append((Coordinate(b),[Coordinate(b)]))
+    p = []
+    while queue:
+        for i in queue:
+            print(i)
+        t, v = queue.pop(0)
+        #input()
+        #if graph[t]["end"]:
+        #    p.append(copy.deepcopy(v))
+        #    continue
+        m = []
+        db= []
+        tp = []
+        for x in graph[t]["adj"]:
+            if x in v:
+                continue
+            m.append(dp[x])
+            #db.append((x,dp[x]))
+        #print(db)
+        for x in graph[t]["adj"]:
+            if x in v:
+                continue
+            if dp[x] == max(m) or graph[x]["end"] or x==start:
+                tp = copy.deepcopy(v)
+                tp.append(x)
+                new = (x, tp)
+                queue.append(new)
+        if not tp:
+            p.append(copy.deepcopy(v))
+    #print(v)
+    queue = []
+    for b in p:
+        queue.append((Coordinate(b[0]),copy.deepcopy(b)))
+    p2 = []
+    print("backwards")
+    while queue:
+        for i in queue:
+            print(i)
+        t, v = queue.pop(0)
+        #input()
+        #if graph[t]["end"]:
+        #    p.append(copy.deepcopy(v))
+        #    continue
+        m = []
+        npt = []
+        db= []
+        tp = []
+        for k in graph:
+            if k in v:
+                continue
+            if t in graph[k]["adj"]:
+                m.append(dp[k])
+                npt.append(k)
+            #db.append((x,dp[x]))
+        #print(db)
+        for x in npt:
+            if x in v:
+                continue
+            if dp[x] == max(m) or graph[x]["end"] or x==start:
+                tp = copy.deepcopy(v)
+                tp.append(x)
+                new = (x, tp)
+                queue.append(new)
+        if not tp:
+            print("a",t,v)
+            p2.append(copy.deepcopy(v))    
+
+    print("p2")
     print(p2)
+    dd=[]
+    for i in p2:
+        d=0
+        for j in i:
+            d += graph[j]["size"]
+        print(d, i)
+            #input()
+        dd.append(d)
+    print(max(dd)) 
+    
+    #print_np(puzzle)
+    #print(np.max(dp))
+    #print()
+
+
+
+def compute_euclidean_distance_matrix(locations):
+    """Computes distances between all points (from ortools docs)."""
+    n_city = len(locations)
+    distances = np.zeros((n_city,n_city))
+    for from_counter, from_node in enumerate(locations):
+        for to_counter, to_node in enumerate(locations):
+            if from_counter != to_counter:
+                #print(from_counter, to_counter, from_node, to_node)
+                distances[from_counter][to_counter] = (int(
+                    math.hypot((from_node[0] - to_node[0]),
+                               (from_node[1] - to_node[1]))))
+    return distances.astype(int)
+
+def display(sol):
+    x = 0
+    msg = "0"
+    while sol[x] != 0:
+        x = sol[x]
+        msg += f" --> {x}"
+    print(msg + " --> 0")
+
+def cpm():
+    locations= [
+        (288, 149), (288, 129), (270, 133), (256, 141), (256, 163), (246, 157),
+        (236, 169), (228, 169), (228, 148), (220, 164), (212, 172), (204, 159)
+    ]
+    distance_matrix = compute_euclidean_distance_matrix(locations)
+    print(distance_matrix)
+    n_city = len(locations)
+
+
+    # we use the successor variable formulation and circuit global constraint here
+    # alternative is to model like in vrp.py
+
+    # x[i]=j means that j is visited immediately after i
+    x = cpmpy.intvar(0, n_city-1, shape=n_city)
+    print(x)
+
+    # The 'circuit' global constraint ensures that the successor variables from a circuit
+    model = cpmpy.Model(cpmpy.Circuit(x) )
+    print(model)
+    model += x[3] == 1
+
+    # the objective is to minimze the travelled distance 
+    distance_matrix = cpmpy.cpm_array(distance_matrix) # for indexing with variable
+    travel_distance = sum(distance_matrix[i, x[i]] for i in range(n_city))
+    model.minimize(travel_distance)
+
+    # print(model)
+
+    model.solve()
+    print(model.status())
+
+    print("Total Cost of solution", travel_distance.value())
+
+    display(x.value())
+
+
+
+def day24(example=None, reload=False, r_min=200000000000000, r_max=400000000000000):
+    """Intersect the rays and see if they are in a plane."""
+    import sympy  # noqa: PLC0415
+    if example:
+        day = ("19, 13, 30 @ -2,  1, -2\n"
+               "18, 19, 22 @ -1, -1, -2\n"
+               "20, 25, 34 @ -2, -2, -4\n"
+               "12, 31, 28 @ -1, -2, -1\n"
+               "20, 19, 15 @  1, -5, -3\n")
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    puzzle = get_input(day, "\n", cast=None, override=reload)
+    # puzzle = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    lines_2d = []
+    for line in puzzle:
+        this_line = line.replace("@ ", "")
+        this_line = this_line.replace(",", "")
+        d = list(map(int, this_line.split()))
+        point_2d = Coordinate(d[:2])
+        ratio_2d = Coordinate(d[3:5])
+        lines_2d.append(sympy.Ray2D(sympy.Point(*point_2d), sympy.Point(*(point_2d + ratio_2d))))
+    p1 = 0
+    counter = 0
+    for i1, i2 in itertools.combinations(range(len(lines_2d)), 2):
+        # print(counter)
+        counter += 1
+        p_2d = lines_2d[i1].intersect(lines_2d[i2]).args
+        if p_2d and r_min <= p_2d[0].coordinates[0] <= r_max and r_min <= p_2d[0].coordinates[1] <= r_max:
+            p1 += 1
+    print("P1:", p1)
+
+
+def day25(example=None, reload=False):
+    """Don't cut the red wire!"""  # noqa: D400
+    import networkx as nx  # noqa: PLC0415
+    if example:
+        day = ("jqt: rhn xhk nvd\n"
+               "rsh: frs pzl lsr\n"
+               "xhk: hfx\n"
+               "cmg: qnr nvd lhk bvb\n"
+               "rhn: xhk bvb hfx\n"
+               "bvb: xhk hfx\n"
+               "pzl: lsr hfx nvd\n"
+               "qnr: nvd\n"
+               "ntq: jqt hfx bvb xhk\n"
+               "nvd: lhk\n"
+               "lsr: lhk\n"
+               "rzs: qnr cmg lsr rsh\n"
+               "frs: qnr lhk lsr\n")
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    puzzle = get_input(day, "\n", cast=None, override=reload)
+    g = nx.Graph()
+    for line in puzzle:
+        parent, children = line.split(":")
+        g.add_node(parent)
+        for c in children.split():
+            g.add_node(parent)
+            g.add_edge(parent, c)
+    g.remove_edges_from(nx.minimum_edge_cut(g))
+    s = list(nx.connected_components(g))
+    print(len(s[0]) * len(s[1]))
