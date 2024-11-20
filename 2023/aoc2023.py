@@ -13,6 +13,7 @@ from os import path
 import itertools
 # import statistics
 import collections
+import networkx as nx
 import numpy as np
 import pyglet
 import requests
@@ -2068,6 +2069,67 @@ def day23(example=None, reload=False, debug=False):
     #print()
 
 
+def day23_networkx(example=None, reload=False, debug=False):
+    """Do day 23."""
+    if example:
+        day = ("#.#####################\n"
+               "#.......#########...###\n"
+               "#######.#########.#.###\n"
+               "###.....#.>.>.###.#.###\n"
+               "###v#####.#v#.###.#.###\n"
+               "###.>...#.#.#.....#...#\n"
+               "###v###.#.#.#########.#\n"
+               "###...#.#.#.......#...#\n"
+               "#####.#.#.#######.#.###\n"
+               "#.....#.#.#.......#...#\n"
+               "#.#####.#.#.#########v#\n"
+               "#.#...#...#...###...>.#\n"
+               "#.#.#v#######v###.###v#\n"
+               "#...#.>.#...>.>.#.###.#\n"
+               "#####v#.#.###v#.#.###.#\n"
+               "#.....#...#...#.#.#...#\n"
+               "#.#########.###.#.#.###\n"
+               "#...###...#...#...#.###\n"
+               "###.###.#.###v#####v###\n"
+               "#...#...#.#.>.>.#.>.###\n"
+               "#.###.###.#.###.#.#v###\n"
+               "#.....###...###...#...#\n"
+               "#####################.#\n")
+    else:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    # p = get_input(day, "\n", cast=None, override=reload)
+    puzzle = get_np_input(day, "\n", splitter=list, dtype=str, override=reload)
+    v = np.zeros(puzzle.shape, dtype=bool)
+    dp = np.full(puzzle.shape, -1, dtype="int64")
+    start = np.argwhere(puzzle[0]==".")[0][0]
+    start = Coordinate((0,start))
+    end = np.argwhere(puzzle[-1]==".")[0][0]
+    end = (puzzle.shape[0]-1, end)
+    g = nx.DiGraph()
+
+    graph = {start: {"size":0,"adj":[],"vis":set(), "end":False}}
+    c = {">": "e", "^": "n", "v": "s", "<": "w"}
+    queue = [start]
+    while queue:
+        cur = queue.pop(0)
+        v[cur]=True
+        g.add_node(cur)
+        for d in "news":
+            n = cur + move_dict[d]
+            if not ((0,0) <= n < puzzle.shape):
+                continue
+            if v[n]:
+                continue
+            if puzzle[n] == "#":
+                continue
+            if puzzle[n] in c.keys() and c[puzzle[n]] != d:
+                continue
+            if puzzle[n] not in c.keys():
+                g.add_edge(n, cur)
+            if puzzle[cur] not in c.keys():
+                g.add_edge(cur, n)
+            queue.append(n)
+    return g
 
 def compute_euclidean_distance_matrix(locations):
     """Computes distances between all points (from ortools docs)."""
@@ -2127,7 +2189,6 @@ def cpm():
     display(x.value())
 
 
-
 def day24(example=None, reload=False, r_min=200000000000000, r_max=400000000000000):
     """Intersect the rays and see if they are in a plane."""
     import sympy  # noqa: PLC0415
@@ -2162,7 +2223,6 @@ def day24(example=None, reload=False, r_min=200000000000000, r_max=4000000000000
 
 def day25(example=None, reload=False):
     """Don't cut the red wire!"""  # noqa: D400
-    import networkx as nx  # noqa: PLC0415
     if example:
         day = ("jqt: rhn xhk nvd\n"
                "rsh: frs pzl lsr\n"
