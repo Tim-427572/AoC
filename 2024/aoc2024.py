@@ -29,7 +29,7 @@ import cpmpy
 # Constants
 _code_path = r'c:\AoC'
 _offline = False
-_year = 2023
+_year = 2024
 
 
 def _check_internet(host="8.8.8.8", port=53, timeout=2):
