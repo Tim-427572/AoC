@@ -19,7 +19,7 @@ import pyglet
 import requests
 import functools
 import heapq
-import cpmpy
+# import cpmpy
 
 # Advent of Code
 # Never did spend the time to work out how to get oAuth to work so this code expects you to
@@ -67,7 +67,7 @@ def _pull_puzzle_input(day, seperator, cast=None):
         data_list = day.split(seperator)
     else:
         if not path.exists(_code_path + "/session.txt"):
-            raise Exception("Using the web browser get the session cookie value\nand put it as a string in {}".format(_code_path + "\session.txt"))  # noqa: W605
+            raise Exception("Using the web browser get the session cookie value\nand put it as a string in {}".format(_code_path + r"\session.txt"))  # noqa: W605
         with open(_code_path + "/session.txt", 'r') as session_file:
             session = session_file.read()
         # Check to see if behind the firewall.
@@ -2250,3 +2250,5 @@ def day25(example=None, reload=False):
     g.remove_edges_from(nx.minimum_edge_cut(g))
     s = list(nx.connected_components(g))
     print(len(s[0]) * len(s[1]))
+
+
