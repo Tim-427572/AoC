@@ -1,17 +1,17 @@
 [tool.black]
 line-length = 160
-target-version = ['py38']
+target-version = ['py310']
 include = '\.pyi?$'
 
 [tool.ruff]
 # keep these in sync with tool.black
-target-version = "py38"
+target-version = "py310"
 line-length = 160
 preview = true
 # Extend the `pyproject.toml` file in the parent directory.
 # Decided not to inherit from the base for now, but can use this with extend-select and extend-ignore if needed
 # extend = "../pyproject.toml"
-select = [
+lint.select = [
     # Pyflakes (F)
     "F401",  # unused-import
     "F402",  # import-shadowed-by-loop-var
@@ -68,7 +68,7 @@ select = [
     "E117",  # over-indented
     "E201",  # whitespace-after-open-bracket
     "E202",  # whitespace-before-close-bracket
-  # "E203",  # whitespace-before-punctuation (not PEP8 compliant, conflicts with black in some cases)
+    "E203",  # whitespace-before-punctuation
     "E211",  # whitespace-before-parameters
     "E221",  # multiple-spaces-before-operator
     "E222",  # multiple-spaces-after-operator
@@ -92,9 +92,18 @@ select = [
     "E273",  # tab-after-keyword
     "E274",  # tab-before-keyword
     "E275",  # missing-whitespace-after-keyword
+    "E301",  # blank-line-between-methods	Expected {BLANK_LINES_NESTED_LEVEL:?} blank line, found 0	🧪 🛠️
+    "E302",  # blank-lines-top-level
+    "E303",  # too-many-blank-lines
+    "E304",  # blank-line-after-decorator
+    "E305",  # blank-lines-after-function-or-class
+    "E306",  # blank-lines-before-nested-definition
+    "E401",  # multiple-imports-on-one-line
+    "E402",  # module-import-not-at-top-of-file
     "E401",  # multiple-imports-on-one-line
     "E402",  # module-import-not-at-top-of-file
     "E501",  # line-too-long
+    "E502",  # redundant-backslash
     "E701",  # multiple-statements-on-one-line-colon
     "E702",  # multiple-statements-on-one-line-semicolon
     "E703",  # useless-semicolon
@@ -109,13 +118,14 @@ select = [
     "E742",  # ambiguous-class-name
     "E743",  # ambiguous-function-name
     "E902",  # io-error
-    "E999",  # syntax-error
+  # "E999",  # syntax-error
 
     # pycodestyle Warning (W)
     "W191",  # tab-indentation
     "W291",  # trailing-whitespace
     "W292",  # missing-newline-at-end-of-file
     "W293",  # blank-line-with-whitespace
+    "W391",  # too-many-newlines-at-end-of-file
     "W505",  # doc-line-too-long
     "W605",  # invalid-escape-sequence
 
@@ -123,7 +133,7 @@ select = [
   # "C901",  # complex-structure
 
     # isort (I)
-  # "I001",  # unsorted-imports
+  #  "I001",  # unsorted-imports
     "I002",  # missing-required-import
 
     # pep8-naming (N)
@@ -184,7 +194,7 @@ select = [
     "D410",  # no-blank-line-after-section
     "D411",  # no-blank-line-before-section
     "D412",  # blank-lines-between-header-and-content
-    "D413",  # blank-line-after-last-section
+  # "D413",  # blank-line-after-last-section
     "D414",  # empty-docstring-section
     "D415",  # ends-in-punctuation
     "D416",  # section-name-ends-in-colon
@@ -217,7 +227,7 @@ select = [
     "UP024",  # os-error-alias
     "UP025",  # unicode-kind-prefix
     "UP026",  # deprecated-mock-import
-    "UP027",  # unpacked-list-comprehension
+  # "UP027",  # unpacked-list-comprehension
     "UP028",  # yield-in-for-loop
     "UP029",  # unnecessary-builtin-import
     "UP030",  # format-literals
@@ -230,7 +240,10 @@ select = [
     "UP037",  # quoted-annotation
     "UP038",  # non-pep604-isinstance
     "UP039",  # unnecessary-class-parentheses  # ruff 0.0.273
-    "UP041",  #	timeout-error-alias  # ruff 0.1.4
+    "UP040",  # non-pep695-type-alias
+    "UP041",  # timeout-error-alias  # ruff 0.1.4
+    "UP042",  # replace-str-enum
+    "UP043",  # Unnecessary default type arguments
 
     # flake8-2020 (YTT)
     "YTT101",  # sys-version-slice3
@@ -259,15 +272,17 @@ select = [
 
     # flake8-async (ASYNC)
     "ASYNC100",  # blocking-http-call-in-async-function
-    "ASYNC101",  # open-sleep-or-subprocess-in-async-function
-    "ASYNC102",  # blocking-os-call-in-async-function
-
-    # flake8-trio (TRIO)
-    "TRIO100",  # trio-timeout-without-await  # ruff 0.1.4
-    "TRIO105",  # trio-sync-call  # ruff 0.1.5
-    "TRIO109",  # trio-async-function-with-timeout  # ruff 0.1.5
-    "TRIO110",  # trio-unneeded-sleep  # ruff 0.1.5
-    "TRIO115",  #	trio-zero-sleep-call  # ruff 0.1.5
+    "ASYNC105",  # trio-sync-call
+    "ASYNC109",  # async-function-with-timeout
+    "ASYNC110",  # async-busy-wait
+    "ASYNC115",  # async-zero-sleep
+    "ASYNC116",  # long-sleep-not-forever
+    "ASYNC210",  # blocking-http-call-in-async-function
+    "ASYNC220",  # create-subprocess-in-async-function
+    "ASYNC221",  # run-process-in-async-function
+    "ASYNC222",  # wait-for-process-in-async-function
+    "ASYNC230",  # blocking-open-call-in-async-function
+    "ASYNC251",  # blocking-sleep-in-async-function
 
     # flake8-bandit (S)
     "S101",  # assert
@@ -282,6 +297,7 @@ select = [
     "S112",  # try-except-continue
     "S113",  # request-without-timeout
     "S201",  # flask-debug-true  # ruff 0.0.291
+    "S202",  # tarfile-unsafe-members
     "S301",  # suspicious-pickle-usage
     "S302",  # suspicious-marshal-usage
     "S303",  # suspicious-insecure-hash-usage
@@ -304,7 +320,23 @@ select = [
     "S321",  # suspicious-ftp-lib-usage
     "S323",  # suspicious-unverified-context-usage
     "S324",  # hashlib-insecure-hash-function
+    "S401",  # suspicious-telnetlib-import
+    "S402",  # suspicious-ftplib-import
+  # "S403",  # suspicious-pickle-import
+    "S404",  # suspicious-subprocess-import
+    "S405",  # suspicious-xml-etree-import
+    "S406",  # suspicious-xml-sax-import
+    "S407",  # suspicious-xml-expat-import
+    "S408",  # suspicious-xml-minidom-import
+    "S409",  # suspicious-xml-pulldom-import
+    "S411",  # suspicious-xmlrpc-import
+    "S412",  # suspicious-httpoxy-import
+    "S413",  # suspicious-pycrypto-import
+    "S415",  # suspicious-pyghmi-import
     "S501",  # request-with-no-cert-validation
+    "S502",  # ssl-insecure-version
+    "S503",  # ssl-with-bad-defaults
+    "S504",  # ssl-with-no-version
     "S505",  # weak-cryptographic-key  # ruff 0.0.292
     "S506",  # unsafe-yaml-load
     "S507",  # ssh-no-host-key-verification  # ruff 0.0.291
@@ -319,6 +351,8 @@ select = [
     "S607",  # start-process-with-partial-path
     "S608",  # hardcoded-sql-expression
     "S609",  # unix-command-wildcard-injection
+    "S610",  # django-extra
+    "S611",  # django-raw-sql
     "S612",  # logging-config-insecure-listen
     "S701",  # jinja2-autoescape-false
     "S702",  # mako-templates  # ruff 0.1.5
@@ -327,9 +361,9 @@ select = [
     "BLE001",  # blind-except
 
     # flake8-boolean-trap (FBT)
-    #"FBT001",  # boolean-positional-arg-in-function-definition
-    #"FBT002",  # boolean-default-value-in-function-definition
-    #"FBT003",  # boolean-positional-value-in-function-call
+    "FBT001",  # boolean-positional-arg-in-function-definition
+    "FBT002",  # boolean-default-value-in-function-definition
+    "FBT003",  # boolean-positional-value-in-function-call
 
     # flake8-bugbear (B)
     "B002",  # unary-prefix-increment
@@ -365,18 +399,26 @@ select = [
     "B032",  # unintentional-type-annotation
     "B033",  # duplicate-value
     "B034",  # re-sub-positional-args  # ruff 0.0.278
+    "B035",  # static-key-dict-comprehension
     "B904",  # raise-without-from-inside-except
     "B905",  # zip-without-explicit-strict
+    "B909",  # loop-iterator-mutation
 
     # flake8-builtins (A)
     "A001",  # builtin-variable-shadowing
     "A002",  # builtin-argument-shadowing
     "A003",  # builtin-attribute-shadowing
+    "A004",  # builtin-import-shadowing
+    "A005",  # builtin-module-shadowing
+    "A006",  # builtin-lambda-argument-shadowing
 
     # flake8-commas (COM)
     "COM812",  # missing-trailing-comma
     "COM818",  # trailing-comma-on-bare-tuple
     "COM819",  # prohibited-trailing-comma
+
+    # flake8-copyright (CPY)
+    "CPY001",  # missing-copyright-notice
 
     # flake8-comprehensions (C4)
     "C400",  # unnecessary-generator-list
@@ -397,6 +439,7 @@ select = [
     "C417",  # unnecessary-map
     "C418",  # unnecessary-literal-within-dict-call
     "C419",  # unnecessary-comprehension-any-all
+    "C420",  # unnecessary-dict-comprehension-for-iterable
 
     # flake8-datetimez (DTZ)
   # "DTZ001",  # call-datetime-without-tzinfo
@@ -413,13 +456,13 @@ select = [
     "T100",  # debugger
 
     # flake8-django (DJ)
-    # "DJ001",  # django-nullable-model-string-field
-    # "DJ003",  # django-locals-in-render-function
-    # "DJ006",  # django-exclude-with-model-form
-    # "DJ007",  # django-all-with-model-form
-    # "DJ008",  # django-model-without-dunder-str
-    # "DJ012",  # django-unordered-body-content-in-model
-    # "DJ013",  # django-non-leading-receiver-decorator
+  # "DJ001",  # django-nullable-model-string-field
+  # "DJ003",  # django-locals-in-render-function
+  # "DJ006",  # django-exclude-with-model-form
+  # "DJ007",  # django-all-with-model-form
+  # "DJ008",  # django-model-without-dunder-str
+  # "DJ012",  # django-unordered-body-content-in-model
+  # "DJ013",  # django-non-leading-receiver-decorator
 
     # flake8-errmsg (EM)
     "EM101",  # raw-string-in-exception
@@ -447,6 +490,12 @@ select = [
     "ICN002",  # banned-import-alias
     "ICN003",  # banned-import-from
 
+    # flake8-logging (LOG)
+    "LOG001",  # direct-logger-instantiation
+    "LOG002",  # invalid-get-logger-argument
+  # "LOG007",  # exception-without-exc-info
+    "LOG009",  # undocumented-warn
+
     # flake8-logging-format (G)
     "G001",  # logging-string-format
     "G002",  # logging-percent-format
@@ -471,7 +520,7 @@ select = [
     "PIE810",  # multiple-starts-ends-with
 
     # flake8-print (T20)
-    # "T201",  # print
+    "T201",  # print
     "T203",  # p-print
 
     # flake8-pyi (PYI)
@@ -493,6 +542,7 @@ select = [
     "PYI016",  # duplicate-union-member
     "PYI017",  # complex-assignment-in-stub  # ruff 0.0.279
     "PYI018",  # unused-private-type-var  # ruff 0.0.281
+    "PYI019",  # custom-type-var-return-type
     "PYI020",  # quoted-annotation-in-stub
     "PYI021",  # docstring-in-stub
     "PYI024",  # collections-named-tuple
@@ -515,17 +565,24 @@ select = [
     "PYI048",  # stub-body-multiple-statements
     "PYI049",  # unused-private-typed-dict  # ruff 0.0.281
     "PYI050",  # no-return-argument-annotation-in-stub
+    "PYI051",  # redundant-literal-union
     "PYI052",  # unannotated-assignment-in-stub
     "PYI053",  # string-or-bytes-too-long
     "PYI054",  # numeric-literal-too-long
     "PYI056",  # unsupported-method-call-on-all  # ruff 0.0.281
+    "PYI058",  # generator-return-from-iter-method
+    "PYI059",  # generic-not-last-base-class
+    "PYI062",  # duplicate-literal-member
+    "PYI063",  # pre-pep570-positional-argument
+    "PYI064",  # redundant-final-literal
+    "PYI066",  # bad-version-info-order
 
     # flake8-pytest-style (PT)
     "PT001",  # pytest-fixture-incorrect-parentheses-style
     "PT002",  # pytest-fixture-positional-args
     "PT003",  # pytest-extraneous-scope-function
-    "PT004",  # pytest-missing-fixture-name-underscore
-    "PT005",  # pytest-incorrect-fixture-name-underscore
+  # "PT004",  # pytest-missing-fixture-name-underscore - DEPRECATED
+  # "PT005",  # pytest-incorrect-fixture-name-underscore - DEPRECATED
     "PT006",  # pytest-parametrize-names-wrong-type
     "PT007",  # pytest-parametrize-values-wrong-type
     "PT008",  # pytest-patch-with-lambda
@@ -573,7 +630,7 @@ select = [
     "SLF001",  # private-member-access
 
     # flake8-slots (SLOT)
-    "SLOT000",	# no-slots-in-str-subclass  # ruff 0.0.273
+    "SLOT000",  # no-slots-in-str-subclass  # ruff 0.0.273
     "SLOT001",  # no-slots-in-tuple-subclass # ruff 0.0.273
     "SLOT002",  # no-slots-in-namedtuple-subclass  # ruff 0.0.273
 
@@ -587,6 +644,7 @@ select = [
     "SIM109",  # compare-with-tuple
     "SIM110",  # reimplemented-builtin
     "SIM112",  # uncapitalized-environment-variables
+    "SIM113",  # enumerate-for-loop
     "SIM114",  # if-with-same-arms
     "SIM115",  # open-file-with-context-handler
     "SIM116",  # if-else-block-instead-of-dict-lookup
@@ -605,6 +663,7 @@ select = [
     "SIM300",  # yoda-conditions
     "SIM401",  # if-else-block-instead-of-dict-get
     "SIM910",  # dict-get-with-none-default
+    "SIM911",  # zip-dict-keys-and-values
 
     # flake8-tidy-imports (TID)
     "TID251",  # banned-api
@@ -617,6 +676,7 @@ select = [
     "TCH003",  # typing-only-standard-library-import
     "TCH004",  # runtime-import-in-type-checking-block
     "TCH005",  # empty-type-checking-block
+    "TCH010",  # runtime-string-union
 
     # flake8-gettext (INT)
     "INT001",  # f-string-in-get-text-func-call
@@ -698,43 +758,58 @@ select = [
     "PD901",  # pandas-df-variable-name
 
     # pygrep-hooks (PGH)
-    "PGH001",  # eval
-    "PGH002",  # deprecated-log-warn
+  # "PGH001",  # eval remapped to S307
+  # "PGH002",  # deprecated-log-warn remapped to G010
     "PGH003",  # blanket-type-ignore
     "PGH004",  # blanket-noqa
     "PGH005",  # invalid-mock-access
 
     # Pylint Convention (PLC)
     "PLC0105",  # type-name-incorrect-variance  # ruff 0.0.278
-    "PLC0131",	# type-bivariance  # ruff 0.0.278
+    "PLC0131",  # type-bivariance  # ruff 0.0.278
     "PLC0132",  # type-param-name-mismatch  # ruff 0.0.277
-    "PLC0205",	# single-string-slots  # ruff 0.0.276
+    "PLC0205",  # single-string-slots  # ruff 0.0.276
     "PLC0208",  # iteration-over-set
     "PLC0414",  # useless-import-alias
     "PLC0415",  # import-outside-top-level  # ruff 0.1.4
     "PLC1901",  # compare-to-empty-string
     "PLC2401",  # non-ascii-name  # ruff 0.1.2
     "PLC2403",  # non-ascii-import-name  # ruff 0.1.2
+    "PLC2701",  # import-private-name
+    "PLC2801",  # unnecessary-dunder-call
     "PLC3002",  # unnecessary-direct-lambda-call
 
     # Pylint Error (PLE)
     "PLE0100",  # yield-in-init
     "PLE0101",  # return-in-init
+    "PLE0115",  # nonlocal-and-global
     "PLE0116",  # continue-in-finally
     "PLE0117",  # nonlocal-without-binding
     "PLE0118",  # load-before-global-declaration
+    "PLE0237",  # non-slot-assignment
     "PLE0241",  # duplicate-bases
     "PLE0302",  # unexpected-special-method-signature
+    "PLE0303",  # invalid-length-return-type
+    "PLE0304",  # invalid-bool-return-type
+    "PLE0305",  # invalid-index-return-type
     "PLE0307",  # invalid-str-return-type
+    "PLE0308",  # invalid-bytes-return-type
+    "PLE0309",  # invalid-hash-return-type
     "PLE0604",  # invalid-all-object
     "PLE0605",  # invalid-all-format
+    "PLE0643",  # potential-index-error
     "PLE0704",  # misplaced-bare-raise  # ruff 0.1.1
+    "PLE1132",  # repeated-keyword-argument
+    "PLE1141",  # dict-iter-missing-items
     "PLE1142",  # await-outside-async
     "PLE1205",  # logging-too-many-args
     "PLE1206",  # logging-too-few-args
+    "PLE1300",  # bad-string-format-charater
     "PLE1307",  # bad-string-format-type
     "PLE1310",  # bad-str-strip-call
     "PLE1507",  # invalid-envvar-value
+    "PLE1519",  # singledispatch-method
+    "PLE1520",  # singledispatchmethod-function
     "PLE1700",  # yield-from-in-async-function
     "PLE2502",  # bidirectional-unicode
     "PLE2510",  # invalid-character-backspace
@@ -742,26 +817,36 @@ select = [
     "PLE2513",  # invalid-character-esc
     "PLE2514",  # invalid-character-nul
     "PLE2515",  # invalid-character-zero-width-space
+    "PLE4703",  # modified-iterating-set
 
     # Pylint Refactor (PLR)
     "PLR0124",  # comparison-with-itself  # ruff 0.0.273
     "PLR0133",  # comparison-of-constant
+    "PLR0202",  # no-classmethod-decorator
+    "PLR0203",  # no-staticmethod-decorator
     "PLR0206",  # property-with-parameters
     "PLR0402",  # manual-from-import
   # "PLR0904",  # too-many-public-methods  # ruff 0.0.290
   # "PLR0911",  # too-many-return-statements
   # "PLR0912",  # too-many-branches
   # "PLR0913",  # too-many-arguments
+  # "PLR0914",  # too-many-locals
   # "PLR0915",  # too-many-statements
   # "PLR0916",  # too-many-boolean-expressions  # ruff 0.1.1
-    "PLR1701",  # repeated-isinstance-calls
+  # "PLR0917",  # too-many-positional
+  # "PLR1702",  # too-many-nested-blocks
     "PLR1704",  # redefined-argument-from-local  # ruff 0.1.6
-    "PLR1706",  # and-or-ternary  # ruff 0.1.0
     "PLR1711",  # useless-return
     "PLR1714",  # repeated-equality-comparison-target  # ruff 0.0.279
+    "PLR1716",  # boolean-chained-comparison
     "PLR1722",  # sys-exit-alias
+    "PLR1730",  # if-stmt-min-max
+    "PLR1733",  # unnecessary-dict-index-lookup
+    "PLR1736",  # unnecessary-list-index-lookup
   # "PLR2004",  # magic-value-comparison
+    "PLR2044",  # empty-comment
     "PLR5501",  # collapsible-else-if
+    "PLR6104",  # non-augmented-assignment
     "PLR6201",  # literal-membership  # ruff 0.1.1
     "PLR6301",  # no-self-use  # ruff 0.0.286
 
@@ -769,12 +854,18 @@ select = [
     "PLW0108",  # unnecessary-lambda  # ruff 0.1.2
     "PLW0120",  # useless-else-on-loop
     "PLW0127",  # self-assigning-variable  # ruff 0.0.281
+    "PLW0128",  # redeclared-assigned-name
     "PLW0129",  # assert-on-string-literal
     "PLW0131",  # named-expr-without-context
+    "PLW0133",  # useless-exception-statement
+    "PLW0177",  # nan-comparison
+    "PLW0211",  # bad-staticmethod-argument
+    "PLW0245",  # super-without-brackets
     "PLW0406",  # import-self
     "PLW0602",  # global-variable-not-assigned
     "PLW0603",  # global-statement
     "PLW0604",  # global-at-module-level  # ruff 0.1.1
+    "PLW0642",  # self-or-cls-assignment
     "PLW0711",  # binary-op-exception
     "PLW1501",  # bad-open-mode  # ruff 0.1.4
     "PLW1508",  # invalid-envvar-default
@@ -791,11 +882,10 @@ select = [
     "TRY002",  # raise-vanilla-class
     "TRY003",  # raise-vanilla-args
     "TRY004",  # type-check-without-type-error
-    "TRY200",  # reraise-no-cause
     "TRY201",  # verbose-raise
+    "TRY203",  # useless-try-except
     "TRY300",  # try-consider-else
     "TRY301",  # raise-within-try
-    "TRY302",  # useless-try-except
     "TRY400",  # error-instead-of-exception
     "TRY401",  # verbose-log-message
 
@@ -807,6 +897,11 @@ select = [
     "NPY002",  # numpy-legacy-random
     "NPY003",  # numpy-deprecated-function  # ruff 0.0.276
     "NPY201",  # numpy2-deprecation  # ruff 0.1.4
+
+    # FastAPI (FAST)
+    "FAST001", # fast-api-redundant-response-model
+    "FAST002", # fast-api-non-annotated-dependency
+    "FAST003", # fast-api-unused-path-parameter
 
     # Airflow (AIR)
     "AIR001",  # airflow-variable-name-task-id-mismatch
@@ -821,25 +916,46 @@ select = [
 
     # refurb (FURB)
     "FURB101",  # read-whole-file  # ruff 0.1.2
+    "FURB103",  # write-whole-file
     "FURB105",  # print-empty-string  # ruff 0.0.292
+    "FURB110",  # if-exp-instead-of-or-operator
     "FURB113",  # repeated-append  # ruff 0.0.287
+    "FURB116",  # f-string-number-format
+    "FURB118",  # reimplemented-operator
+    "FURB129",  # readlines-in-for
     "FURB131",  # delete-full-slice  # ruff 0.0.287
     "FURB132",  # check-and-remove-from-set  # ruff 0.0.287
     "FURB136",  # if-expr-min-max  # ruff 0.1.6
   # "FURB140",  # reimplemented-starmap  # ruff 0.0.291
+    "FURB142",  # for-loop-set-mutations
     "FURB145",  # slice-copy  # ruff 0.0.290
     "FURB148",  # unnecessary-enumerate  # ruff 0.0.291
     "FURB152",  # math-constant  # ruff 0.1.6
+    "FURB154",  # repeated-global
+    "FURB156",  # hardcoded-string-charset
+    "FURB157",  # verbose-decimal-constructor
+    "FURB161",  # bit-count
+    "FURB163",  # redundant-log-base
+    "FURB164",  # unnecessary-from-float
+    "FURB166",  # int-on-sliced-str
+    "FURB167",  # regex-flag-alias
     "FURB168",  # isinstance-type-none  # ruff 0.1.4
     "FURB169",  # type-none-comparison  # ruff 0.1.5
     "FURB171",  # single-item-membership-test  # ruff 0.1.0
     "FURB177",  # implicit-cwd  # ruff 0.0.292
+    "FURB180",  # meta-class-abc-meta
+    "FURB181",  # hashlib-digest-hex
+    "FURB187",  # list-reverse-copy
+    "FURB188",  # slice-to-remove-prefix-or-suffix
+    "FURB192",  # sorted-min-max
 
-    # flake8-logging (LOG)
-    "LOG001",  # direct-logger-instantiation  # ruff 0.0.290
-    "LOG002",  # invalid-get-logger-argument  # ruff 0.0.291
-  # "LOG007",  # exception-without-exc-info  # ruff 0.0.291  # Conflicts with TRY400
-    "LOG009",  # undocumented-warn  # ruff 0.0.290
+    # pydoclint (DOC)
+    "DOC201",   # docstring-missing-returns
+    "DOC202",   # docstring-extraneous-returns
+    "DOC402",   # docstring-missing-yields
+    "DOC403",   # docstring-extraneous-yields
+    "DOC501",   # docstring-missing-exception
+    "DOC502",   # docstring-extraneous-exception
 
     # Ruff-specific rules (RUF)
     "RUF001",  # ambiguous-unicode-character-string
@@ -851,18 +967,34 @@ select = [
     "RUF008",  # mutable-dataclass-default
     "RUF009",  # function-call-in-dataclass-default-argument
     "RUF010",  # explicit-f-string-type-conversion
-    "RUF011",  # static-key-dict-comprehension  # ruff 0.0.273
   # "RUF012",  # mutable-class-default  # ruff 0.0.273
     "RUF013",  # implicit-optional  # ruff 0.0.273
     "RUF015",  # unnecessary-iterable-allocation-for-first-element  # ruff 0.0.278
     "RUF016",  # invalid-index-type  # ruff 0.0.278
     "RUF017",  # quadratic-list-summation  # ruff 0.0.285
+    "RUF018",  # assignment-in-assert
+    "RUF019",  # unnecessary-key-check
+    "RUF020",  # never-union
+    "RUF021",  # parenthesize-chained-operators
+    "RUF022",  # unsorted-dunder-all
+    "RUF023",  # unsorted-dunder-slots
+    "RUF024",  # mutable-fromkeys-value
+    "RUF026",  # default-factory-kwarg
+    "RUF027",  # missing-f-string-syntax
+    "RUF028",  # invalid-formatter-suppression-comment
+    "RUF029",  # unused-async
+    "RUF030",  # assert-with-print-message
+    "RUF031",  # incorrectly-parenthesized-tuple-in-subscript
+    "RUF032",  # decimal-from-float-literal
+    "RUF033",  # post-init-default
+    "RUF034",  # useless-if-else    
   # "RUF100",  # unused-noqa
+    "RUF101",  # redirected-noqa
     "RUF200",  # invalid-pyproject-toml
     ]
-ignore = []
+lint.ignore = []
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["N999"]  # github action complains: __init__.py:1:1: N999 Invalid module name: 'frameworks.validation.pythonsv.projects.diamondrapids'
 
 [tool.ruff.lint.pydocstyle]
