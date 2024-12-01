@@ -1,0 +1,219 @@
+set nocompatible
+"source $VIMRUNTIME/vimrc_example.vim
+source $VIMRUNTIME/mswin.vim
+behave mswin
+set bs=indent,eol,start
+set confirm
+set cmdheight=2
+set scrolloff=10
+set history=50
+set ruler
+set showcmd
+syntax on
+set ignorecase
+set smartcase
+set incsearch
+"set nohlsearch
+set autoindent
+set nu
+colorscheme slate
+set background=dark
+set mouse=a
+set ts=4
+set nowrap
+set lines=44
+set columns=85
+set hlsearch
+imap jj <Esc>
+inoremap <Esc> <Esc>`^
+set fileencodings=utf-8
+"unmap <C-F>
+
+"ctags search upwards stop at PythonSV folder"
+set tags=./tags;C:\PythonSV
+
+"Unix file endings"
+set ff=unix
+
+"set textwidth=80
+set guifont=Consolas:h11:cDEFAULT
+"set guifont=Courier_New:h11:cDEFAULT
+if has("vms")
+		set nobackup
+else
+		set backup
+endif
+
+"Central location for swap and backup
+set backupdir=C:\\Users\\tjburbac\\AppData\\Local\\Temp
+set dir=C:\\Users\\tjburbac\\AppData\\Local\\Temp
+
+"Disable beep/flash
+set noeb vb t_vb=
+set vb t_vb=
+" Plugins?
+packloadall
+" Load all the helptags?
+silent! helptags ALL
+" ALE configuration section.
+let g:ale_linters_explicit = 1
+" let g:ale_linters = {'python': []}
+" let g:ale_linters = {'python': ['ruff']}
+let g:ale_linters = {'python': ['mypy', 'ruff']}
+let g:ale_lint_on_text_changed = 'never'
+let g:ale_lint_on_insert_leave = 0
+let g:ale_lint_on_enter = 0
+let g:ale_python_ruff_executable = 'ruff'
+" let g:ale_python_ruff_options = 'check'
+" let g:ale_python_ruff_options = '--extend-ignore=E501'
+let g:ale_python_mypy_options = '--check-untyped-defs'
+let g:ale_fixers = {'python': ['black']}
+" let g:ale_python_black_options = '--line-length=400'
+nmap ]a :ALENextWrap<CR>
+nmap [a :ALEPreviousWrap<CR>
+nmap ]A :ALELast<CR>
+nmap [A :ALEFirst<CR>
+" command ALERun :call ale#Queue(0)
+
+" quickfix list
+nmap [q :cprev<CR>
+nmap ]q :cnext<CR>
+nmap [Q :cfirst<CR>
+nmap ]Q :clast<CR>
+
+" Optional buffer selection
+function! BufSel(pattern)
+  let bufcount = bufnr("$")
+  let currbufnr = 1
+  let nummatches = 0
+  let firstmatchingbufnr = 0
+  while currbufnr <= bufcount
+    if(bufexists(currbufnr))
+      let currbufname = bufname(currbufnr)
+      if(match(currbufname, a:pattern) > -1)
+        echo currbufnr . ": ". bufname(currbufnr)
+        let nummatches += 1
+        let firstmatchingbufnr = currbufnr
+      endif
+    endif
+    let currbufnr = currbufnr + 1
+  endwhile
+  if(nummatches == 1)
+    execute ":buffer ". firstmatchingbufnr
+  elseif(nummatches > 1)
+    let desiredbufnr = input("Enter buffer number: ")
+    if(strlen(desiredbufnr) != 0)
+      execute ":buffer ". desiredbufnr
+    endif
+  else
+    echo "No matching buffers"
+  endif
+endfunction
+
+"Bind the BufSel() function to a user-command
+command! -nargs=1 Bs :call BufSel("<args>")
+
+" Version: 0.1 
+" Date: 13 May 2006 
+" 
+" Description: most python scripts use four spaces for indenting, but 
+" sometimes you will end up editing a script where tabs 
+" are used; in these situations it can be useful to 
+" automatically detect whether spaces or tabs were used, 
+" and set some parameters (or call some functions) consequently. 
+" 
+" Usage: you can put this script in you vimrc and call the PyIndentAutoCfg 
+" function with an autocmd associated to python files, or call 
+" it manually, or put it in the python.vim syntax script, or... :-) 
+
+" Function to set parameters for python scripts that use 
+" spaces for indention. This is also the default. YMMV. 
+function PySpacesCfg() 
+ set expandtab " use spaces in place of tabs. 
+ set tabstop=8 " number of spaces for a tab. 
+ set softtabstop=4 " number of spaces for a tab in editing operations. 
+ set shiftwidth=4 " number of spaces for indent (>>, <<, ...) 
+endfunction 
+
+
+
+" Function to set parameters for python scripts that use 
+" tabs for indention. YMMV. 
+function PyTabsCfg() 
+ set noexpandtab 
+ set tabstop=4 
+ set softtabstop=4 
+ set shiftwidth=4 
+endfunction 
+
+
+" This function returns 1 if the file looks like a python script 
+" that uses tabs for indenting, or 0 otherwise. 
+function PyIsTabIndent() 
+  let lnum = 1 
+  let max_lines = 200 " max number of lines to check. 
+  let got_tabs = 0 
+  let got_cols = 0 " 1 if the previous lines ended with columns. 
+  while lnum <= max_lines 
+    let line = getline(lnum) 
+    let lnum = lnum + 1 
+    if got_cols == 1 
+      if line =~ "^\t\t" " at least two tabs, to prevent false-positives. 
+        let got_tabs = 1 
+        break 
+      endif 
+    endif 
+    if line =~ ":\s*$" 
+      let got_cols = 1 
+    else 
+      let got_cols = 0 
+    endif 
+  endwhile 
+  return got_tabs 
+endfunction 
+
+
+" Check the file, and run the relative function. 
+function PyAutoCfg() 
+  if PyIsTabIndent() == 1 
+    call PyTabsCfg() 
+  else 
+    call PySpacesCfg() 
+  endif 
+endfunction 
+
+
+" If this is a Grits or Ruby file then set the syntax editor
+" and set expand tab and ts=3
+function RubyCfg()
+  set filetype=ruby
+  set ts=3
+  set expandtab
+  set softtabstop=3 
+  set shiftwidth=3
+endfunction
+
+" Function to set parameters for fortran 77 code 
+function FortranCfg() 
+ set expandtab 
+ set tabstop=4
+ set softtabstop=4
+ set shiftwidth=4
+ set colorcolumn=73
+endfunction 
+
+" Function to set parameters for fortran 77 code 
+function CppCfg() 
+ set expandtab 
+ set tabstop=2
+ set softtabstop=2
+ set shiftwidth=2
+endfunction
+
+au BufNewFile,BufRead *.py		call PyAutoCfg()
+au BufNewFile,BufRead *.tcl		call PyAutoCfg()
+au BufNewFile,BufRead *.gsf		call RubyCfg()
+au BufNewFile,BufRead *.rb		call RubyCfg()
+au BufNewFile,BufRead *.f		call FortranCfg()
+au BufNewFile,BufRead *.f90		call FortranCfg()
+au BufNewFile,BufRead *.c		call CppCfg()
