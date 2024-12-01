@@ -18,7 +18,7 @@ import pyglet
 import requests
 import functools
 import heapq
-import cpmpy
+# import cpmpy
 
 # Advent of Code
 # Never did spend the time to work out how to get oAuth to work so this code expects you to
@@ -35,13 +35,19 @@ _year = 2024
 def _check_internet(host="8.8.8.8", port=53, timeout=2):
     """
     Attempt to check for the firewall by connecting to Google's DNS.
+
+    Args:
+        host (str): A DNS server IP address, defaults to 8.8.8.8
+        port (int): A port number, defaults to 53.
+        timeout (int): A timeout value, defaults to 2.
+
+    Returns:
+        bool: True if DNS ping succeeds.
     """
     try:
         socket.setdefaulttimeout(timeout)
         socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
         return True
-    # except socket.error as ex:
-        # print(ex)
     except socket.error:
         return False
 
@@ -300,58 +306,64 @@ def dfs(graph, node):  # Example function for DFS
 
 
 def bfs(graph, node):  # Example function for BFS
-  visited = set()
-  queue = [node]
+    visited = set()
+    queue = [node]
 
-  while queue:          # Creating loop to visit each node
-    this_node = queue.pop(0) 
-    print(this_node)
+    while queue:          # Creating loop to visit each node
+        this_node = queue.pop(0)
+        print(this_node)
 
     for neighbor in graph[this_node]:
-      if neighbor not in visited:
-        visited.add(neighbor)
-        queue.append(neighbor)
+        if neighbor not in visited:
+            visited.add(neighbor)
+            queue.append(neighbor)
+
+
+def day1_original(example=False):
+    """So it begins."""
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    if example == 1:
+        day = ("3   4\n"
+               "4   3\n"
+               "2   5\n"
+               "1   3\n"
+               "3   9\n"
+               "3   3\n")
+
+    # print(day)
+    p = get_input(day, "\n", None, override=False)
+    l = []  # noqa: E741
+    r = []
+    for i in p:
+        a, b = i.split("  ")
+        l.append(int(a))
+        r.append(int(b))
+    # print(l)
+    l.sort()
+    r.sort()
+    d = []
+    for i in range(len(l)):
+        d.append(abs(l[i] - r[i]))  # noqa: PERF401
+    # print(d)
+    print(sum(d))
+    p2 = 0
+    for i in range(len(l)):
+        p2 += r.count(l[i]) * l[i]
+    print(p2)
 
 
 def day1(example=False):
-    """
-    So it begins!
-    """
+    """So it begins."""
     day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    if example == 1:
-        day = ("1abc2\n"
-               "pqr3stu8vwx\n"
-               "a1b2c3d4e5f\n"
-               "treb7uchet\n")
-    if example == 2:
-        day = ("two1nine\n"
-               "eightwothree\n"
-               "abcone2threexyz\n"
-               "xtwone3four\n"
-               "4nineeightseven2\n"
-               "zoneight234\n"
-               "7pqrstsixteen\n")
-
-    calibration_doc = get_input(day, '\n', None, False)
-    p1_calibration = 0
-    p2_calibration = 0
-    numbers = "1234567890"
-    number_words = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]   
-    for new_value in calibration_doc:
-        if any(digit in new_value for digit in numbers):  # Conditional just for the part 2 example, not needed for the real puzzle input.
-            digit_index_list = [f(x) for x in numbers if x in new_value for f in (lambda x: new_value.index(x), lambda x: new_value.rindex(x))]
-            value = f"{new_value[min(digit_index_list)]}{new_value[max(digit_index_list)]}"
-        else:
-            value = "00"
-        p1_calibration += int(value)
-        if any(word in new_value for word in number_words):  # Skip if there are no number words in the calibration.
-            first_word_dict = dict([(new_value.index(x), numbers[number_words.index(x)]) for x in number_words if x in new_value])
-            value = first_word_dict[min(first_word_dict.keys())] + value[1] if min(first_word_dict.keys()) < min(digit_index_list) else value
-            last_word_dict = dict([(new_value.rindex(x), numbers[number_words.index(x)]) for x in number_words if x in new_value])
-            value = value[0] + last_word_dict[max(last_word_dict.keys())] if max(last_word_dict.keys()) > max(digit_index_list) else value
-        p2_calibration += int(value)
-    print(f"Part 1 the sum of calibration values is {p1_calibration}")
-    print(f"Part 2 the sum of calibration values is {p2_calibration}")
-
-
-
+    if example:
+        day = ("3   4\n"
+               "4   3\n"
+               "2   5\n"
+               "1   3\n"
+               "3   9\n"
+               "3   3\n")
+    location = np.array(get_input(day, "\n", lambda x: (int(x.split()[0]), int(x.split()[1])), override=False))
+    part_1 = np.sum(np.abs(location[:, 0][location[:, 0].argsort()] - location[:, 1][location[:, 1].argsort()]))
+    print(f"Part 1: The total distance is {part_1}")
+    part_2 = np.sum([x * np.count_nonzero(location[:, 1] == x) for x in np.nditer(location[:, 0])])
+    print(f"Part 2: The similarity score is {part_2}")
