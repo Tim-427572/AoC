@@ -367,3 +367,79 @@ def day1(example=False):
     print(f"Part 1: The total distance is {part_1}")
     part_2 = np.sum([x * np.count_nonzero(location[:, 1] == x) for x in np.nditer(location[:, 0])])
     print(f"Part 2: The similarity score is {part_2}")
+
+
+def day2_part1_original(example=False):
+    """Day 2."""
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    if example:
+        day = ("7 6 4 2 1\n"
+               "1 2 7 8 9\n"
+               "9 7 6 2 1\n"
+               "1 3 2 4 5\n"
+               "8 6 4 4 1\n"
+               "1 3 6 7 9")
+    p1 = 0
+    p = get_input(day, "\n", lambda x: list(map(int, x.split(" "))), override=False)
+    for lvl in p:
+        a = np.diff(lvl)
+        a.sort()
+        print("")
+        print(lvl)
+        print(a)
+        if a[-1] > 3:
+            continue
+        if a[0] < -3:
+            continue
+        if 0 in a:
+            continue
+        b=np.where(a<0)
+        if np.where(a<0)[0].size == a.size:
+            print("safe neg")
+            p1 += 1
+        if np.where(a>0)[0].size == a.size:
+            print("safe pos")
+            p1+=1
+    print(p1)
+
+
+def safe_level(lvl):
+    """Check if the level is safe."""
+    a = np.diff(lvl)
+    a.sort()
+    if a[-1] > 3:
+        return False
+    if a[0] < -3:
+        return False
+    if 0 in a:
+        return False
+    if np.where(a < 0)[0].size == a.size:
+        return True
+    if np.where(a > 0)[0].size == a.size:
+        return True
+    return False
+
+
+def day2_part2_original(example=False):
+    """Day 2."""
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    if example:
+        day = ("7 6 4 2 1\n"
+               "1 2 7 8 9\n"
+               "9 7 6 2 1\n"
+               "1 3 2 4 5\n"
+               "8 6 4 4 1\n"
+               "1 3 6 7 9")
+    p2 = 0
+    p = get_input(day, "\n", lambda x: list(map(int, x.split(" "))), override=True)
+    for lvl in p:
+        if safe_level(lvl):
+            p2 += 1
+        else:
+            for i in range(len(lvl)):
+                temp = copy.deepcopy(lvl)
+                temp.pop(i)
+                if safe_level(temp):
+                    p2 += 1
+                    break
+    print(p2)
