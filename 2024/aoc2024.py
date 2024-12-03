@@ -403,7 +403,7 @@ def day2_part1_original(example=False):
     print(p1)
 
 
-def safe_level(lvl):
+def safe_level_orig(lvl):
     """Check if the level is safe."""
     a = np.diff(lvl)
     a.sort()
@@ -433,13 +433,161 @@ def day2_part2_original(example=False):
     p2 = 0
     p = get_input(day, "\n", lambda x: list(map(int, x.split(" "))), override=True)
     for lvl in p:
-        if safe_level(lvl):
+        if safe_level_orig(lvl):
             p2 += 1
         else:
             for i in range(len(lvl)):
                 temp = copy.deepcopy(lvl)
                 temp.pop(i)
-                if safe_level(temp):
+                if safe_level_orig(temp):
                     p2 += 1
                     break
+    print(p2)
+
+
+def safe_level(np_array):
+    """
+    Check if the levels on a report are 'safe'.
+
+    Args:
+        np_array (np.array): The report to check
+
+    Returns:
+        bool: True if safe.
+    """
+    safe = False
+    dampener_safe = False
+    pause = False
+    print(np.diff(np_array))
+    pos_bad_locations = np.where(np.isin(np.diff(np_array), [1, 2, 3], invert=True))[0]
+    neg_bad_locations = np.where(np.isin(np.diff(np_array), [-1, -2, -3], invert=True))[0]
+    
+
+
+    neg_lvl_diff = np.isin(np.diff(np_array), [-1, -2, -3])
+    if np.all(pos_lvl_diff) or np.all(neg_lvl_diff):
+        safe = dampener_safe = True
+    if np.count_nonzero(np.invert(pos_lvl_diff)) == 1:
+        unsafe_location = np.where(np.invert(pos_lvl_diff))[0]
+        print("unsafe at:", unsafe_location)
+        temp = np.diff(np.delete(np_array, unsafe_location + 1))
+        print(temp)
+        if np.all(np.isin(temp, [-1, -2, -3])) or np.all(np.isin(temp, [1, 2, 3])):
+            dampener_safe = True
+        else:
+            pause = True
+    if np.count_nonzero(np.invert(neg_lvl_diff)) == 1:
+        unsafe_location = np.where(np.invert(neg_lvl_diff))[0]
+        print("unsafe at:", unsafe_location)
+        temp = np.diff(np.delete(np_array, unsafe_location + 1))
+        print(temp)
+        if np.all(np.isin(temp, [-1, -2, -3])) or np.all(np.isin(temp, [1, 2, 3])):
+            dampener_safe = True
+        else:
+            pause = True
+    print(safe, dampener_safe)
+    if pause:
+        _=input()
+    return safe, dampener_safe
+
+
+def day2(example=False, override=False):
+    """Day 2."""
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    if example:
+        day = ("7 6 4 2 1\n"
+               "1 2 7 8 9\n"
+               "9 7 6 2 1\n"
+               "1 3 2 4 5\n"
+               "8 6 4 4 1\n"
+               "1 3 6 7 9")
+    p1 = p2 = 0
+    puzzle = get_input(day, "\n", lambda x: np.array(list(map(int, x.split(" ")))), override=override)
+    for level in puzzle:
+        for check in [[1, 2, 3], [-1, -2, -3]]:
+            differences = np.diff(level)
+            bad_locations = np.where(np.isin(differences, check, invert=True))[0]
+            if bad_locations.size == 0:
+                p1 += 1
+                p2 += 1
+            if (bad_locations.size == 1 and
+                (np.where(np.isin(np.diff(np.delete(level, bad_locations[0])), check, invert=True))[0].size == 0 or
+                np.where(np.isin(np.diff(np.delete(level, bad_locations[0] + 1)), check, invert=True))[0].size == 0)):
+                p2 += 1
+            if (bad_locations.size == 2 and np.diff(bad_locations)[0] == 1 and
+                differences[bad_locations[0]] + differences[bad_locations[1]] in check):
+                p2 += 1
+
+    print(f"Part 1: The number of safe reports is {p1}")
+    print(f"Part 2: The number of safe reports using the 'Problem Dampener' is {p2}")
+
+
+def mul(a,b):
+    return a*b
+
+
+def day3_eval(example=True, override=False):
+    """
+    Day 3.
+
+    Args:
+        example (bool): Use the example input.
+        override (boot): Override the stored get_input data.
+    """
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    if example:
+        day = """xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"""
+    p1 = p2 = 0
+    p = get_input(day, "\n", None, override=override)
+    r=re.compile("mul\([0-9]*,[0-9]*\)|do\(\)|don't\(\)")
+    do=True
+    for x in p:
+        l = r.findall(x)
+        print(l)
+        for i in l:
+            if i == "do()":
+                do=True
+                continue
+            if i == "don't()":
+                do=False
+                continue
+            p1 += eval(i)
+            if do:
+                p2 += eval(i)
+    print(p1)
+    print(p2)
+
+
+def day3(example=True, override=False):
+    """
+    Day 3.
+
+    Args:
+        example (bool): Use the example input.
+        override (boot): Override the stored get_input data.
+    """
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    if example:
+        day = """xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"""
+    p1 = p2 = 0
+    p = get_input(day, "\n", None, override=override)
+    r=re.compile("mul\([0-9]*,[0-9]*\)|do\(\)|don't\(\)")
+    do=True
+    for x in p:
+        l = r.findall(x)
+        print(l)
+        for i in l:
+            if i == "do()":
+                do=True
+                continue
+            if i == "don't()":
+                do=False
+                continue
+            a=int(i.split("(")[1].split(",")[0])
+            b=int(i.split(",")[1].split(")")[0])
+            print(i, a, b)
+            p1 += (a*b)
+            if do:
+                p2 += (a*b)
+    print(p1)
     print(p2)
