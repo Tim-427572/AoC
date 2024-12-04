@@ -591,3 +591,76 @@ def day3(example=True, override=False):
                 p2 += (a*b)
     print(p1)
     print(p2)
+
+
+def day4(example=False, override=False):
+    """Day 4."""
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    if example:
+        day = ("MMMSXXMASM\n"
+               "MSAMXMSMSA\n"
+               "AMXSXMAAMM\n"
+               "MSAMASMSMX\n"
+               "XMASAMXAMM\n"
+               "XXAMMXXAMA\n"
+               "SMSMSASXSS\n"
+               "SAXAMASAAA\n"
+               "MAMMMXMMMM\n"
+               "MXMXAXMASX\n")
+    p1 = p2 = 0
+    p = get_input(day, "\n", None, override=override)
+    the_map= []
+    for l in p:
+        the_map.append(list(l))
+    the_xs=[]
+    # Part 1
+    # Find the X's
+    for y,l in enumerate(p):
+        for x,c in enumerate(l):
+            if c == "X":
+                the_xs.append(Point_Object(y,x))
+    # Check for XMAS
+    for x in the_xs:
+        for md in ["u","d","l","r","ur","ul","dl","dr"]:
+            t = Point_Object(*x.p())
+            t.move(md)
+            if t.y not in range(len(the_map)) or t.x not in range(len(the_map[0])) or the_map[t.y][t.x] != "M":
+                continue
+            t.move(md)
+            if t.y not in range(len(the_map)) or t.x not in range(len(the_map[0])) or the_map[t.y][t.x] != "A":
+                continue
+            t.move(md)
+            if t.y not in range(len(the_map)) or t.x not in range(len(the_map[0])) or the_map[t.y][t.x] != "S":
+                continue
+            p1+=1
+    # Part 2
+    # Find the A's
+    the_as = []
+    for y,l in enumerate(p):
+        for x,c in enumerate(l):
+            if c == "A":
+                the_as.append(Point_Object(y,x))
+    # Check for MAS
+    for a in the_as:
+        ur = Point_Object(*a.p())
+        ur.move("ur")
+        ul = Point_Object(*a.p())
+        ul.move("ul")
+        dr = Point_Object(*a.p())
+        dr.move("dr")
+        dl = Point_Object(*a.p())
+        dl.move("dl")
+        if ur.y in range(len(the_map)) and ur.x in range(len(the_map)) and \
+           ul.y in range(len(the_map)) and ul.x in range(len(the_map)) and \
+           dl.y in range(len(the_map)) and dl.x in range(len(the_map)) and \
+           dl.y in range(len(the_map)) and dl.x in range(len(the_map)):
+            ul_l = the_map[ul.y][ul.x]
+            ur_l = the_map[ur.y][ur.x]
+            dl_l = the_map[dl.y][dl.x]
+            dr_l = the_map[dr.y][dr.x]
+            if ((ul_l == "M" and dr_l == "S") or (ul_l == "S" and dr_l == "M")) and \
+               ((ur_l == "M" and dl_l == "S") or (ur_l == "S" and dl_l == "M")):
+                p2 += 1
+    print(p1)
+    print(p2)
+
