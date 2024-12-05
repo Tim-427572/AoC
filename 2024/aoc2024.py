@@ -664,3 +664,51 @@ def day4(example=False, override=False):
     print(p1)
     print(p2)
 
+
+def day5(example=False, override=False):
+    """Day 5."""
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    if example:
+        day = ("47|53\n97|13\n97|61\n97|47\n75|29\n61|13\n75|53\n29|13\n97|29\n"
+               "53|29\n\n61|53\n\n97|53\n61|29\n47|13\n75|47\n97|75\n47|61\n75|61\n"
+               "47|29\n75|13\n53|13"
+               "\n"
+               "75,47,61,53,29\n"
+               "97,61,53,29,13\n"
+               "75,29,13\n"
+               "75,97,47,61,53\n"
+               "61,13,29\n"
+               "97,13,75,29,47\n")
+    p1 = p2 = 0
+    p = get_input(day, "\n", None, override=override)
+    r = []
+    u = []
+    for l in p:
+        if "|" in l:
+            a, b = l.split("|")
+            r.append((int(a), int(b)))
+        if "," in l:
+            u.append(list(map(int, l.split(","))))
+    for x in u:
+        invalid = False
+        while True:
+            changed = False
+            for a, b in r:
+                if a in x and b in x:
+                    i_a = x.index(a)
+                    i_b = x.index(b)
+                    if i_a >= i_b:
+                        invalid = True
+                        changed = True
+                        x[i_a] = b
+                        x[i_b] = a
+            if not changed:
+                break
+
+        if invalid:
+            p2 += x[len(x) // 2]
+        else:
+            p1 += x[len(x) // 2]
+    print(p1)
+    print(p2)
+
