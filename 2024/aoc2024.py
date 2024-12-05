@@ -7,6 +7,7 @@ import random
 import re
 import socket
 from os import path
+import time, sys
 
 # import functools
 import itertools
@@ -14,7 +15,7 @@ import itertools
 import collections
 import networkx as nx
 import numpy as np
-import pyglet
+# import pyglet
 import requests
 import functools
 import heapq
@@ -76,7 +77,7 @@ def _pull_puzzle_input(day, seperator, cast=None):
         with open(_code_path + "/session.txt", 'r') as session_file:
             session = session_file.read()
         # Check to see if behind the firewall.
-        if _check_internet():
+        if _check_internet() and False:
             proxy_dict = {}
         else:
             proxy_dict = {'http': 'proxy-dmz.intel.com:911',
@@ -176,6 +177,26 @@ def print_np(array):
 #     #label = pyglet.text.Label("Hello, world",font_name='Times New Roman',font_size=36, anchor_x='center',anchor_y='center')
 #     _ = Viz(512, 512, "Test",resizable=False)
 #     pyglet.app.run()
+
+class Timer (object):
+    """
+    Performance debugging class. Usage:
+       with Timer(<optional label/tag>):
+    """
+    def __init__(self, label=None, on=True):
+        self.label = label
+        self.on=on
+
+    def __enter__(self):
+        self.tic = time.perf_counter()
+        return(self)
+
+    def __exit__(self, type, value, traceback):
+        elapsed = time.perf_counter() - self.tic
+        if self.on==True:
+            elapsed_us = elapsed*1000000
+            print("Finished %s after %.0f us\n"%(self.label, elapsed_us))
+        self.elapsed = elapsed
 
 class Point_Object:
     """
@@ -712,3 +733,50 @@ def day5(example=False, override=False):
     print(p1)
     print(p2)
 
+
+global rules
+
+
+def _page_sort(a, b):
+    global rules
+    if (a, b) in rules:
+        return -1
+    elif (b, a) in rules:
+        return 1
+    else:
+        -1
+    return 0
+
+
+def day5_sort(example=False, override=False):
+    """Day 5."""
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    if example:
+        day = ("47|53\n97|13\n97|61\n97|47\n75|29\n61|13\n75|53\n29|13\n97|29\n"
+               "53|29\n\n61|53\n\n97|53\n61|29\n47|13\n75|47\n97|75\n47|61\n75|61\n"
+               "47|29\n75|13\n53|13"
+               "\n"
+               "75,47,61,53,29\n"
+               "97,61,53,29,13\n"
+               "75,29,13\n"
+               "75,97,47,61,53\n"
+               "61,13,29\n"
+               "97,13,75,29,47\n")
+    p1 = p2 = 0
+    p = get_input(day, "\n", None, override=override)
+    global rules
+    rules = set()
+    u = []
+    for l in p:
+        if "|" in l:
+            rules.add(tuple(map(int, l.split("|"))))
+        if "," in l:
+            u.append(list(map(int, l.split(","))))
+    for x in u:
+        n = sorted(x, key=functools.cmp_to_key(_page_sort))
+        if n == x:
+            p1 += x[len(x) // 2]
+        else:
+            p2 += n[len(n) // 2]
+    print(p1)
+    print(p2)
