@@ -770,12 +770,60 @@ def day5_sort(example=False, override=False):
         if "|" in l:
             rules.add(tuple(map(int, l.split("|"))))
         if "," in l:
-            u.append(list(map(int, l.split(","))))
+            u.append(np.array(l.split(","), dtype=int))
     for x in u:
-        n = sorted(x, key=functools.cmp_to_key(_page_sort))
-        if n == x:
-            p1 += x[len(x) // 2]
+        n = np.array(sorted(x, key=functools.cmp_to_key(_page_sort)))
+        if (n == x).all():
+            p1 += x[x.size // 2]
         else:
-            p2 += n[len(n) // 2]
+            p2 += n[n.size // 2]
     print(p1)
     print(p2)
+
+
+def day5_bryce(override=False):
+    from collections import defaultdict
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    p = get_input(day, "\n", None, override=override)
+    rules = defaultdict(list)
+    updates = []
+    for item in p:
+        if "|" in item:
+            page, later_page = item.split('|')
+            page = int(page)
+            later_page = int(later_page)
+            rules[page].append(later_page)
+        if "," in item:
+            updates.append(list(map(int, item.split(","))))
+
+    total_sum = 0
+    for update in updates:
+        still_good = True
+        for i, page in enumerate(update):
+            for later_page in update[i+1:]:
+                if later_page not in rules[page]:
+                    still_good = False
+                    break
+            if not still_good:
+                break
+        if still_good:
+            total_sum += update[(len(update)-1)//2 ]
+
+    # print("P1:", total_sum)
+
+    total_sum = 0
+    for update in updates:
+        sorting_list = [i for i in update]
+        changed = False
+        for page in update:
+            index = sorting_list.index(page)
+            for later_page in sorting_list[index+1:]:
+                if later_page not in rules[page]:
+                    sorting_list.remove(later_page)
+                    sorting_list.insert(index, later_page)
+                    index+=1
+                    changed = True
+        if changed:
+            total_sum += sorting_list[(len(sorting_list)-1)//2]
+            
+    # print("P2:", total_sum)
