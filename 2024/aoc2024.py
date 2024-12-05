@@ -744,8 +744,7 @@ def _page_sort(a, b):
     elif (b, a) in rules:
         return 1
     else:
-        -1
-    return 0
+        return 0
 
 
 def day5_sort(example=False, override=False):
