@@ -77,7 +77,7 @@ def _pull_puzzle_input(day, seperator, cast=None):
         with open(_code_path + "/session.txt", 'r') as session_file:
             session = session_file.read()
         # Check to see if behind the firewall.
-        if _check_internet() and False:
+        if _check_internet():
             proxy_dict = {}
         else:
             proxy_dict = {'http': 'proxy-dmz.intel.com:911',
@@ -560,7 +560,7 @@ def day3_eval(example=True, override=False):
         day = """xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"""
     p1 = p2 = 0
     p = get_input(day, "\n", None, override=override)
-    r=re.compile("mul\([0-9]*,[0-9]*\)|do\(\)|don't\(\)")
+    r=re.compile(r"mul\([0-9]*,[0-9]*\)|do\(\)|don't\(\)")
     do=True
     for x in p:
         l = r.findall(x)
@@ -592,7 +592,7 @@ def day3(example=True, override=False):
         day = """xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"""
     p1 = p2 = 0
     p = get_input(day, "\n", None, override=override)
-    r=re.compile("mul\([0-9]*,[0-9]*\)|do\(\)|don't\(\)")
+    r=re.compile(r"mul\([0-9]*,[0-9]*\)|do\(\)|don't\(\)")
     do=True
     for x in p:
         l = r.findall(x)
@@ -808,8 +808,7 @@ def day5_bryce(override=False):
                 break
         if still_good:
             total_sum += update[(len(update)-1)//2 ]
-
-    # print("P1:", total_sum)
+    print("P1:", total_sum)
 
     total_sum = 0
     for update in updates:
@@ -825,5 +824,65 @@ def day5_bryce(override=False):
                     changed = True
         if changed:
             total_sum += sorting_list[(len(sorting_list)-1)//2]
-            
-    # print("P2:", total_sum)
+    print("P2:", total_sum)
+
+
+def day6(example=False, override=False):
+    """Day 6."""
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    if example:
+        day = ("....#.....\n"
+               ".........#\n"
+               "..........\n"
+               "..#.......\n"
+               ".......#..\n"
+               "..........\n"
+               ".#..^.....\n"
+               "........#.\n"
+               "#.........\n"
+               "......#...\n")
+    a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
+    loc = np.where(a=="^")
+    d = "u"
+    g = Point_Object(loc[0][0],loc[1][0])
+    g.show()
+    pos = set()
+    pos.add((g.y,g.x))
+    while g.x in range(a[0].size) and g.y in range(a[:,0].size):
+        if a[g.y][g.x] == "#":
+            d=_right[d]
+            d=_right[d]
+            g.move(d)
+            d=_left[d]
+        pos.add((g.y,g.x))
+        g.move(d)
+    # Brute force by putting an obstruction in each spot along the guard path.
+    p2 = 0
+    loop_set = set()
+    for y,x in pos:
+        if a[y][x] == "#" or a[y][x] == "^":
+            continue
+        g = Point_Object(loc[0][0],loc[1][0])
+        d = "u"
+        b = copy.deepcopy(a)
+        b[y][x] = "#"
+        loop_detect = 0
+        this_pos = set()
+        print(f"Checking: ({x},{y})")
+        while g.x in range(a[0].size) and g.y in range(a[:,0].size):
+            if b[g.y][g.x] == "#":
+                d=_right[d]
+                d=_right[d]
+                g.move(d)
+                d=_left[d]
+            prev = len(this_pos)
+            this_pos.add((g.y,g.x))
+            if len(this_pos) == prev:
+                loop_detect += 1
+            # Didn't have a great idea on detecting a loop.
+            if loop_detect > 1000:
+                p2+=1
+                break
+            g.move(d)
+    print(f"Part 1: {len(pos)}")
+    print(f"Part 2: {p2}")
