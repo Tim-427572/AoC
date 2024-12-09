@@ -979,3 +979,134 @@ def day8(example=False, override=False):
     # print_np(city)
 
 
+def day9(example=False, override=False):
+    """Day 9."""
+    day: int | str = """2333133121414131402"""
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, "\n", None, override=override)
+    p=list(p[0])
+    #print(p)
+    #print(len(p))
+    # a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
+    p1 = p2 = 0
+    files = []
+    files_val = []
+    free = []
+    val = 0
+    while p:
+        size = int(p.pop(0))
+        if size:
+            files.append((size, val))
+            val += 1
+        try:
+            free = p.pop(0)
+        except:
+            break
+        if free:
+            files.append((int(free), "F"))
+    idx=0
+    check = 0
+    #_=input()
+    while files:
+        print("before")
+        print(files[:3])
+        print(files[-3:])
+        print("check: ",check, "idx: ", idx)
+        t = files.pop(0)
+        #print("t:",t)
+        if t[1] == "F" and t[0] == 0:
+            continue
+        if t[1] == "F":  # free space
+            e=None
+            while True:
+                if not files:
+                    break
+                e = files.pop()
+                #print("e: ",e)
+                if e[1] != "F":
+                    break
+            if e:
+                if e[1] == "F":
+                    print("Error about to insert blank")
+                    _=input()
+                if t[0] == e[0]:
+                    files = [e] + files
+                elif t[0] > e[0]:
+                    files = [(t[0] - e[0], "F")] + files
+                    files = [e] + files
+                if t[0] < e[0]:
+                    files = [(t[0], e[1])] + files
+                    files.append((e[0]-t[0], e[1]))
+        else:
+            for x in range(t[0]):
+                check += t[1] * idx
+                idx += 1
+        print("after")
+        print(files[:3])
+        print(files[-3:])
+        print("check: ",check, "idx: ", idx)
+        print(len(files))
+        #_=input()
+    print(check)
+    print(files)
+
+
+def day9_2(example=False, override=False):
+    """Day 9."""
+    day: int | str = """2333133121414131402"""
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, "\n", None, override=override)
+    p=list(p[0])
+    #print(p)
+    #print(len(p))
+    # a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
+    p1 = p2 = 0
+    files = []
+    files_val = []
+    free = []
+    val = 0
+    while p:
+        size = int(p.pop(0))
+        if size:
+            files.append((size, val))
+            val += 1
+        try:
+            free = p.pop(0)
+        except:
+            break
+        if free:
+            files.append((int(free), "F"))
+    idx=0
+    check = 0
+    #print(files)
+    for idx in range(val-1, 0, -1):
+        print(idx)
+        for i in range(len(files)-1, 0, -1):
+            if files[i][1] == idx:
+                for j in range(i):
+                    if files[j][1] == "F" and files[j][0] >= files[i][0]:
+                        x=files.pop(i)
+                        e=files.pop(j)
+                        files.insert(j, x)
+                        files.insert(i, (x[0], "F"))
+                        if e[0] > x[0]:
+                            r = e[0] - x[0]
+                            files.insert(j+1, (r, "F"))
+                        break
+        #print(files)
+        #_=input()
+    #print()
+    #print(files)
+    pos = 0
+    for f in files:
+        for x in range(f[0]):
+            if f[1] != "F":
+                check += f[1]*pos
+            pos += 1
+    print(check)
+    
+        
+
+
