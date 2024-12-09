@@ -418,7 +418,7 @@ lint.select = [
     "COM819",  # prohibited-trailing-comma
 
     # flake8-copyright (CPY)
-    "CPY001",  # missing-copyright-notice
+  # "CPY001",  # missing-copyright-notice
 
     # flake8-comprehensions (C4)
     "C400",  # unnecessary-generator-list

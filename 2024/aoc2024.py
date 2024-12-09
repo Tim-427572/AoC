@@ -1,36 +1,38 @@
-import math
+"""
+Advent of Code.
+
+Never did spend the time to work out how to get oAuth to work so this code expects you to
+manually copy over your session cookie value.
+Using a web browser inspect the cookies when logged into the Advent of Code website.
+Copy the value from the "session" cookie into a text file called "session.txt"
+"""
+
+# import collections
 import copy
-# import curses # pip install windows-curses
+# import curses  # pip install windows-curses
+import functools
+# import heapq
 import inspect
+import itertools
+# import math
 import pickle
-import random
+# import random
 import re
 import socket
-from os import path
-import time
-import sys
-
-# import functools
-import itertools
 # import statistics
-import collections
-import networkx as nx
+# import sys
+# import time
+from os import path
+
+# import cpmpy
+# import networkx as nx
 import numpy as np
 # import pyglet
-import requests
-import functools
-import heapq
-# import cpmpy
-
-# Advent of Code
-# Never did spend the time to work out how to get oAuth to work so this code expects you to
-# manually copy over your session cookie value.
-# Using a web browser inspect the cookies when logged into the Advent of Code website.
-# Copy the value from the "session" cookie into a text file called "session.txt"
+import requests  # type: ignore[import-untyped]
 
 # Constants
 _code_path = r"c:\AoC"
-_offline = True
+_offline = False
 _year = 2024
 
 
@@ -66,29 +68,32 @@ def _pull_puzzle_input(day, seperator, cast=None):
 
     Returns:
         tuple of the puzzle data.
+
+    Raises:
+        Exception: if session file does not exist.
     """
     if _offline:
-        with open(_code_path + r"\{}\day{}.txt".format(_year, day)) as file_handler:
+        with open(_code_path + r"\{}\day{}.txt".format(_year, day)) as file_handler:  # noqa: UP032, FURB101, PTH123
             data_list = file_handler.read().split(seperator)
     elif isinstance(day, str):  # An example string
         data_list = day.split(seperator)
     else:
-        if not path.exists(_code_path + "/session.txt"):
-            raise Exception("Using the web browser get the session cookie value\nand put it as a string in {}".format(_code_path + r"\session.txt"))  # noqa: W605
-        with open(_code_path + "/session.txt", 'r') as session_file:
+        if not path.exists(_code_path + "/session.txt"):  # noqa: PTH110
+            raise Exception("Using the web browser get the session cookie value\nand put it as a string in {}".format(_code_path + r"\session.txt"))  # noqa: W605, EM103, TRY002
+        with open(_code_path + "/session.txt", 'r') as session_file:  # noqa: Q000, UP015, FURB101, PTH123
             session = session_file.read()
         # Check to see if behind the firewall.
-        if _check_internet():
+        if _check_internet():  # noqa: SIM108
             proxy_dict = {}
         else:
-            proxy_dict = {'http': 'proxy-dmz.intel.com:911',
-                          'https': 'proxy-dmz.intel.com:912'}
-        header = {'Cookie': 'session={:s}'.format(session.rstrip('\n'))}
+            proxy_dict = {"http": "proxy-dmz.intel.com:911",
+                          "https": "proxy-dmz.intel.com:912"}
+        header = {"Cookie": "session={:s}".format(session.rstrip("\n"))}
         with requests.Session() as session:
-            resp = session.get('https://adventofcode.com/{}/day/{}/input'.format(_year, day), headers = header, proxies = proxy_dict)  # noqa: E251
+            resp = session.get("https://adventofcode.com/{}/day/{}/input".format(_year, day), headers = header, proxies = proxy_dict)  # noqa: E251, UP032
             _ = resp.text.strip("\n")
             if resp.ok:
-                if seperator in [None, ""]:
+                if seperator in [None, ""]:  # noqa: PLR6201, SIM108
                     data_list = [resp.text]
                 else:
                     data_list = resp.text.split(seperator)
@@ -96,7 +101,7 @@ def _pull_puzzle_input(day, seperator, cast=None):
                 print("Warning website error")
                 return ()
 
-    if data_list[-1] == "":
+    if data_list[-1] == "":  # noqa: PLC1901
         data_list.pop(-1)
     if cast is not None:
         data_list = [cast(x) for x in data_list]
@@ -106,21 +111,23 @@ def _pull_puzzle_input(day, seperator, cast=None):
 # Cache the data in a pickle file.
 def get_input(day, seperator, cast=None, override=False):
     """
-    Helper function for the daily puzzle information.
+    Fetch the daily puzzle information.
+
     If the puzzle data does not exist it attempts to pull it from the website.
     Caches the puzzle data into a pickle file so that re-runs don't have the performance
     penalty of fetching from the Advent Of Code website.
-    :param day: (int, str) the AoC day puzzle input to fetch or a string of the puzzle example.
-    :param seperator: (str) A string separator to pass into str.split when consuming the puzzle data.
-    :param cast: (None,type) A Python function often a type cast (int, str, lambda) to be run against each data element.
-                             None - do not apply a function/cast to the data.
-    :param override: (bool) True = Fetch the data again instead of using the cached copy.
 
-    :return: tuple containing the puzzle data
+    Params:
+        day (int, str): the AoC day puzzle input to fetch or a string of the puzzle example.
+        seperator (str): A string separator to pass into str.split when consuming the puzzle data.
+        cast (type, None): A Python function often a type cast (int, str, lambda) to be run against each data element.
+        override (bool): True to re-download the puzzle input.
+
+    Returns:
+        tuple containing the puzzle data
     """
-    global _code_path
-    if path.exists(_code_path + r'\{}\input.p'.format(_year)):
-        puzzle_dict = pickle.load(open(_code_path + r'\{}\input.p'.format(_year), 'rb'))
+    if path.exists(_code_path + r"\{}\input.p".format(_year)):  # noqa: UP032, PTH110, SIM108
+        puzzle_dict = pickle.load(open(_code_path + r"\{}\input.p".format(_year), "rb"))  # noqa: UP032, SIM115, PTH123, S301
     else:  # No pickle file, will need to make a new one.
         puzzle_dict = {}
 
@@ -130,32 +137,37 @@ def get_input(day, seperator, cast=None, override=False):
         puzzle_input = _pull_puzzle_input(day, seperator, cast)
         if isinstance(day, int):  # only save the full puzzle data to the pickle file.
             puzzle_dict[day] = puzzle_input
-            pickle.dump(puzzle_dict, open(_code_path + r'\{}\input.p'.format(_year), 'wb'))
+            pickle.dump(puzzle_dict, open(_code_path + r"\{}\input.p".format(_year), "wb"))  # noqa: UP032, SIM115, PTH123, S301
     return puzzle_input
 
 
 def get_np_input(day, seperator, cast=None, splitter=None, dtype=None, override=False):
     """
     Wrap get_input and cast the allow casting the data type too.
+
     returns a numpy array instead of the tuple array that get_input does.
+
+    Params:
+        day (int, str): the AoC day puzzle input to fetch or a string of the puzzle example.
+        seperator (str): A string separator to pass into str.split when consuming the puzzle data.
+        cast (type, None): A Python function often a type cast (int, str, lambda) to be run against each data element.
+        splitter (function, None): A splitter function to be called on the input data.
+        dtype (str, None): The data type hint for numpy.
+        override (bool): True to re-download the puzzle input.
+
+    Returns:
+        Numpy array
+
     """
     day_input = get_input(day, seperator, cast, override)
     if splitter is None:
         return np.array(day_input, dtype=dtype)
-    else:
-        temp = []
-        for r in day_input:
-            foo = splitter(r)
-            #print(foo)
-            temp.append(foo)
-            #temp.append(splitter(r))
-        return np.array(temp, dtype=dtype)
+    temp = [splitter(x) for x in day_input]
+    return np.array(temp, dtype=dtype)
 
 
 def print_np(array):
-    """
-    Small script to print a numpy array to the console visually similar to the puzzles in AoC.
-    """
+    """Small script to print a numpy array to the console visually similar to the puzzles in AoC."""
     if array.dtype == np.dtype("<U1"):
         for row in array:
             print("".join(row))
@@ -171,33 +183,14 @@ def print_np(array):
 #
 #     def on_draw(self):
 #         self.clear()
-#         label = pyglet.text.Label("Hello, world",font_name='Times New Roman',font_size=36, x=self.width//2, y=self.height//2, anchor_x='center',anchor_y='center')
-#         label.draw() 
+#         label = pyglet.text.Label("Hello, world",font_name='Times New Roman',font_size=36,
+#                                   x=self.width//2, y=self.height//2, anchor_x='center',anchor_y='center')
+#         label.draw()
 #
 # def v():
 #     #label = pyglet.text.Label("Hello, world",font_name='Times New Roman',font_size=36, anchor_x='center',anchor_y='center')
 #     _ = Viz(512, 512, "Test",resizable=False)
 #     pyglet.app.run()
-
-class Timer (object):
-    """
-    Performance debugging class. Usage:
-       with Timer(<optional label/tag>):
-    """
-    def __init__(self, label=None, on=True):
-        self.label = label
-        self.on=on
-
-    def __enter__(self):
-        self.tic = time.perf_counter()
-        return(self)
-
-    def __exit__(self, type, value, traceback):
-        elapsed = time.perf_counter() - self.tic
-        if self.on==True:
-            elapsed_us = elapsed*1000000
-            print("Finished %s after %.0f us\n"%(self.label, elapsed_us))
-        self.elapsed = elapsed
 
 
 class PointObject:
@@ -280,37 +273,36 @@ class Coordinate(tuple):  # noqa: SLOT001
 
     def __mul__(self, other):
         """Multiply a scaler with this coordinate."""
-        return Coordinate(x * other for x in self)
-    def __neg__(self):
+        return Coordinate(x * other for x in self)  # noqa: DOC201
+    def __neg__(self):  # noqa: E301
         """Turn the coordinate negative."""
-        return Coordinate(-1 * x for x in self)
-    def __add__(self, other):
+        return Coordinate(-1 * x for x in self)  # noqa: DOC201
+    def __add__(self, other):  # noqa: E301
         """Add two coordinates or a coordinate and a tuple."""
-        return Coordinate(x + y for x, y in zip(self, other))
-    def __sub__(self, other):
+        return Coordinate(x + y for x, y in zip(self, other, strict=True))  # noqa: DOC201
+    def __sub__(self, other):  # noqa: E301
         """Subtract one coordinate from another."""
-        return Coordinate(x - y for x, y in zip(self, other))
-    def __lt__(self, other):
+        return Coordinate(x - y for x, y in zip(self, other, strict=True))  # noqa: DOC201
+    def __lt__(self, other):  # noqa: E301
         """Use to test if coordinate in 2D array."""
-        return all(x < y for x, y in zip(self, other))
-    def __le__(self, other):
+        return all(x < y for x, y in zip(self, other, strict=True))  # noqa: DOC201
+    def __le__(self, other):  # noqa: E301
         """Use to test if coordinate in 2D array."""
-        return all(x <= y for x, y in zip(self, other))
-    def __gt__(self, other):
+        return all(x <= y for x, y in zip(self, other, strict=True))  # noqa: DOC201
+    def __gt__(self, other):  # noqa: E301
         """Use to test if coordinate in 2D array."""
-        return all(x > y for x, y, in zip(self, other))
-    def __ge__(self, other):
+        return all(x > y for x, y, in zip(self, other, strict=True))  # noqa: DOC201
+    def __ge__(self, other):  # noqa: E301
         """Use to test if coordinate in 2D array."""
-        return all(x >= y for x, y, in zip(self, other))
-    def __setitem__(self, key, value):
+        return all(x >= y for x, y, in zip(self, other, strict=True))  # noqa: DOC201
+    def __setitem__(self, key, value):  # noqa: E301
         """Ok, look it really isn't a tuple."""
         self_list = list(self)
         self_list[key] = value
-        # print(l)
-        return Coordinate(tuple(self_list))
-    def manhattan_dist(self, other):
+        return Coordinate(tuple(self_list))  # noqa: DOC201
+    def manhattan_dist(self, other):  # noqa: E301
         """Calculate the manhattan distance between this coordinate and another."""
-        return Coordinate(abs(x - y) for x, y in zip(self, other))
+        return Coordinate(abs(x - y) for x, y in zip(self, other, strict=True))  # noqa: DOC201
 
 
 # Dictionary to make walking the 2D maps easier.
@@ -343,6 +335,7 @@ turn_dict = {"r": _right, "right": _right, "cw": _right, "clockwise": _right,
 
 
 def dfs(graph, node):  # Example function for DFS
+    """DFS search."""
     visited = set()
     if node not in visited:
         print(node)
@@ -352,6 +345,7 @@ def dfs(graph, node):  # Example function for DFS
 
 
 def bfs(graph, node):  # Example function for BFS
+    """BFS search."""
     visited = set()
     queue = [node]
 
@@ -367,7 +361,7 @@ def bfs(graph, node):  # Example function for BFS
 
 def day1_original(example=False):
     """So it begins."""
-    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     if example == 1:
         day = ("3   4\n"
                "4   3\n"
@@ -400,7 +394,7 @@ def day1_original(example=False):
 
 def day1(example=False):
     """So it begins."""
-    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     if example:
         day = ("3   4\n"
                "4   3\n"
@@ -417,7 +411,7 @@ def day1(example=False):
 
 def day2_part1_original(example=False):
     """Day 2."""
-    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     if example:
         day = ("7 6 4 2 1\n"
                "1 2 7 8 9\n"
@@ -430,7 +424,7 @@ def day2_part1_original(example=False):
     for lvl in p:
         a = np.diff(lvl)
         a.sort()
-        print("")
+        print()
         print(lvl)
         print(a)
         if a[-1] > 3:
@@ -439,18 +433,25 @@ def day2_part1_original(example=False):
             continue
         if 0 in a:
             continue
-        b=np.where(a<0)
-        if np.where(a<0)[0].size == a.size:
+        if np.where(a < 0)[0].size == a.size:
             print("safe neg")
             p1 += 1
-        if np.where(a>0)[0].size == a.size:
+        if np.where(a > 0)[0].size == a.size:
             print("safe pos")
-            p1+=1
+            p1 += 1
     print(p1)
 
 
 def safe_level_orig(lvl):
-    """Check if the level is safe."""
+    """
+    Check if the level is safe.
+
+    Args:
+        lvl (array): level array.
+
+    Returns:
+        bool
+    """
     a = np.diff(lvl)
     a.sort()
     if a[-1] > 3:
@@ -461,14 +462,14 @@ def safe_level_orig(lvl):
         return False
     if np.where(a < 0)[0].size == a.size:
         return True
-    if np.where(a > 0)[0].size == a.size:
+    if np.where(a > 0)[0].size == a.size:  # noqa: SIM103
         return True
     return False
 
 
 def day2_part2_original(example=False):
     """Day 2."""
-    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     if example:
         day = ("7 6 4 2 1\n"
                "1 2 7 8 9\n"
@@ -504,12 +505,9 @@ def safe_level(np_array):
     safe = False
     dampener_safe = False
     pause = False
-    print(np.diff(np_array))
-    pos_bad_locations = np.where(np.isin(np.diff(np_array), [1, 2, 3], invert=True))[0]
-    neg_bad_locations = np.where(np.isin(np.diff(np_array), [-1, -2, -3], invert=True))[0]
-    
+    # print(np.diff(np_array))
 
-
+    pos_lvl_diff = np.isin(np.diff(np_array), [1, 2, 3])
     neg_lvl_diff = np.isin(np.diff(np_array), [-1, -2, -3])
     if np.all(pos_lvl_diff) or np.all(neg_lvl_diff):
         safe = dampener_safe = True
@@ -533,13 +531,12 @@ def safe_level(np_array):
             pause = True
     print(safe, dampener_safe)
     if pause:
-        _=input()
+        _ = input()
     return safe, dampener_safe
 
 
 def day2(example=False, override=False):
     """Day 2."""
-    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
     day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     if example:
         day = ("7 6 4 2 1\n"
@@ -994,6 +991,7 @@ def day9(example=False, override=False):
     day: int | str = """2333133121414131402"""
     if not example:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    day=9
     p = get_input(day, "\n", None, override=override)
     p=list(p[0])
     #print(p)
@@ -1019,10 +1017,10 @@ def day9(example=False, override=False):
     check = 0
     #_=input()
     while files:
-        print("before")
-        print(files[:3])
-        print(files[-3:])
-        print("check: ",check, "idx: ", idx)
+        # print("before")
+        # print(files[:3])
+        # print(files[-3:])
+        # print("check: ",check, "idx: ", idx)
         t = files.pop(0)
         #print("t:",t)
         if t[1] == "F" and t[0] == 0:
@@ -1052,19 +1050,20 @@ def day9(example=False, override=False):
             for x in range(t[0]):
                 check += t[1] * idx
                 idx += 1
-        print("after")
-        print(files[:3])
-        print(files[-3:])
-        print("check: ",check, "idx: ", idx)
+        # print("after")
+        # print(files[:3])
+        # print(files[-3:])
+        # print("check: ",check, "idx: ", idx)
         print(len(files))
         #_=input()
     print(check)
-    print(files)
+    # print(files)
 
 
 def day9_2(example=False, override=False):
     """Day 9."""
-    day: int | str = """2333133121414131402"""
+    day: int | str
+    day = """2333133121414131402"""
     if not example:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     p = get_input(day, "\n", None, override=override)
@@ -1116,7 +1115,18 @@ def day9_2(example=False, override=False):
                 check += f[1]*pos
             pos += 1
     print(check)
-    
-        
 
 
+def day10(example=False, override=False):
+    """Day 9."""
+    day: int | str
+    day = """233\n313\n312\n"""
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, "\n", None, override=override)
+    # a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
+    p1 = p2 = 0
+    for line in p:
+        print(line)
+    print(p1)
+    print(p2)
