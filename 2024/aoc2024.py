@@ -198,16 +198,21 @@ class Timer (object):
             print("Finished %s after %.0f us\n"%(self.label, elapsed_us))
         self.elapsed = elapsed
 
-class Point_Object:
+
+class PointObject:
     """
     A point object to use with 2D arrays where y/row is the first index and x/column is the second.
+
     Useful when you want to turn the 2D map into a graph.
     """
-    def __init__(self, y, x, shape=None, empty_shape="."):
+
+    def __init__(self, y, x, shape=None, empty_shape=".", direction=None):
+        """Set up the initial values."""
         self.x = x
         self.y = y
         self.contains = shape
-        self.is_empty = True if self.contains == empty_shape else False
+        self.is_empty = self.contains == empty_shape
+        self.direction = direction
         self.up = None
         self.down = None
         self.left = None
@@ -216,33 +221,44 @@ class Point_Object:
         self.up_left = None
         self.down_right = None
         self.down_left = None
-    def move(self, direction, steps=1):
-        if direction in ["u", "n", "up", "north"]:
+
+    def move(self, direction=None, steps=1):
+        """Move the point object."""
+        direction = self.direction if direction is None else direction
+        if direction in {"u", "n", "up", "north"}:
             self.y -= steps
-        if direction in ["d", "s", "down", "south"]:
+        if direction in {"d", "s", "down", "south"}:
             self.y += steps
-        if direction in ["r", "e", "right", "east"]:
+        if direction in {"r", "e", "right", "east"}:
             self.x += steps
-        if direction in ["l", "w", "left", "west"]:
+        if direction in {"l", "w", "left", "west"}:
             self.x -= steps
-        if direction in ["ur", "ne", "up_right", "north_east"]:
+        if direction in {"ur", "ne", "up_right", "north_east"}:
             self.y -= steps
             self.x += steps
-        if direction in ["ul", "nw", "up_left", "north_west"]:
+        if direction in {"ul", "nw", "up_left", "north_west"}:
             self.y -= steps
             self.x -= steps
-        if direction in ["dr", "se", "down_right", "south_east"]:
+        if direction in {"dr", "se", "down_right", "south_east"}:
             self.y += steps
             self.x += steps
-        if direction in ["dl", "sw", "down_left", "south_west"]:
+        if direction in {"dl", "sw", "down_left", "south_west"}:
             self.y += steps
             self.x -= steps
+
     def position(self):
+        """Return position tuple."""
         return (self.y, self.x)
+
     def p(self):
+        """Return position tuple."""
         return (self.y, self.x)
+
     def show(self):
+        """Display internal state."""
         print(f"({self.y},{self.x}) {self.contains}")
+        if self.direction:
+            print(f"direction: {self.direction}")
         if self.up:
             print(f"up: ({self.up[0].y}, {self.up[0].x}) {self.up[1]}")
         if self.down:
@@ -270,6 +286,9 @@ class Coordinate(tuple):  # noqa: SLOT001
     def __add__(self, other):
         """Add two coordinates or a coordinate and a tuple."""
         return Coordinate(x + y for x, y in zip(self, other))
+    def __sub__(self, other):
+        """Subtract one coordinate from another."""
+        return Coordinate(x - y for x, y in zip(self, other))
     def __lt__(self, other):
         """Use to test if coordinate in 2D array."""
         return all(x < y for x, y in zip(self, other))
@@ -312,6 +331,11 @@ _left = {"r": "u", "e": "n", "right": "up", "east": "north",
          "l": "d", "w": "s", "left": "down", "west": "south",
           "u": "l", "n": "w", "up": "left", "north": "west",
           "d": "r", "s": "e", "down": "right", "south": "east"}
+
+_reverse = {"r": "l", "e": "w", "right": "left", "east": "west",
+            "l": "r", "w": "e", "left": "right", "west": "east",
+            "u": "d", "n": "s", "up": "down", "north": "south",
+            "d": "u", "s": "n", "down": "up", "south": "north"}
 
 turn_dict = {"r": _right, "right": _right, "cw": _right, "clockwise": _right,
              "l": _left, "left": _left, "ccw": _left, "counterclockwise": _left}
@@ -639,11 +663,11 @@ def day4(example=False, override=False):
     for y,l in enumerate(p):
         for x,c in enumerate(l):
             if c == "X":
-                the_xs.append(Point_Object(y,x))
+                the_xs.append(PointObject(y,x))
     # Check for XMAS
     for x in the_xs:
         for md in ["u","d","l","r","ur","ul","dl","dr"]:
-            t = Point_Object(*x.p())
+            t = PointObject(*x.p())
             t.move(md)
             if t.y not in range(len(the_map)) or t.x not in range(len(the_map[0])) or the_map[t.y][t.x] != "M":
                 continue
@@ -660,16 +684,16 @@ def day4(example=False, override=False):
     for y,l in enumerate(p):
         for x,c in enumerate(l):
             if c == "A":
-                the_as.append(Point_Object(y,x))
+                the_as.append(PointObject(y,x))
     # Check for MAS
     for a in the_as:
-        ur = Point_Object(*a.p())
+        ur = PointObject(*a.p())
         ur.move("ur")
-        ul = Point_Object(*a.p())
+        ul = PointObject(*a.p())
         ul.move("ul")
-        dr = Point_Object(*a.p())
+        dr = PointObject(*a.p())
         dr.move("dr")
-        dl = Point_Object(*a.p())
+        dl = PointObject(*a.p())
         dl.move("dl")
         if ur.y in range(len(the_map)) and ur.x in range(len(the_map)) and \
            ul.y in range(len(the_map)) and ul.x in range(len(the_map)) and \
@@ -829,7 +853,7 @@ def day5_bryce(override=False):
 
 def day6(example=False, override=False):
     """Day 6."""
-    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
     if example:
         day = ("....#.....\n"
                ".........#\n"
@@ -842,47 +866,116 @@ def day6(example=False, override=False):
                "#.........\n"
                "......#...\n")
     a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
-    loc = np.where(a=="^")
-    d = "u"
-    g = Point_Object(loc[0][0],loc[1][0])
-    g.show()
+    a = np.pad(a, 1, mode="constant", constant_values="E")
+    loc = np.where(a == "^")
+    g = PointObject(loc[0][0], loc[1][0], direction="u")
     pos = set()
-    pos.add((g.y,g.x))
-    while g.x in range(a[0].size) and g.y in range(a[:,0].size):
-        if a[g.y][g.x] == "#":
-            d=_right[d]
-            d=_right[d]
-            g.move(d)
-            d=_left[d]
-        pos.add((g.y,g.x))
-        g.move(d)
+    while a[g.p()] != "E":
+        if a[g.p()] == "#":
+            g.move(steps=-1)
+            g.direction = _right[g.direction]
+        pos.add(g.p())
+        g.move()
+    print(f"Part 1: {len(pos)}")
     # Brute force by putting an obstruction in each spot along the guard path.
     p2 = 0
-    loop_set = set()
-    for y,x in pos:
+    for y, x in pos:
         if a[y][x] == "#" or a[y][x] == "^":
             continue
-        g = Point_Object(loc[0][0],loc[1][0])
-        d = "u"
-        b = copy.deepcopy(a)
-        b[y][x] = "#"
-        loop_detect = 0
-        this_pos = set()
-        print(f"Checking: ({x},{y})")
-        while g.x in range(a[0].size) and g.y in range(a[:,0].size):
-            if b[g.y][g.x] == "#":
-                d=_right[d]
-                d=_right[d]
-                g.move(d)
-                d=_left[d]
-            prev = len(this_pos)
-            this_pos.add((g.y,g.x))
-            if len(this_pos) == prev:
-                loop_detect += 1
-            # Didn't have a great idea on detecting a loop.
-            if loop_detect > 1000:
-                p2+=1
+        g = PointObject(loc[0][0], loc[1][0], direction="u")
+        a[y][x] = "#"
+        this_route = set()
+        # print(f"Checking: ({x},{y})")
+        while a[g.p()] != "E":
+            if a[g.p()] == "#":
+                g.move(steps=-1)
+                g.direction = _right[g.direction]
+            now = (g.y, g.x, g.direction)
+            if now in this_route:
+                p2 += 1
                 break
-            g.move(d)
-    print(f"Part 1: {len(pos)}")
+            this_route.add(now)
+            g.move()
+        a[y][x] = "."
     print(f"Part 2: {p2}")
+
+
+def day7(example=False, override=False):
+    """Day 7."""
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    if example:
+        day = ("190: 10 19\n3267: 81 40 27\n83: 17 5\n156: 15 6\n7290: 6 8 6 15\n"
+               "161011: 16 10 13\n192: 17 8 14\n21037: 9 7 18 13\n292: 11 6 16 20\n")
+    import operator  # noqa: PLC0415
+    puzzle = get_input(day, "\n", None, override=override)
+    equations = []
+    logic = [operator.add, operator.mul, lambda x, y: int(str(x) + str(y))]
+    g = lambda x, y: x+y
+    g(2,3)
+    for line in puzzle:
+        a, b = line.split(":")
+        equations.append((int(a), list(map(int, b.split()))))
+    for part, j in [("Part 1: ", 2), ("Part 2:", 3)]:
+        answer = 0
+        for test_value, numbers in equations:
+            for operations in itertools.product(logic[:j], repeat=len(numbers) - 1):
+                i = 1
+                this_val = numbers[0]
+                for operation in operations:
+                    this_val = operation(this_val, numbers[i])
+                    i += 1
+                    if this_val > test_value:  # Early exit operations only make things 'bigger'
+                        break
+                if this_val == test_value:
+                    # print(" Matched: ", this_val)
+                    answer += this_val
+                    break  # Only add once.
+        print(part, answer)
+
+
+def day8(example=False, override=False):
+    """Day 8."""
+    day: int | str = ("............\n........0...\n.....0......\n.......0....\n"
+                      "....0.......\n......A.....\n............\n............\n"
+                      "........A...\n.........A..\n............\n............")
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    city = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
+    frequencies = set([city[x] for x in zip(*np.where(city != "."), strict=True)])  # noqa: C403
+    p1_antinodes: set[Coordinate] = set()
+    p2_antinodes: set[Coordinate] = set()
+    for frequency in frequencies:
+        antennas = [Coordinate(x) for x in zip(*np.where(city == frequency), strict=True)]
+        for one, two in itertools.combinations(antennas, 2):
+            p2_antinodes.add(one)
+            p2_antinodes.add(two)
+            delta = one - two
+            p1_flag = True
+            new = one
+            while True:
+                new += delta
+                if new[0] in range(city[0].size) and new[1] in range(city[:, 0].size):
+                    p2_antinodes.add(new)
+                    if p1_flag:
+                        p1_antinodes.add(new)
+                        p1_flag = False
+                else:
+                    break
+            p1_flag = True
+            new = two
+            while True:
+                new -= delta
+                if new[0] in range(city[0].size) and new[1] in range(city[:, 0].size):
+                    p2_antinodes.add(new)
+                    if p1_flag:
+                        p1_antinodes.add(new)
+                        p1_flag = False
+                else:
+                    break
+    print("Part 1: ", len(p1_antinodes))
+    print("Part 2: ", len(p2_antinodes))
+    # for p in p2_antinodes:
+    #     city[p]="#"
+    # print_np(city)
+
+
