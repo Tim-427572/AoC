@@ -7,7 +7,8 @@ import random
 import re
 import socket
 from os import path
-import time, sys
+import time
+import sys
 
 # import functools
 import itertools
@@ -28,8 +29,8 @@ import heapq
 # Copy the value from the "session" cookie into a text file called "session.txt"
 
 # Constants
-_code_path = r'c:\AoC'
-_offline = False
+_code_path = r"c:\AoC"
+_offline = True
 _year = 2024
 
 
@@ -48,8 +49,8 @@ def _check_internet(host="8.8.8.8", port=53, timeout=2):
     try:
         socket.setdefaulttimeout(timeout)
         socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
-        return True
-    except socket.error:
+        return True  # noqa: TRY300
+    except socket.error:  # noqa: UP024
         return False
 
 
@@ -57,15 +58,15 @@ def _pull_puzzle_input(day, seperator, cast=None):
     """
     Pull the puzzle data from the AOC website.
 
-    :param day: (int,str) the AoC day puzzle input to fetch or an example puzzle string
-    :param seperator: (str,None) A string separator to pass into str.split when consuming the puzzle data.
-        If None or "" don't try and split the puzzle input.
-    :param cast: (None,type) A Python function often a type cast (int, str, lambda) to be run against each data element.
+    Args:
+        day (int, str): the AoC day puzzle input to fetch or an example puzzle string
+        seperator (str, None): A string separator to pass into str.split when consuming the puzzle data.
+            If None or "" don't try and split the puzzle input.
+        cast (None, type): A Python function often a type cast (int, str, lambda) to be run against each data element.
 
-    :return: tuple of the data.
+    Returns:
+        tuple of the puzzle data.
     """
-    global _work, _offline, _code_path
-
     if _offline:
         with open(_code_path + r"\{}\day{}.txt".format(_year, day)) as file_handler:
             data_list = file_handler.read().split(seperator)
@@ -539,6 +540,7 @@ def safe_level(np_array):
 def day2(example=False, override=False):
     """Day 2."""
     day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     if example:
         day = ("7 6 4 2 1\n"
                "1 2 7 8 9\n"
@@ -567,8 +569,14 @@ def day2(example=False, override=False):
     print(f"Part 2: The number of safe reports using the 'Problem Dampener' is {p2}")
 
 
-def mul(a,b):
-    return a*b
+def mul(a, b):
+    """
+    Multiply for eval use.
+
+    Returns:
+        a * b
+    """
+    return a * b
 
 
 def day3_eval(example=True, override=False):
@@ -579,26 +587,26 @@ def day3_eval(example=True, override=False):
         example (bool): Use the example input.
         override (boot): Override the stored get_input data.
     """
-    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     if example:
         day = """xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"""
     p1 = p2 = 0
     p = get_input(day, "\n", None, override=override)
-    r=re.compile(r"mul\([0-9]*,[0-9]*\)|do\(\)|don't\(\)")
-    do=True
-    for x in p:
-        l = r.findall(x)
-        print(l)
-        for i in l:
+    r = re.compile(r"mul\([0-9]*,[0-9]*\)|do\(\)|don't\(\)")
+    do = True
+    for line in p:
+        f = r.findall(line)
+        print(f)
+        for i in f:
             if i == "do()":
-                do=True
+                do = True
                 continue
             if i == "don't()":
-                do=False
+                do = False
                 continue
-            p1 += eval(i)
+            p1 += eval(i)  # noqa: S307
             if do:
-                p2 += eval(i)
+                p2 += eval(i)  # noqa: S307
     print(p1)
     print(p2)
 
@@ -611,63 +619,64 @@ def day3(example=True, override=False):
         example (bool): Use the example input.
         override (boot): Override the stored get_input data.
     """
-    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     if example:
         day = """xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))"""
     p1 = p2 = 0
     p = get_input(day, "\n", None, override=override)
-    r=re.compile(r"mul\([0-9]*,[0-9]*\)|do\(\)|don't\(\)")
-    do=True
-    for x in p:
-        l = r.findall(x)
-        print(l)
-        for i in l:
+    r = re.compile(r"mul\([0-9]*,[0-9]*\)|do\(\)|don't\(\)")
+    do = True
+    for line in p:
+        f = r.findall(line)
+        print(f)
+        for i in f:
             if i == "do()":
-                do=True
+                do = True
                 continue
             if i == "don't()":
-                do=False
+                do = False
                 continue
-            a=int(i.split("(")[1].split(",")[0])
-            b=int(i.split(",")[1].split(")")[0])
+            a = int(i.split("(")[1].split(",")[0])
+            b = int(i.split(",")[1].split(")")[0])
             print(i, a, b)
-            p1 += (a*b)
+            p1 += (a * b)
             if do:
-                p2 += (a*b)
+                p2 += (a * b)
     print(p1)
     print(p2)
 
 
 def day4(example=False, override=False):
     """Day 4."""
-    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    if example:
-        day = ("MMMSXXMASM\n"
-               "MSAMXMSMSA\n"
-               "AMXSXMAAMM\n"
-               "MSAMASMSMX\n"
-               "XMASAMXAMM\n"
-               "XXAMMXXAMA\n"
-               "SMSMSASXSS\n"
-               "SAXAMASAAA\n"
-               "MAMMMXMMMM\n"
-               "MXMXAXMASX\n")
+    day: int | str
+    day = ("MMMSXXMASM\n"
+           "MSAMXMSMSA\n"
+           "AMXSXMAAMM\n"
+           "MSAMASMSMX\n"
+           "XMASAMXAMM\n"
+           "XXAMMXXAMA\n"
+           "SMSMSASXSS\n"
+           "SAXAMASAAA\n"
+           "MAMMMXMMMM\n"
+           "MXMXAXMASX\n")
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     p1 = p2 = 0
-    p = get_input(day, "\n", None, override=override)
-    the_map= []
-    for l in p:
-        the_map.append(list(l))
-    the_xs=[]
+    puzzle = get_input(day, "\n", None, override=override)
+    the_map = []
+    for line in puzzle:
+        the_map.append(list(line))  # noqa: PERF401
+    the_xs: list[PointObject] = []
     # Part 1
     # Find the X's
-    for y,l in enumerate(p):
-        for x,c in enumerate(l):
+    for y, line in enumerate(puzzle):
+        for x, c in enumerate(line):
             if c == "X":
-                the_xs.append(PointObject(y,x))
+                the_xs.append(PointObject(y, x))
     # Check for XMAS
-    for x in the_xs:
-        for md in ["u","d","l","r","ur","ul","dl","dr"]:
-            t = PointObject(*x.p())
+    for p in the_xs:
+        for md in ["u", "d", "l", "r", "ur", "ul", "dl", "dr"]:
+            t = PointObject(*p.p())
             t.move(md)
             if t.y not in range(len(the_map)) or t.x not in range(len(the_map[0])) or the_map[t.y][t.x] != "M":
                 continue
@@ -677,14 +686,14 @@ def day4(example=False, override=False):
             t.move(md)
             if t.y not in range(len(the_map)) or t.x not in range(len(the_map[0])) or the_map[t.y][t.x] != "S":
                 continue
-            p1+=1
+            p1 += 1
     # Part 2
     # Find the A's
     the_as = []
-    for y,l in enumerate(p):
-        for x,c in enumerate(l):
+    for y, line in enumerate(puzzle):
+        for x, c in enumerate(line):
             if c == "A":
-                the_as.append(PointObject(y,x))
+                the_as.append(PointObject(y, x))
     # Check for MAS
     for a in the_as:
         ur = PointObject(*a.p())
@@ -712,28 +721,29 @@ def day4(example=False, override=False):
 
 def day5(example=False, override=False):
     """Day 5."""
-    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    if example:
-        day = ("47|53\n97|13\n97|61\n97|47\n75|29\n61|13\n75|53\n29|13\n97|29\n"
-               "53|29\n\n61|53\n\n97|53\n61|29\n47|13\n75|47\n97|75\n47|61\n75|61\n"
-               "47|29\n75|13\n53|13"
-               "\n"
-               "75,47,61,53,29\n"
-               "97,61,53,29,13\n"
-               "75,29,13\n"
-               "75,97,47,61,53\n"
-               "61,13,29\n"
-               "97,13,75,29,47\n")
+    day: int | str
+    day = ("47|53\n97|13\n97|61\n97|47\n75|29\n61|13\n75|53\n29|13\n97|29\n"
+           "53|29\n\n61|53\n\n97|53\n61|29\n47|13\n75|47\n97|75\n47|61\n75|61\n"
+           "47|29\n75|13\n53|13"
+           "\n"
+           "75,47,61,53,29\n"
+           "97,61,53,29,13\n"
+           "75,29,13\n"
+           "75,97,47,61,53\n"
+           "61,13,29\n"
+           "97,13,75,29,47\n")
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     p1 = p2 = 0
     p = get_input(day, "\n", None, override=override)
     r = []
     u = []
-    for l in p:
-        if "|" in l:
-            a, b = l.split("|")
+    for line in p:
+        if "|" in line:
+            a, b = line.split("|")
             r.append((int(a), int(b)))
-        if "," in l:
-            u.append(list(map(int, l.split(","))))
+        if "," in line:
+            u.append(list(map(int, line.split(","))))
     for x in u:
         invalid = False
         while True:
@@ -758,43 +768,44 @@ def day5(example=False, override=False):
     print(p2)
 
 
-global rules
+rules: set[tuple[int, ...]] = set()
 
 
 def _page_sort(a, b):
-    global rules
+    global rules  # noqa: PLW0602
+    val = 0
     if (a, b) in rules:
-        return -1
+        val = -1
     elif (b, a) in rules:
-        return 1
-    else:
-        return 0
+        val = 1
+    return val
 
 
 def day5_sort(example=False, override=False):
     """Day 5."""
-    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    if example:
-        day = ("47|53\n97|13\n97|61\n97|47\n75|29\n61|13\n75|53\n29|13\n97|29\n"
-               "53|29\n\n61|53\n\n97|53\n61|29\n47|13\n75|47\n97|75\n47|61\n75|61\n"
-               "47|29\n75|13\n53|13"
-               "\n"
-               "75,47,61,53,29\n"
-               "97,61,53,29,13\n"
-               "75,29,13\n"
-               "75,97,47,61,53\n"
-               "61,13,29\n"
-               "97,13,75,29,47\n")
+    day: int | str
+    day = ("47|53\n97|13\n97|61\n97|47\n75|29\n61|13\n75|53\n29|13\n97|29\n"
+           "53|29\n\n61|53\n\n97|53\n61|29\n47|13\n75|47\n97|75\n47|61\n75|61\n"
+           "47|29\n75|13\n53|13"
+           "\n"
+           "75,47,61,53,29\n"
+           "97,61,53,29,13\n"
+           "75,29,13\n"
+           "75,97,47,61,53\n"
+           "61,13,29\n"
+           "97,13,75,29,47\n")
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     p1 = p2 = 0
     p = get_input(day, "\n", None, override=override)
-    global rules
+    global rules  # noqa: PLW0603
     rules = set()
     u = []
-    for l in p:
-        if "|" in l:
-            rules.add(tuple(map(int, l.split("|"))))
-        if "," in l:
-            u.append(np.array(l.split(","), dtype=int))
+    for line in p:
+        if "|" in line:
+            rules.add(tuple(map(int, line.split("|"))))
+        if "," in line:
+            u.append(np.array(line.split(","), dtype=int))
     for x in u:
         n = np.array(sorted(x, key=functools.cmp_to_key(_page_sort)))
         if (n == x).all():
@@ -806,14 +817,15 @@ def day5_sort(example=False, override=False):
 
 
 def day5_bryce(override=False):
-    from collections import defaultdict
-    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    """Bryce's solution to day 5 for time comparison."""
+    from collections import defaultdict  # noqa: PLC0415
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     p = get_input(day, "\n", None, override=override)
     rules = defaultdict(list)
     updates = []
     for item in p:
         if "|" in item:
-            page, later_page = item.split('|')
+            page, later_page = item.split("|")
             page = int(page)
             later_page = int(later_page)
             rules[page].append(later_page)
@@ -824,36 +836,36 @@ def day5_bryce(override=False):
     for update in updates:
         still_good = True
         for i, page in enumerate(update):
-            for later_page in update[i+1:]:
+            for later_page in update[i + 1:]:
                 if later_page not in rules[page]:
                     still_good = False
                     break
             if not still_good:
                 break
         if still_good:
-            total_sum += update[(len(update)-1)//2 ]
+            total_sum += update[(len(update) - 1) // 2]
     print("P1:", total_sum)
 
     total_sum = 0
     for update in updates:
-        sorting_list = [i for i in update]
+        sorting_list = list(update)
         changed = False
         for page in update:
             index = sorting_list.index(page)
-            for later_page in sorting_list[index+1:]:
+            for later_page in sorting_list[index + 1:]:
                 if later_page not in rules[page]:
                     sorting_list.remove(later_page)
                     sorting_list.insert(index, later_page)
-                    index+=1
+                    index += 1
                     changed = True
         if changed:
-            total_sum += sorting_list[(len(sorting_list)-1)//2]
+            total_sum += sorting_list[(len(sorting_list) - 1) // 2]
     print("P2:", total_sum)
 
 
 def day6(example=False, override=False):
     """Day 6."""
-    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     if example:
         day = ("....#.....\n"
                ".........#\n"
@@ -910,8 +922,6 @@ def day7(example=False, override=False):
     puzzle = get_input(day, "\n", None, override=override)
     equations = []
     logic = [operator.add, operator.mul, lambda x, y: int(str(x) + str(y))]
-    g = lambda x, y: x+y
-    g(2,3)
     for line in puzzle:
         a, b = line.split(":")
         equations.append((int(a), list(map(int, b.split()))))
