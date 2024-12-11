@@ -30,6 +30,8 @@ import numpy as np
 # import pyglet
 import requests  # type: ignore[import-untyped]
 
+from collections import defaultdict
+
 # Constants
 _code_path = r"c:\AoC"
 _offline = False
@@ -1194,3 +1196,53 @@ def day10_2(example=False, override=False):
     print(p2)
 
 
+def day11_part1_orig(example=False, override=False):
+    """Day 11."""
+    day: int | str
+    day = """125 17"""
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, " ", int, override=override)
+    print(p)
+    for i in range(75):
+        t = []
+        print(i)
+        for s in p:
+            if s == 0:
+                t.append(1)
+            elif len(str(s)) % 2 == 0:
+                st = str(s)
+                t.append(int(st[:len(st) // 2]))
+                t.append(int(st[len(st) // 2:]))
+            else:
+                t.append(s * 2024)
+        p = copy.deepcopy(t)
+    print(len(p))
+
+
+def day11(example=False, override=False):
+    """Day 11."""
+    day: int | str
+    day = """125 17"""
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, " ", int, override=override)
+    d = defaultdict(lambda: 0)
+    for x in p:
+        d[x] += 1
+    for i in range(75):
+        t = defaultdict(lambda: 0)
+        for x, v in d.items():
+            if x == 0:
+                t[1] += v
+            elif len(str(x)) % 2 == 0:
+                n = str(x)
+                h = len(n) // 2
+                t[int(n[:h])] += v
+                t[int(n[h:])] += v
+            else:
+                t[x * 2024] += v
+        d = copy.deepcopy(t)
+        if i == 24:
+            print("Part 1: ", sum(d.values()))
+    print("Part 2: ", sum(d.values()))
