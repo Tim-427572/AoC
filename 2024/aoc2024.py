@@ -1113,17 +1113,84 @@ def day9_part2(example=False, override=False):
     print(check)
 
 
+def trail(graph, node):
+    """DFS trail search."""
+    visited = set()
+    found = set()
+    if node not in visited:
+        visited.add(node)
+        for neighbor in ["u", "d", "l", "r"]:
+            t = PointObject(*node.p())
+            t.move(neighbor)
+            if t.y in range(graph[0].size) and t.x in range(graph[:, 0].size) and graph[t.p()] - 1 == graph[node.p()]:
+                found = found.union(trail(graph, t))
+                if graph[t.p()] == 9:
+                    found.add(t.p())
+    return found
+
+
 def day10(example=False, override=False):
     """Day 10."""
     day: int | str
-    day = """
-"""
+    day = ("89010123\n"
+           "78121874\n"
+           "87430965\n"
+           "96549874\n"
+           "45678903\n"
+           "32019012\n"
+           "01329801\n"
+           "10456732\n")
     if not example:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
-    p = get_input(day, "\n", None, override=override)
-    # a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
-    p1 = p2 = 0
-    for line in p:
-        print(line)
+    a = get_np_input(day, "\n", splitter=list, dtype=int, override=override)
+    p1 = 0
+    start = [PointObject(y, x) for y, x in zip(*np.where(a == 0), strict=True)]
+    for s in start:
+        p1 += len(trail(a, s))
     print(p1)
+
+
+def trail_bfs(graph, node):  # Example function for BFS
+    """BFS search."""
+    visited = set([node.p()])
+    queue = [node]
+    paths = 0
+    while queue:          # Creating loop to visit each node
+        this_node = queue.pop(0)
+        for neighbor in ["u","d","l","r"]:
+            t=PointObject(*this_node.p())
+            t.move(neighbor)
+            if t.y in range(graph[0].size) and t.x in range(graph[:,0].size) and graph[t.p()] - 1 == graph[this_node.p()]:
+                if graph[t.p()] == 9:
+                    paths += 1
+                else:
+                    queue.append(t)
+                    visited.add(t.p())
+    return paths
+
+
+def day10_2(example=False, override=False):
+    """Day 10."""
+    day: int | str
+    day = ("89010123\n"
+           "78121874\n"
+           "87430965\n"
+           "96549874\n"
+           "45678903\n"
+           "32019012\n"
+           "01329801\n"
+           "10456732\n")
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
+    # Code to make the three path example work.
+    b = np.full((a[0].size, a[:,0].size), -1, dtype=int)
+    for i in range(10):
+        b[np.where(a == str(i))] = i
+    p2 = 0
+    start = [PointObject(y, x) for y, x in zip(*np.where(b == 0), strict=True)]
+    for s in start:
+        p2 += trail_bfs(b, s)
     print(p2)
+
+
