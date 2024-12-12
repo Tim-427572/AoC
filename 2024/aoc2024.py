@@ -273,6 +273,8 @@ class Coordinate(tuple):  # noqa: SLOT001
     Used to store 2D position but still allow hashing and (x,y) notation which I like.
     """
 
+    def __abs__(self):
+        return Coordinate(abs(x) for x in self)
     def __mul__(self, other):
         """Multiply a scaler with this coordinate."""
         return Coordinate(x * other for x in self)  # noqa: DOC201
@@ -1246,3 +1248,226 @@ def day11(example=False, override=False):
         if i == 24:
             print("Part 1: ", sum(d.values()))
     print("Part 2: ", sum(d.values()))
+
+
+#def plots_bfs(graph, node):  # Example function for BFS
+#    """BFS search."""
+#    visited = set([node])
+#    queue = [node]
+#    paths = 0
+#    corner = 0
+#    while queue:          # Creating loop to visit each node
+#        this_node = queue.pop(0)
+#
+#        # ul corner
+#        if graph[*this_node+move_dict["u"]] != graph[*this_node] and graph[*this_node+move_dict["l"]] != graph[*this_node]:
+#            #print("ul ex:",this_node)
+#            corner += 1
+#        # ur corner
+#        if graph[*this_node+move_dict["u"]] != graph[*this_node] and graph[*this_node+move_dict["r"]] != graph[*this_node]:
+#            corner += 1
+#            #print("ur ex:",this_node)
+#        # dr corner
+#        if graph[*this_node+move_dict["d"]] != graph[*this_node] and graph[*this_node+move_dict["r"]] != graph[*this_node]:
+#            corner += 1
+#            #print("dr ex:",this_node)
+#        # dl corner
+#        if graph[*this_node+move_dict["d"]] != graph[*this_node] and graph[*this_node+move_dict["l"]] != graph[*this_node]:
+#            corner += 1
+#            #print("dl ex:",this_node)
+#        # Interior corners
+#        # ul
+#        if (graph[*this_node+move_dict["d"]] == graph[*this_node] and
+#            graph[*this_node+move_dict["r"]] == graph[*this_node] and
+#            graph[*this_node+move_dict["d"]+move_dict["r"]] != graph[*this_node]):
+#            corner += 1
+#            #print("ul in:",this_node)
+#        # ur
+#        if (graph[*this_node+move_dict["d"]] == graph[*this_node] and
+#            graph[*this_node+move_dict["l"]] == graph[*this_node] and
+#            graph[*this_node+move_dict["d"]+move_dict["l"]] != graph[*this_node]):
+#            corner += 1
+#            #print("ur in:",this_node)
+#        # dl
+#        if (graph[*this_node+move_dict["u"]] == graph[*this_node] and
+#            graph[*this_node+move_dict["r"]] == graph[*this_node] and
+#            graph[*this_node+move_dict["u"]+move_dict["r"]] != graph[*this_node]):
+#            corner += 1
+#            #print("dl in:",this_node)
+#        # dr
+#        if (graph[*this_node+move_dict["u"]] == graph[*this_node] and
+#            graph[*this_node+move_dict["l"]] == graph[*this_node] and
+#            graph[*this_node+move_dict["u"]+move_dict["l"]] != graph[*this_node]):
+#            corner += 1
+#            #print("dr in:",this_node)
+#
+#        for neighbor in ["u","d","l","r"]:
+#            t=this_node + move_dict[neighbor]
+#            if t not in visited and t[0] in range(graph[0].size) and t[1] in range(graph[:,0].size) and graph[*t] == graph[*this_node]:
+#                queue.append(t)
+#                visited.add(t)
+#
+#    return visited, corner
+
+
+# def day12(example=False, override=False):
+#    """
+#    Day 12.
+#
+#    Returns:
+#        list
+#    """
+#    day: int | str
+#    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+#    if example == 1:
+#        day = """AAAA\nBBCD\nBBCC\nEEEC"""
+#    if example == 2:
+#        day = """OOOOO\nOXOXO\nOOOOO\nOXOXO\nOOOOO"""
+#    if example == 3:
+#        day = ("RRRRIICCFF\n"
+#               "RRRRIICCCF\n"
+#               "VVRRRCCFFF\n"
+#               "VVRCCCJFFF\n"
+#               "VVVVCJJCFE\n"
+#               "VVIVCCJJEE\n"
+#               "VVIIICJJEE\n"
+#               "MIIIIIJJEE\n"
+#               "MIIISIJEEE\n"
+#               "MMMISSJEEE")
+#    a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
+#    plots = a[0].size * a[:,0].size
+#    a = np.pad(a, 1, mode="constant", constant_values=".")
+#    b=copy.deepcopy(a)
+#    #print_np(a)
+#    plot_types = set([a[x] for x in zip(*np.where(a!="."), strict=True)])
+#    #print(plot_types)
+#    visited = set()
+#    sizes = []
+#    p2 = 0
+#    return a
+#    while len(visited) < plots:
+#        for t in plot_types:
+#            l = set([Coordinate(x) for x in zip(*np.where(a==t), strict=True)])
+#            while l:
+#                temp = l.pop()
+#                v,c = plots_bfs(a, temp)
+#                #print(a[temp],"area: ",len(v),"corners: ",c)
+#                sizes.append(v)
+#                l = l.difference(v)
+#                visited = visited.union(v)
+#                p2 += len(v) * c
+#                #print(temp)
+#                #print(v)
+#                #print(visited)
+#                for x in v:
+#                    a[x]=0
+#                #print_np(a)
+#                #_=input()
+#        #print("v",len(visited))
+#        #print(plots)
+#        #_=input()
+#    #print(sizes)
+#    #p1=0
+#    #for s in sizes:
+#    #    if len(s) == 1:
+#    #        p1+=4
+#    #    elif len(s) == 2:
+#    #        p1+=2*4
+#    #    else:
+#    #        t=s.pop()
+#    #        print(a[t])
+#    #        s.add(t)
+#    #        #print(s)
+#    ##        p=Polygon(s)
+#    #        sides = len(p.exterior.coords)-1
+#    #        print("sides: ",sides)
+#    #        print("area: ", len(s))
+#    #        p1+=len(s)*sides
+#
+#    print(p2)
+#    #print_np(b)
+#    #return sizes
+
+def plots_bfs(graph, node):
+    """BFS search."""
+    visited = set([node])
+    queue = [node]
+    corners = 0
+    perimeter = 0
+    while queue:  # Creating loop to visit each node
+        this_node = queue.pop(0)
+        this_char = graph[*this_node]
+        this_3x3 = graph[this_node[0] - 1:this_node[0] + 2,this_node[1] - 1:this_node[1] + 2]
+        # Perimeter (edge) check
+        e_mask = np.array([[1, 0, 1],
+                           [0, 1, 0],
+                           [1, 0, 1]])
+        e_masked = np.ma.masked_array(this_3x3, e_mask)
+        perimeter += 4 - np.count_nonzero(e_masked == this_char)
+        # Corner checks.
+        mask = np.array([[1, 0, 1],
+                         [0, 1, 1],
+                         [1, 1, 1]])
+        diag_mask = np.array([[0, 1, 1],
+                              [1, 1, 1],
+                              [1, 1, 1]])
+        for _ in range(4):
+            masked = np.ma.masked_array(this_3x3, mask)
+            diag_masked = np.ma.masked_array(this_3x3, diag_mask)
+            # Exterior corner
+            if np.count_nonzero(masked == this_char) == 0:
+                corners += 1
+            # Interior corner
+            if np.count_nonzero(masked == this_char) == 2 and \
+               np.count_nonzero(diag_masked == this_char) == 0:
+                corners += 1
+            this_3x3 = np.rot90(this_3x3)
+
+        for neighbor in ["u", "d", "l", "r"]:
+            t = this_node + move_dict[neighbor]
+            if t not in visited and t[0] in range(graph[0].size) and \
+               t[1] in range(graph[:, 0].size) and graph[*t] == graph[*this_node]:
+                queue.append(t)
+                visited.add(t)
+
+    return visited, corners, perimeter
+
+
+def day12(example=False, override=False):
+    """Day 12."""
+    day: int | str
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    if example == 1:
+        day = """AAAA\nBBCD\nBBCC\nEEEC"""
+    if example == 2:
+        day = """OOOOO\nOXOXO\nOOOOO\nOXOXO\nOOOOO"""
+    if example == 3:
+        day = ("RRRRIICCFF\n"
+               "RRRRIICCCF\n"
+               "VVRRRCCFFF\n"
+               "VVRCCCJFFF\n"
+               "VVVVCJJCFE\n"
+               "VVIVCCJJEE\n"
+               "VVIIICJJEE\n"
+               "MIIIIIJJEE\n"
+               "MIIISIJEEE\n"
+               "MMMISSJEEE")
+    a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
+    total_plots = a[0].size * a[:,0].size
+    a = np.pad(a, 1, mode="constant", constant_values=".")
+    plot_types = set([a[x] for x in zip(*np.where(a!="."), strict=True)])
+    total_visited = set()
+    p1 = p2 = 0
+    while len(total_visited) < total_plots:
+        for t in plot_types:
+            plots = set([Coordinate(x) for x in zip(*np.where(a == t), strict=True)]).difference(total_visited)
+            while plots:
+                temp = plots.pop()
+                visited, corners, perimeter = plots_bfs(a, temp)
+                # print(a[*temp], "area: ", len(visited), "sides: ", corners, "perimeter: ", perimeter)
+                p1 += len(visited) * perimeter
+                p2 += len(visited) * corners
+                total_visited = total_visited.union(visited)
+                plots = set([Coordinate(x) for x in zip(*np.where(a == t), strict=True)]).difference(total_visited)
+    print("Part 1: ", p1)
+    print("Part 2: ", p2)
