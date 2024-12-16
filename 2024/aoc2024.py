@@ -24,8 +24,8 @@ import socket
 # import time
 from os import path
 
-# import cpmpy
-# import networkx as nx
+import cpmpy as cp
+import networkx as nx
 import numpy as np
 # import pyglet
 import requests  # type: ignore[import-untyped]
@@ -310,10 +310,10 @@ class Coordinate(tuple):  # noqa: SLOT001
 
 
 # Dictionary to make walking the 2D maps easier.
-move_dict = {"u": (-1, 0), "n": (-1, 0), "up": (-1, 0), "north": (-1, 0),
-             "d": (1, 0), "s": (1, 0), "down": (1, 0), "south": (1, 0),
-             "r": (0, 1), "e": (0, 1), "right": (0, 1), "east": (0, 1),
-             "l": (0, -1), "w": (0, -1), "left": (0, -1), "west": (0, -1),
+move_dict = {"u": (-1, 0), "n": (-1, 0), "up": (-1, 0), "north": (-1, 0), "^": (-1, 0),
+             "d": (1, 0), "s": (1, 0), "down": (1, 0), "south": (1, 0), "v": (1, 0),
+             "r": (0, 1), "e": (0, 1), "right": (0, 1), "east": (0, 1), ">": (0, 1),
+             "l": (0, -1), "w": (0, -1), "left": (0, -1), "west": (0, -1), "<": (0, -1),
              "ur": (-1, 1), "ne": (-1, 1), "up-right": (-1, 1), "north-east": (-1, 1),
              "dr": (1, 1), "se": (1, 1), "down-right": (1, 1), "south-east": (1, 1),
              "ul": (-1, -1), "nw": (-1, -1), "up-left": (-1, -1), "north-west": (-1, -1),
@@ -1452,6 +1452,12 @@ def day12(example=False, override=False):
                "MIIIIIJJEE\n"
                "MIIISIJEEE\n"
                "MMMISSJEEE")
+    if example == 4:
+        day = ("----\n"
+               "-OOO\n"
+               "-O-O\n"
+               "OO-O\n"
+               "-OOO")
     a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
     total_plots = a[0].size * a[:,0].size
     a = np.pad(a, 1, mode="constant", constant_values=".")
@@ -1471,3 +1477,347 @@ def day12(example=False, override=False):
                 plots = set([Coordinate(x) for x in zip(*np.where(a == t), strict=True)]).difference(total_visited)
     print("Part 1: ", p1)
     print("Part 2: ", p2)
+
+
+def day13(example=False, override=False):
+    """Day 13."""
+    day: int | str
+    day = ("Button A: X+94, Y+34\n"
+           "Button B: X+22, Y+67\n"
+           "Prize: X=8400, Y=5400\n"
+           "\n"
+           "Button A: X+26, Y+66\n"
+           "Button B: X+67, Y+21\n"
+           "Prize: X=12748, Y=12176\n"
+           "\n"
+           "Button A: X+17, Y+86\n"
+           "Button B: X+84, Y+37\n"
+           "Prize: X=7870, Y=6450\n"
+           "\n"
+           "Button A: X+69, Y+23\n"
+           "Button B: X+27, Y+71\n"
+           "Prize: X=18641, Y=10279")
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    puzzle = get_input(day, "\n", None, override=override)
+    for p, offset in enumerate([0, 10000000000000]):
+        ans = 0
+        for i in range(0, len(puzzle), 4):
+            ax = int(puzzle[i].split("X")[1].split(",")[0])
+            ay = int(puzzle[i].split("Y")[1].strip())
+            bx = int(puzzle[i + 1].split("X")[1].split(",")[0])
+            by = int(puzzle[i + 1].split("Y")[1].strip())
+            tx = int(puzzle[i + 2].split("X=")[1].split(",")[0]) + offset
+            ty = int(puzzle[i + 2].split("Y=")[1].strip()) + offset
+            a, b = cp.intvar(lb=0, ub=10000000000000, shape=2)
+            m = cp.Model((a * ax) + (b * bx) == tx, (a * ay) + (b * by) == ty)
+            m.minimize((3 * a) + b)
+            if m.solve():
+                # print("A: ", a.value(), "B: ", b.value())
+                ans += 3 * a.value() + b.value()
+        print(f"Part {p + 1}: ", ans)
+
+
+def day14(example=False, override=False):
+    """Day 14."""
+    day: int | str
+    day = """p=0,4 v=3,-3
+p=6,3 v=-1,-3
+p=10,3 v=-1,2
+p=2,0 v=2,-1
+p=0,0 v=1,3
+p=3,0 v=-2,-2
+p=7,6 v=-1,-3
+p=3,0 v=-1,-2
+p=9,3 v=2,3
+p=7,3 v=-1,2
+p=2,4 v=2,-3
+p=9,5 v=-3,-3
+"""    
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, "\n", None, override=override)
+    p1 = []
+    r={}
+    i=0
+    for l in p:
+        px = int(l.split("p=")[1].split(",")[0])
+        py = int(l.split("p=")[1].split(",")[1].split()[0])
+        vx = int(l.split("v=")[1].split(",")[0])
+        vy = int(l.split("v=")[1].split(",")[1].strip())
+        r[i]=[Coordinate((py,px)), Coordinate((vy,vx))]
+        i+=1
+    for x,y in r.items():
+        print(x,y)
+    if example:
+        w=11
+        t=7
+    else:
+        w=101
+        t=103
+    for s in range(10000000):
+        for a,v in r.items():
+            #print(a,v)
+            r[a][0] = v[0] + v[1]
+
+        a = np.zeros([t,w],dtype=int)
+        for v in r.values():
+            y=v[0][0] % t
+            x=v[0][1] % w
+            #print(a[0].size, a[:,0].size)
+            #print(v,y,x)
+            a[(y,x)]+=1
+        #print_np(a)
+        #a=np.delete(a, w//2, 1)
+        #a=np.delete(a, t//2, 0)
+        #print()
+        #print_np(a)
+        #b=[M for subA in np.split(a,2,axis=0) for M in np.split(subA,2,axis=1)] 
+        #for x in b:
+        #    p1.append(np.sum(x))
+        for x in a:
+            if np.sum(x) > 30:
+                c=np.full([t,w],fill_value=" ",dtype=str)
+                c[np.where(a!=0)]="#"
+                print_np(c)
+                print("@"*100,s)
+                _=input()
+                break
+        for x in a.T:
+            if np.sum(x) > 30:
+                c=np.full([t,w],fill_value=" ",dtype=str)
+                c[np.where(a!=0)]="#"
+                print_np(c)
+                print("@"*100,s)
+                _=input()
+                break
+    #print(np.prod(p1))
+
+
+def push(sub_array):
+    """Push the box."""
+    free = np.where(sub_array == ".")[0][0]
+    wall = np.where(sub_array == "#")[0][0]
+    if free < wall:  # Can push
+        sub_array[:free + 1] = np.roll(sub_array[:free + 1], shift=1)
+
+
+def day15_part1(example=False, override=False):
+    """Day 15."""
+    day: int | str
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    if example == 1:
+        day = ("########\n"
+               "#..O.O.#\n"
+               "##@.O..#\n"
+               "#...O..#\n"
+               "#.#.O..#\n"
+               "#...O..#\n"
+               "#......#\n"
+               "########\n"
+               "\n"
+               "<^^>>>vv<v>>v<<")
+    if example == 2:
+        day = ("#######\n"
+               "#...#.#\n"
+               "#.....#\n"
+               "#..OO@#\n"
+               "#..O..#\n"
+               "#.....#\n"
+               "#######\n"
+               "\n"
+               "<vv<<^^<<^^")
+    if example == 3:
+        day = ("##########\n"
+               "#..O..O.O#\n"
+               "#......O.#\n"
+               "#.OO..O.O#\n"
+               "#..O@..O.#\n"
+               "#O#..O...#\n"
+               "#O..O..O.#\n"
+               "#.OO.O.OO#\n"
+               "#....O...#\n"
+               "##########\n"
+               "\n"
+               "<vv>^<v^>v>^vv^v>v<>v^v<v<^vv<<<^><<><>>v<vvv<>^v^>^<<<><<v<<<v^vv^v>^\n"
+               "vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v\n"
+               "><>vv>v^v^<>><>>>><^^>vv>v<^^^>>v^v^<^^>v^^>v^<^v>v<>>v^v^<v>v^^<^^vv<\n"
+               "<<v<^>>^^^^>>>v^<>vvv^><v<<<>^^^vv^<vvv>^>v<^^^^v<>^>vvvv><>>v^<<^^^^^\n"
+               "^><^><>>><>^^<<^^v>>><^<v>^<vv>>v>>>^v><>^v><<<<v>>v<v<v>vvv>^<><<>^><\n"
+               "^>><>^v<><^vvv<^^<><v<<<<<><^v<<<><<<^^<v<^^^><^>>^<v^><<<^>>^v<v^v<v^\n"
+               ">^>>^v>vv>^<<^v<>><<><<v<<v><>v<^vv<<<>^^v^>^^>>><<^v>>v^v><^^>>^<>vv^\n"
+               "<><^^>^^^<><vvvvv^v<v<<>^v<v>v<<^><<><<><<<^^<<<^<<>><<><^^^>^^<>^>v<>\n"
+               "^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>\n"
+               "v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^")
+    puzzle = get_input(day, "\n", None, override=True)
+    movement_index = puzzle.index("")
+    warehouse = np.array([list(x) for x in puzzle[:movement_index]], dtype=str)
+    movements = puzzle[movement_index:]
+    for moves in movements:
+        for move in moves:
+            prev = np.copy(warehouse)
+            ry, rx = np.argwhere(warehouse == "@")[0]
+            if move == "^" and "." in warehouse[:, rx][:ry + 1]:
+                push(np.flip(warehouse[:, rx][:ry + 1]))
+            elif move == "v" and "." in warehouse[:, rx][ry:]:
+                push(warehouse[:, rx][ry:])
+            elif move == "<" and "." in warehouse[ry][:rx + 1]:
+                push(np.flip(warehouse[ry][:rx + 1]))
+            elif move == ">" and "." in warehouse[ry][rx:]:
+                push(warehouse[ry][rx:])
+    # print_np(warehouse)
+    y, x = np.where(warehouse == "O")
+    print("Part 1: ", np.sum(y) * 100 + np.sum(x))
+
+
+def move_graph(node, direction, warehouse, graph):
+    """Create the move graph."""
+    next_node = (node[0] + move_dict[direction], warehouse[node[0] + move_dict[direction]])
+    graph.add_edge(node, next_node)
+    if next_node[1] in "[]":
+        lr = "l" if next_node[1] == "]" else "r"
+        other_node = (next_node[0] + move_dict[lr], warehouse[next_node[0] + move_dict[lr]])
+        move_graph(other_node, direction, warehouse, graph)
+        move_graph(next_node, direction, warehouse, graph)
+
+
+def wide_push(graph, warehouse):
+    """Move wide boxes."""
+    if all(node == "." for node in [v[1] for v, d in graph.out_degree() if d == 0]):
+        while graph.size():
+            leaves = [v for v, d in graph.out_degree() if d == 0]
+            for node in leaves:
+                parents = graph.predecessors(node)
+                if parents:
+                    for p in parents:
+                        warehouse[node[0]] = p[1]
+                        warehouse[p[0]] = "."
+                else:
+                    warehouse[node[0]] = "."
+                graph.remove_node(node)
+
+
+def day15_part2(part=1,example=False, override=False):
+    """Day 15."""
+    day: int | str
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    if example == 1:
+        day = ("########\n"
+               "#..O.O.#\n"
+               "##@.O..#\n"
+               "#...O..#\n"
+               "#.#.O..#\n"
+               "#...O..#\n"
+               "#......#\n"
+               "########\n"
+               "\n"
+               "<^^>>>vv<v>>v<<")
+    if example == 2:
+        day = ("#######\n"
+               "#...#.#\n"
+               "#.....#\n"
+               "#..OO@#\n"
+               "#..O..#\n"
+               "#.....#\n"
+               "#######\n"
+               "\n"
+               "<vv<<^^<<^^")
+    if example == 3:
+        day = ("##########\n"
+               "#..O..O.O#\n"
+               "#......O.#\n"
+               "#.OO..O.O#\n"
+               "#..O@..O.#\n"
+               "#O#..O...#\n"
+               "#O..O..O.#\n"
+               "#.OO.O.OO#\n"
+               "#....O...#\n"
+               "##########\n"
+               "\n"
+               "<vv>^<v^>v>^vv^v>v<>v^v<v<^vv<<<^><<><>>v<vvv<>^v^>^<<<><<v<<<v^vv^v>^\n"
+               "vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v\n"
+               "><>vv>v^v^<>><>>>><^^>vv>v<^^^>>v^v^<^^>v^^>v^<^v>v<>>v^v^<v>v^^<^^vv<\n"
+               "<<v<^>>^^^^>>>v^<>vvv^><v<<<>^^^vv^<vvv>^>v<^^^^v<>^>vvvv><>>v^<<^^^^^\n"
+               "^><^><>>><>^^<<^^v>>><^<v>^<vv>>v>>>^v><>^v><<<<v>>v<v<v>vvv>^<><<>^><\n"
+               "^>><>^v<><^vvv<^^<><v<<<<<><^v<<<><<<^^<v<^^^><^>>^<v^><<<^>>^v<v^v<v^\n"
+               ">^>>^v>vv>^<<^v<>><<><<v<<v><>v<^vv<<<>^^v^>^^>>><<^v>>v^v><^^>>^<>vv^\n"
+               "<><^^>^^^<><vvvvv^v<v<<>^v<v>v<<^><<><<><<<^^<<<^<<>><<><^^^>^^<>^>v<>\n"
+               "^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>\n"
+               "v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^")
+    puzzle = get_input(day, "\n", None, override=True)
+    movement_index = puzzle.index("")
+    warehouse = []
+    for i in range(movement_index):
+        temp = []
+        for c in puzzle[i]:
+            if c == ".":
+                temp += [".", "."]
+            elif c == "O":
+                temp += ["[", "]"]
+            elif c == "#":
+                temp += ["#", "#"]
+            elif c == "@":
+                temp += ["@", "."]
+            else:
+                print(f"Unknown character {c}")
+                return
+        warehouse.append(temp)
+    warehouse = np.array(warehouse, dtype=str)
+    movements = puzzle[movement_index:]
+    for moves in movements:
+        for move in moves:
+            prev = np.copy(warehouse)
+            ry, rx = np.argwhere(warehouse == "@")[0]
+            pos = Coordinate((ry, rx))
+            graph = nx.DiGraph()
+            graph.add_edge(((0,0), "."), (pos, "@"))
+            if move == "^" and "." in warehouse[:, rx][:ry + 1]:
+                graph.add_edge(((0,0), "."), (pos, "@"))
+                move_graph((pos, "@"), move, warehouse, graph)
+                # prev_g = copy.deepcopy(graph)
+                wide_push(graph, warehouse)
+            elif move == "v" and "." in warehouse[:, rx][ry:]:
+                move_graph((pos, "@"), move, warehouse, graph)
+                # prev_g = copy.deepcopy(graph)
+                wide_push(graph, warehouse)
+            elif move == "<" and "." in warehouse[ry][:rx + 1]:
+                push(np.flip(warehouse[ry][:rx + 1]))
+            elif move == ">" and "." in warehouse[ry][rx:]:
+                push(warehouse[ry][rx:])
+
+            # error = False
+            # for p in np.argwhere(warehouse == "["):
+            #   if warehouse[p[0],p[1]+1] != "]":
+            #     error = True
+            # for p in np.argwhere(warehouse == "]"):
+            #   if warehouse[p[0],p[1]-1] != "[":
+            #     error = True
+            # if error:
+            #     print(move)
+            #     print_np(prev)
+            #     print()
+            #     print_np(warehouse)
+            #     nx.draw(prev_g, with_labels=True)
+            #     import matplotlib.pyplot as plt
+            #     plt.show()
+            #     _=input()
+    # print_np(warehouse)
+    y, x = np.where(warehouse == "[")
+    print("Part 2: ", np.sum(y) * 100 + np.sum(x))
+
+
+def day16(example=False, override=False):
+    """Day 16."""
+    day: int | str
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    if example == 1:
+        day = """
+"""
+    p1 = p2 = 0
+    p = get_input(day, separator="\n", cast=None, override=True)
+    # a = get_np_input(day, separator="\n", cast=None, splitter=list, dtype=str, override=override)
+    for l in p:
+        print(l)
+    print(p1)
+    print(p2)
+
