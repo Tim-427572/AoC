@@ -1811,13 +1811,74 @@ def day16(example=False, override=False):
     day: int | str
     day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     if example == 1:
-        day = """
-"""
-    p1 = p2 = 0
-    p = get_input(day, separator="\n", cast=None, override=True)
-    # a = get_np_input(day, separator="\n", cast=None, splitter=list, dtype=str, override=override)
-    for l in p:
-        print(l)
-    print(p1)
-    print(p2)
+        day = ("###############\n"
+               "#.......#....E#\n"
+               "#.#.###.#.###.#\n"
+               "#.....#.#...#.#\n"
+               "#.###.#####.#.#\n"
+               "#.#.#.......#.#\n"
+               "#.#.#####.###.#\n"
+               "#...........#.#\n"
+               "###.#.#####.#.#\n"
+               "#...#.....#.#.#\n"
+               "#.#.#.###.#.#.#\n"
+               "#.....#...#.#.#\n"
+               "#.###.#.#.#.#.#\n"
+               "#S..#.....#...#\n"
+               "###############")
+    if example == 2:
+        day = ("#################\n"
+               "#...#...#...#..E#\n"
+               "#.#.#.#.#.#.#.#.#\n"
+               "#.#.#.#...#...#.#\n"
+               "#.#.#.#.###.#.#.#\n"
+               "#...#.#.#.....#.#\n"
+               "#.#.#.#.#.#####.#\n"
+               "#.#...#.#.#.....#\n"
+               "#.#.#####.#.###.#\n"
+               "#.#.#.......#...#\n"
+               "#.#.###.#####.###\n"
+               "#.#.#...#.....#.#\n"
+               "#.#.#.#####.###.#\n"
+               "#.#.#.........#.#\n"
+               "#.#.#.#########.#\n"
+               "#S#.............#\n"
+               "#################")
+    maze = get_np_input(day, seperator="\n", cast=None, splitter=list, dtype=str, override=override)
+    visited = set()
+    start = Coordinate(np.argwhere(maze == "S")[0])
+    end = Coordinate(np.argwhere(maze == "E")[0])
+    cur_dir = "h"
+    turn = {"h": "v", "v": "h"}
+    moves = {"h": "we", "v": "ns"}
+    graph = nx.Graph()
+    # BFS to map the maze into a graph.
+    queue = [(start, "h")]
+    while queue:
+        cur_node = queue.pop(0)
+        visited.add(cur_node)
+        graph.add_node(cur_node)
+        rotated = (cur_node[0], turn[cur_node[1]])
+        graph.add_edge(cur_node, rotated, weight=1000)  # Turning costs 1000
+        if rotated not in visited:
+            queue.append(rotated)
+        for d in moves[cur_node[1]]:
+            next_node = (cur_node[0] + move_dict[d], cur_node[1])
+            if not ((0, 0) <= next_node[0] < maze.shape) or \
+               next_node in visited or \
+               maze[next_node[0]] == "#":
+                continue
+            graph.add_edge(cur_node, next_node, weight=1)
+            queue.append(next_node)
+    # Figure out ending in which direction is the shortest.
+    v = nx.shortest_path_length(graph, source=(start, "h"), target=(end, "v"), weight="weight")
+    h = nx.shortest_path_length(graph, source=(start, "h"), target=(end, "h"), weight="weight")
+    print(f"Part 1: {min(v, h)}")
+    # Count all positions along the shortest paths.
+    end_dir = "v" if v < h else "h"
+    paths = nx.all_shortest_paths(graph, source=(start, "h"), target=(end, end_dir), weight="weight")
+    seats = set()
+    for path in paths:
+        seats = seats.union(set([x[0] for x in path]))
+    print(f"Part 2: {len(seats)}")
 
