@@ -92,7 +92,7 @@ lint.select = [
     "E273",  # tab-after-keyword
     "E274",  # tab-before-keyword
     "E275",  # missing-whitespace-after-keyword
-    "E301",  # blank-line-between-methods	Expected {BLANK_LINES_NESTED_LEVEL:?} blank line, found 0	🧪 🛠️
+  # "E301",  # blank-line-between-methods	Expected {BLANK_LINES_NESTED_LEVEL:?} blank line, found 0	🧪 🛠️
     "E302",  # blank-lines-top-level
     "E303",  # too-many-blank-lines
     "E304",  # blank-line-after-decorator
@@ -167,7 +167,7 @@ lint.select = [
     "D201",  # no-blank-line-before-function
     "D202",  # no-blank-line-after-function
   # "D203",  # one-blank-line-before-class (using D211 instead)
-    "D204",  # one-blank-line-after-class
+  # "D204",  # one-blank-line-after-class
     "D205",  # blank-line-after-summary
     "D206",  # indent-with-spaces
     "D207",  # under-indentation
@@ -879,7 +879,7 @@ lint.select = [
     "PLW3301",  # nested-min-max
 
     # tryceratops (TRY)
-    "TRY002",  # raise-vanilla-class
+  # "TRY002",  # raise-vanilla-class
     "TRY003",  # raise-vanilla-args
     "TRY004",  # type-check-without-type-error
     "TRY201",  # verbose-raise
@@ -950,12 +950,12 @@ lint.select = [
     "FURB192",  # sorted-min-max
 
     # pydoclint (DOC)
-    "DOC201",   # docstring-missing-returns
-    "DOC202",   # docstring-extraneous-returns
-    "DOC402",   # docstring-missing-yields
-    "DOC403",   # docstring-extraneous-yields
-    "DOC501",   # docstring-missing-exception
-    "DOC502",   # docstring-extraneous-exception
+  # "DOC201",   # docstring-missing-returns
+  # "DOC202",   # docstring-extraneous-returns
+  # "DOC402",   # docstring-missing-yields
+  # "DOC403",   # docstring-extraneous-yields
+  # "DOC501",   # docstring-missing-exception
+  # "DOC502",   # docstring-extraneous-exception
 
     # Ruff-specific rules (RUF)
     "RUF001",  # ambiguous-unicode-character-string

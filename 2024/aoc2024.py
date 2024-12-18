@@ -274,39 +274,40 @@ class Coordinate(tuple):  # noqa: SLOT001
     """
 
     def __abs__(self):
+        """Return absolute value for each part."""
         return Coordinate(abs(x) for x in self)
     def __mul__(self, other):
         """Multiply a scaler with this coordinate."""
-        return Coordinate(x * other for x in self)  # noqa: DOC201
-    def __neg__(self):  # noqa: E301
+        return Coordinate(x * other for x in self)
+    def __neg__(self):
         """Turn the coordinate negative."""
-        return Coordinate(-1 * x for x in self)  # noqa: DOC201
-    def __add__(self, other):  # noqa: E301
+        return Coordinate(-1 * x for x in self)
+    def __add__(self, other):
         """Add two coordinates or a coordinate and a tuple."""
-        return Coordinate(x + y for x, y in zip(self, other, strict=True))  # noqa: DOC201
-    def __sub__(self, other):  # noqa: E301
+        return Coordinate(x + y for x, y in zip(self, other, strict=True))
+    def __sub__(self, other):
         """Subtract one coordinate from another."""
-        return Coordinate(x - y for x, y in zip(self, other, strict=True))  # noqa: DOC201
-    def __lt__(self, other):  # noqa: E301
+        return Coordinate(x - y for x, y in zip(self, other, strict=True))
+    def __lt__(self, other):
         """Use to test if coordinate in 2D array."""
-        return all(x < y for x, y in zip(self, other, strict=True))  # noqa: DOC201
-    def __le__(self, other):  # noqa: E301
+        return all(x < y for x, y in zip(self, other, strict=True))
+    def __le__(self, other):
         """Use to test if coordinate in 2D array."""
-        return all(x <= y for x, y in zip(self, other, strict=True))  # noqa: DOC201
-    def __gt__(self, other):  # noqa: E301
+        return all(x <= y for x, y in zip(self, other, strict=True))
+    def __gt__(self, other):
         """Use to test if coordinate in 2D array."""
-        return all(x > y for x, y, in zip(self, other, strict=True))  # noqa: DOC201
-    def __ge__(self, other):  # noqa: E301
+        return all(x > y for x, y, in zip(self, other, strict=True))
+    def __ge__(self, other):
         """Use to test if coordinate in 2D array."""
-        return all(x >= y for x, y, in zip(self, other, strict=True))  # noqa: DOC201
-    def __setitem__(self, key, value):  # noqa: E301
+        return all(x >= y for x, y, in zip(self, other, strict=True))
+    def __setitem__(self, key, value):
         """Ok, look it really isn't a tuple."""
         self_list = list(self)
         self_list[key] = value
-        return Coordinate(tuple(self_list))  # noqa: DOC201
-    def manhattan_dist(self, other):  # noqa: E301
+        return Coordinate(tuple(self_list))
+    def manhattan_dist(self, other):
         """Calculate the manhattan distance between this coordinate and another."""
-        return Coordinate(abs(x - y) for x, y in zip(self, other, strict=True))  # noqa: DOC201
+        return Coordinate(abs(x - y) for x, y in zip(self, other, strict=True))
 
 
 # Dictionary to make walking the 2D maps easier.
@@ -1156,15 +1157,15 @@ def day10(example=False, override=False):
 
 def trail_bfs(graph, node):  # Example function for BFS
     """BFS search."""
-    visited = set([node.p()])
+    visited = set(node.p())
     queue = [node]
     paths = 0
     while queue:          # Creating loop to visit each node
         this_node = queue.pop(0)
-        for neighbor in ["u","d","l","r"]:
-            t=PointObject(*this_node.p())
+        for neighbor in "news":
+            t = PointObject(*this_node.p())
             t.move(neighbor)
-            if t.y in range(graph[0].size) and t.x in range(graph[:,0].size) and graph[t.p()] - 1 == graph[this_node.p()]:
+            if t.y in range(graph[0].size) and t.x in range(graph[:, 0].size) and graph[t.p()] - 1 == graph[this_node.p()]:
                 if graph[t.p()] == 9:
                     paths += 1
                 else:
@@ -1188,7 +1189,7 @@ def day10_2(example=False, override=False):
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
     # Code to make the three path example work.
-    b = np.full((a[0].size, a[:,0].size), -1, dtype=int)
+    b = np.full((a[0].size, a[:, 0].size), -1, dtype=int)
     for i in range(10):
         b[np.where(a == str(i))] = i
     p2 = 0
@@ -1214,8 +1215,7 @@ def day11_part1_orig(example=False, override=False):
                 t.append(1)
             elif len(str(s)) % 2 == 0:
                 st = str(s)
-                t.append(int(st[:len(st) // 2]))
-                t.append(int(st[len(st) // 2:]))
+                t.extend([int(st[:len(st) // 2]), int(st[len(st) // 2:])])
             else:
                 t.append(s * 2024)
         p = copy.deepcopy(t)
@@ -1390,14 +1390,14 @@ def day11(example=False, override=False):
 
 def plots_bfs(graph, node):
     """BFS search."""
-    visited = set([node])
+    visited = {node}
     queue = [node]
     corners = 0
     perimeter = 0
     while queue:  # Creating loop to visit each node
         this_node = queue.pop(0)
-        this_char = graph[*this_node]
-        this_3x3 = graph[this_node[0] - 1:this_node[0] + 2,this_node[1] - 1:this_node[1] + 2]
+        this_char = graph[this_node]
+        this_3x3 = graph[this_node[0] - 1:this_node[0] + 2, this_node[1] - 1:this_node[1] + 2]
         # Perimeter (edge) check
         e_mask = np.array([[1, 0, 1],
                            [0, 1, 0],
@@ -1426,7 +1426,7 @@ def plots_bfs(graph, node):
         for neighbor in ["u", "d", "l", "r"]:
             t = this_node + move_dict[neighbor]
             if t not in visited and t[0] in range(graph[0].size) and \
-               t[1] in range(graph[:, 0].size) and graph[*t] == graph[*this_node]:
+               t[1] in range(graph[:, 0].size) and graph[t] == graph[this_node]:
                 queue.append(t)
                 visited.add(t)
 
@@ -1459,14 +1459,14 @@ def day12(example=False, override=False):
                "OO-O\n"
                "-OOO")
     a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
-    total_plots = a[0].size * a[:,0].size
+    total_plots = a[0].size * a[:, 0].size
     a = np.pad(a, 1, mode="constant", constant_values=".")
-    plot_types = set([a[x] for x in zip(*np.where(a!="."), strict=True)])
+    plot_types = {a[x] for x in zip(*np.where(a != "."), strict=True)}
     total_visited = set()
     p1 = p2 = 0
     while len(total_visited) < total_plots:
         for t in plot_types:
-            plots = set([Coordinate(x) for x in zip(*np.where(a == t), strict=True)]).difference(total_visited)
+            plots = {Coordinate(x) for x in zip(*np.where(a == t), strict=True)}.difference(total_visited)
             while plots:
                 temp = plots.pop()
                 visited, corners, perimeter = plots_bfs(a, temp)
@@ -1474,7 +1474,7 @@ def day12(example=False, override=False):
                 p1 += len(visited) * perimeter
                 p2 += len(visited) * corners
                 total_visited = total_visited.union(visited)
-                plots = set([Coordinate(x) for x in zip(*np.where(a == t), strict=True)]).difference(total_visited)
+                plots = {Coordinate(x) for x in zip(*np.where(a == t), strict=True)}.difference(total_visited)
     print("Part 1: ", p1)
     print("Part 2: ", p2)
 
@@ -1521,77 +1521,64 @@ def day13(example=False, override=False):
 def day14(example=False, override=False):
     """Day 14."""
     day: int | str
-    day = """p=0,4 v=3,-3
-p=6,3 v=-1,-3
-p=10,3 v=-1,2
-p=2,0 v=2,-1
-p=0,0 v=1,3
-p=3,0 v=-2,-2
-p=7,6 v=-1,-3
-p=3,0 v=-1,-2
-p=9,3 v=2,3
-p=7,3 v=-1,2
-p=2,4 v=2,-3
-p=9,5 v=-3,-3
-"""    
+    day = ("p=0,4\nv=3,-3\np=6,3\nv=-1,-3\np=10,3\nv=-1,2\np=2,0\nv=2,-1\np=0,0\nv=1,3\n"
+           "p=3,0\nv=-2,-2\np=7,6\nv=-1,-3\np=3,0\nv=-1,-2\np=9,3\nv=2,3\np=7,3\nv=-1,2\n"
+           "p=2,4 v=2,-3\np=9,5\nv=-3,-3")
     if not example:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     p = get_input(day, "\n", None, override=override)
-    p1 = []
-    r={}
-    i=0
-    for l in p:
+    r = {}
+    i = 0
+    for i, l in enumerate(p):  # noqa: E741
         px = int(l.split("p=")[1].split(",")[0])
         py = int(l.split("p=")[1].split(",")[1].split()[0])
         vx = int(l.split("v=")[1].split(",")[0])
         vy = int(l.split("v=")[1].split(",")[1].strip())
-        r[i]=[Coordinate((py,px)), Coordinate((vy,vx))]
-        i+=1
-    for x,y in r.items():
-        print(x,y)
+        r[i] = [Coordinate((py, px)), Coordinate((vy, vx))]
+    for x, y in r.items():
+        print(x, y)
     if example:
-        w=11
-        t=7
+        w = 11
+        t = 7
     else:
-        w=101
-        t=103
+        w = 101
+        t = 103
     for s in range(10000000):
-        for a,v in r.items():
-            #print(a,v)
+        for a, v in r.items():
+            # print(a,v)
             r[a][0] = v[0] + v[1]
-
-        a = np.zeros([t,w],dtype=int)
+        a = np.zeros([t, w], dtype=int)
         for v in r.values():
-            y=v[0][0] % t
-            x=v[0][1] % w
-            #print(a[0].size, a[:,0].size)
-            #print(v,y,x)
-            a[(y,x)]+=1
-        #print_np(a)
-        #a=np.delete(a, w//2, 1)
-        #a=np.delete(a, t//2, 0)
-        #print()
-        #print_np(a)
-        #b=[M for subA in np.split(a,2,axis=0) for M in np.split(subA,2,axis=1)] 
-        #for x in b:
+            y = v[0][0] % t
+            x = v[0][1] % w
+            # print(a[0].size, a[:,0].size)
+            # print(v,y,x)
+            a[y, x] += 1
+        # print_np(a)
+        # a=np.delete(a, w//2, 1)
+        # a=np.delete(a, t//2, 0)
+        # print()
+        # print_np(a)
+        # b=[M for subA in np.split(a,2,axis=0) for M in np.split(subA,2,axis=1)]
+        # for x in b:
         #    p1.append(np.sum(x))
         for x in a:
             if np.sum(x) > 30:
-                c=np.full([t,w],fill_value=" ",dtype=str)
-                c[np.where(a!=0)]="#"
+                c = np.full([t, w], fill_value=" ", dtype=str)
+                c[np.where(a != 0)] = "#"
                 print_np(c)
-                print("@"*100,s)
-                _=input()
+                print("@" * 100, s)
+                _ = input()
                 break
         for x in a.T:
             if np.sum(x) > 30:
-                c=np.full([t,w],fill_value=" ",dtype=str)
-                c[np.where(a!=0)]="#"
+                c = np.full([t, w], fill_value=" ", dtype=str)
+                c[np.where(a != 0)] = "#"
                 print_np(c)
-                print("@"*100,s)
-                _=input()
+                print("@" * 100, s)
+                _ = input()
                 break
-    #print(np.prod(p1))
+    # print(np.prod(p1))
 
 
 def push(sub_array):
@@ -1602,7 +1589,7 @@ def push(sub_array):
         sub_array[:free + 1] = np.roll(sub_array[:free + 1], shift=1)
 
 
-def day15_part1(example=False, override=False):
+def day15_part1(example=False):
     """Day 15."""
     day: int | str
     day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
@@ -1655,7 +1642,7 @@ def day15_part1(example=False, override=False):
     movements = puzzle[movement_index:]
     for moves in movements:
         for move in moves:
-            prev = np.copy(warehouse)
+            # prev = np.copy(warehouse)
             ry, rx = np.argwhere(warehouse == "@")[0]
             if move == "^" and "." in warehouse[:, rx][:ry + 1]:
                 push(np.flip(warehouse[:, rx][:ry + 1]))
@@ -1697,7 +1684,7 @@ def wide_push(graph, warehouse):
                 graph.remove_node(node)
 
 
-def day15_part2(part=1,example=False, override=False):
+def day15_part2(example=False):
     """Day 15."""
     day: int | str
     day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
@@ -1766,13 +1753,13 @@ def day15_part2(part=1,example=False, override=False):
     movements = puzzle[movement_index:]
     for moves in movements:
         for move in moves:
-            prev = np.copy(warehouse)
+            # prev = np.copy(warehouse)
             ry, rx = np.argwhere(warehouse == "@")[0]
             pos = Coordinate((ry, rx))
             graph = nx.DiGraph()
-            graph.add_edge(((0,0), "."), (pos, "@"))
+            graph.add_edge(((0, 0), "."), (pos, "@"))
             if move == "^" and "." in warehouse[:, rx][:ry + 1]:
-                graph.add_edge(((0,0), "."), (pos, "@"))
+                graph.add_edge(((0, 0), "."), (pos, "@"))
                 move_graph((pos, "@"), move, warehouse, graph)
                 # prev_g = copy.deepcopy(graph)
                 wide_push(graph, warehouse)
@@ -1848,7 +1835,6 @@ def day16(example=False, override=False):
     visited = set()
     start = Coordinate(np.argwhere(maze == "S")[0])
     end = Coordinate(np.argwhere(maze == "E")[0])
-    cur_dir = "h"
     turn = {"h": "v", "v": "h"}
     moves = {"h": "we", "v": "ns"}
     graph = nx.Graph()
@@ -1878,13 +1864,15 @@ def day16(example=False, override=False):
     end_dir = "v" if v < h else "h"
     paths = nx.all_shortest_paths(graph, source=(start, "h"), target=(end, end_dir), weight="weight")
     seats = set()
-    for path in paths:
-        seats = seats.union(set([x[0] for x in path]))
+    for this_path in paths:
+        seats = seats.union({x[0] for x in this_path})
     print(f"Part 2: {len(seats)}")
 
-@functools.lru_cache(maxsize=None)
-class comp():
+
+class Comp:
+    """Day 17 computer class."""
     def __init__(self, a=0, b=0, c=0, instructions=""):
+        """Set up the computer class."""
         self.a = a
         self.b = b
         self.c = c
@@ -1894,7 +1882,8 @@ class comp():
         self.ip = None
         self.match = False
 
-    def reinit(self,a):
+    def reinit(self, a):
+        """Reset the computer."""
         self.a = a
         self.b = 0
         self.c = 0
@@ -1903,10 +1892,11 @@ class comp():
         self.match = False
 
     def opcode(self, x, y):
+        """Process the opcode."""
         match x:
             case 0:  # adv
                 # print(f"adv: {self.a // 2**y} = {self.a} // 2**{y}")
-                self.a = self.a // 2**y
+                self.a //= 2**y
             case 1:  # bxl
                 # print(f"bxl: {self.b ^ y} = {self.b} ^ {y}")
                 self.b ^= y
@@ -1932,17 +1922,19 @@ class comp():
         self.ip += 2
 
     def decode(self):
+        """Decode the instruction string."""
         commands = self.instructions.split(",")
         self.program = list(map(int, commands))
         self.ip = 0
 
     def run(self):
+        """Run the program."""
         # self.decode()
         while 0 <= self.ip < len(self.program) - 1:
             # print(f"before a: {self.a} b: {self.b} c: {self.c}")
             x, y = self.program[self.ip : self.ip + 2]
             # print(self.ip, x, y)
-            if x in [0, 2, 5, 6, 7]:
+            if x in {0, 2, 5, 6, 7}:
                 match y:
                     case 4:
                         y = self.a
@@ -1951,15 +1943,16 @@ class comp():
                     case 6:
                         y = self.c
                     case 7:
-                        raise Exception("illegal combo operand")
+                        error = "illegal combo operand."
+                        raise Exception(error)  # noqa: TRY002
             self.opcode(x, y)
             if self.output != self.program[:len(self.output)]:
                 # print(f"mismatch {self.output} {self.program}")
                 break
             # print(f"after a: {self.a} b: {self.b} c: {self.c}")
-            #_ = input()
+            # _ = input()
         if self.output == self.program:
-            self.match=True
+            self.match = True
         # print(self.output)
 
 
@@ -1976,7 +1969,7 @@ def _comp_segment(a, b, c, opcodes, operands):
     while 0 <= ip < len(opcodes):
         x = opcodes[ip]
         y = operands[ip]
-        if x in [0, 2, 5, 6, 7]:
+        if x in {0, 2, 5, 6, 7}:
             match y:
                 case 4:
                     y = a
@@ -1986,14 +1979,14 @@ def _comp_segment(a, b, c, opcodes, operands):
                     y = c
         match x:
             case 0:  # adv
-                a = a // 2**y
+                a //= 2**y
             case 1:  # bxl
                 b ^= y
             case 2:  # bst
                 b = y % 8
             case 3:  # jnz
-                print("ERROR! Jump detected")
-                raise Exception
+                error = "ERROR! Jump detected"
+                raise Exception(error)  # noqa: TRY002
             case 4:  # bxc
                 b = c ^ b
             case 5:  # out
@@ -2008,9 +2001,9 @@ def _comp_segment(a, b, c, opcodes, operands):
 
 def _day17_thread2(p, r):
     print(p, r)
-    opcodes = [p[x] for x in range(0,len(p),2)]
-    operands = [p[x] for x in range(1,len(p),2)]
-    #print(opcodes)
+    opcodes = [p[x] for x in range(0, len(p), 2)]
+    operands = [p[x] for x in range(1, len(p), 2)]
+    # print(opcodes)
     for i in r:
         a = i
         b = 0
@@ -2018,7 +2011,7 @@ def _day17_thread2(p, r):
         ip = 0
         output = []
         while 0 <= ip < len(opcodes):
-            #print("next",ip, opcodes[ip])
+            # print("next",ip, opcodes[ip])
             if opcodes[ip] == 3:
                 if a:
                     ip = operands[ip]
@@ -2026,20 +2019,21 @@ def _day17_thread2(p, r):
                     ip += 1
             elif 3 in opcodes[ip:]:
                 jmp_loc = opcodes[ip:].index(3)
-                a, b, c, more_output = _comp_segment(a,b,c,tuple(opcodes[ip:jmp_loc+ip]), tuple(operands[ip:jmp_loc+ip]))
+                a, b, c, more_output = _comp_segment(a, b, c, tuple(opcodes[ip:jmp_loc + ip]),
+                                                     tuple(operands[ip:jmp_loc + ip]))
                 output.extend(more_output)
                 ip += jmp_loc
-                #print(ip, output)
-                #_= input()
+                # print(ip, output)
+                # _ = input()
             else:
-                a,b,c, more_output =_comp_segment(a,b,c,tuple(opcodes[ip:]), tuple(operands[:]))
+                a, b, c, more_output = _comp_segment(a, b, c, tuple(opcodes[ip:]), tuple(operands[ip:]))
                 output.extend(more_output)
-                ip+=len(opcodes[ip:])
+                ip += len(opcodes[ip:])
             if output != p[:len(output)]:
                 break
         if output == p:
             print(i)
-        #print(output)
+        # print(output)
 
 
 def _day17_thread(p, r):
@@ -2053,7 +2047,7 @@ def _day17_thread(p, r):
         ip = 0
         while 0 <= ip < len(program):
             x, y = program[ip : ip + 2]
-            if x in [0, 2, 5, 6, 7]:
+            if x in {0, 2, 5, 6, 7}:
                 match y:
                     case 4:
                         y = a
@@ -2063,7 +2057,7 @@ def _day17_thread(p, r):
                         y = c
             match x:
                 case 0:  # adv
-                    a = a // 2**y
+                    a //= 2**y
                 case 1:  # bxl
                     b ^= y
                 case 2:  # bst
@@ -2083,10 +2077,10 @@ def _day17_thread(p, r):
             if output != program[:len(output)]:
                 break
         if output == program:
-            print("yes",i)
+            print("yes", i)
 
 
-def day17(example=False, override=False, start=0,nmax=8):
+def day17(example=False, override=False, start=0, nmax=8):
     """Day 17."""
     day: int | str
     day = ("Register A: 2024\n"
@@ -2097,21 +2091,18 @@ def day17(example=False, override=False, start=0,nmax=8):
     if not example:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     p = get_input(day, "\n", lambda x: x.split(":")[-1], override=override)
-    c = comp(*map(int, p[:3]), p[4])
+    c = Comp(*map(int, p[:3]), p[4])
     c.decode()
-    p2 = 0
-    from concurrent import futures
+    from concurrent import futures  # noqa: PLC0415
     threads = 16
     with futures.ProcessPoolExecutor(max_workers=threads) as executor:
         running = []
         for thread in range(threads):
-            #r = range(2024, 2025)
-            r = range(start+thread, 10**nmax+thread+start, threads)
+            # r = range(2024, 2025)
+            r = range(start + thread, 10**nmax + thread + start, threads)
             f = executor.submit(_day17_thread2, list(map(int, p[4].split(","))), r)
             running.append(f)
         futures.wait(running, return_when=futures.ALL_COMPLETED)
-
-
     # while not c.match:
     #     p2 += 1
     #     if p2 % 1000:
@@ -2130,27 +2121,25 @@ def day18(example=False, override=False):
     day: int | str
     day = ("5,4\n4,2\n4,5\n3,0\n2,1\n6,3\n2,4\n1,5\n0,6\n3,3\n2,6\n5,1\n1,2\n5,5\n2,5\n"
            "6,5\n1,4\n0,4\n6,4\n1,1\n6,1\n1,0\n0,5\n1,6\n2,0")
-    size = 7
+    grid_size = 7
+    part_1_bytes = 12
     if not example:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
-        size = 71
+        grid_size = 71
+        part_1_bytes = 1024
     p = get_input(day, "\n", lambda x: Coordinate(tuple(map(int, x.split(",")))), override=override)
-    g = nx.Graph()
-    for y in range(size):
-        for x in range(size):
-            g.add_node(Coordinate((x,y)))
-    for node in g.nodes:
-        for d in "news":
-            n = node + move_dict[d]
-            if n[0] in range(size) and n[1] in range(size):
-                g.add_edge(n, node)
-    print(g)
-    # for i in range(1024):
+    graph = nx.Graph()
+    for x, y in itertools.product(range(grid_size), range(grid_size)):
+        graph.add_node(Coordinate((x, y)))
+    for node in graph.nodes:
+        for direction in "news":
+            neighbor = node + move_dict[direction]
+            if neighbor[0] in range(grid_size) and neighbor[1] in range(grid_size):
+                graph.add_edge(neighbor, node)
     for i, x in enumerate(p):
-        g.remove_node(p[i])
-        try:
-            nx.shortest_path_length(g, source=(0, 0), target=(size - 1, size - 1))
-        except:
-            print(i,x)
+        graph.remove_node(x)
+        if i == part_1_bytes:
+            print("Part 1:", nx.shortest_path_length(graph, source=(0, 0), target=(grid_size - 1, grid_size - 1)))
+        if not nx.has_path(graph, source=(0, 0), target=(grid_size - 1, grid_size - 1)):
+            print(f"Part 2: {x[0]},{x[1]}")
             break
-    #print(g)
