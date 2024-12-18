@@ -1882,3 +1882,244 @@ def day16(example=False, override=False):
         seats = seats.union(set([x[0] for x in path]))
     print(f"Part 2: {len(seats)}")
 
+@functools.lru_cache(maxsize=None)
+class comp():
+    def __init__(self, a=0, b=0, c=0, instructions=""):
+        self.a = a
+        self.b = b
+        self.c = c
+        self.program = []
+        self.instructions = instructions
+        self.output = []
+        self.ip = None
+        self.match = False
+
+    def reinit(self,a):
+        self.a = a
+        self.b = 0
+        self.c = 0
+        self.ip = 0
+        self.output = []
+        self.match = False
+
+    def opcode(self, x, y):
+        match x:
+            case 0:  # adv
+                # print(f"adv: {self.a // 2**y} = {self.a} // 2**{y}")
+                self.a = self.a // 2**y
+            case 1:  # bxl
+                # print(f"bxl: {self.b ^ y} = {self.b} ^ {y}")
+                self.b ^= y
+            case 2:  # bst
+                # print(f"bst: {y % 8} = {y} % 8")
+                self.b = y % 8
+            case 3:  # jnz
+                if self.a:
+                    # print("jump from ", self.ip, " to ", y)
+                    self.ip = y - 2
+            case 4:  # bxc
+                # print(f"bxc: {self.c ^ self.b} = {self.c} ^ {self.b}")
+                self.b = self.c ^ self.b
+            case 5:  # out
+                # print(f"out: {y % 8} = {y} % 8")
+                self.output.append(y % 8)
+            case 6:  # bdv
+                # print(f"bdv: {self.a // 2**y} = {self.a} // 2**{y}")
+                self.b = self.a // 2**y
+            case 7:  # cdv
+                # print(f"cdv: {self.a // 2**y} = {self.a} // 2**{y}")
+                self.c = self.a // 2**y
+        self.ip += 2
+
+    def decode(self):
+        commands = self.instructions.split(",")
+        self.program = list(map(int, commands))
+        self.ip = 0
+
+    def run(self):
+        # self.decode()
+        while 0 <= self.ip < len(self.program) - 1:
+            # print(f"before a: {self.a} b: {self.b} c: {self.c}")
+            x, y = self.program[self.ip : self.ip + 2]
+            # print(self.ip, x, y)
+            if x in [0, 2, 5, 6, 7]:
+                match y:
+                    case 4:
+                        y = self.a
+                    case 5:
+                        y = self.b
+                    case 6:
+                        y = self.c
+                    case 7:
+                        raise Exception("illegal combo operand")
+            self.opcode(x, y)
+            if self.output != self.program[:len(self.output)]:
+                # print(f"mismatch {self.output} {self.program}")
+                break
+            # print(f"after a: {self.a} b: {self.b} c: {self.c}")
+            #_ = input()
+        if self.output == self.program:
+            self.match=True
+        # print(self.output)
+
+
+@functools.lru_cache(maxsize=None)
+def _comp_segment(a, b, c, opcodes, operands):
+    """
+    Process the segment.
+
+    Returns:
+        list: output
+    """
+    output = []
+    ip = 0
+    while 0 <= ip < len(opcodes):
+        x = opcodes[ip]
+        y = operands[ip]
+        if x in [0, 2, 5, 6, 7]:
+            match y:
+                case 4:
+                    y = a
+                case 5:
+                    y = b
+                case 6:
+                    y = c
+        match x:
+            case 0:  # adv
+                a = a // 2**y
+            case 1:  # bxl
+                b ^= y
+            case 2:  # bst
+                b = y % 8
+            case 3:  # jnz
+                print("ERROR! Jump detected")
+                raise Exception
+            case 4:  # bxc
+                b = c ^ b
+            case 5:  # out
+                output.append(y % 8)
+            case 6:  # bdv
+                b = a // 2**y
+            case 7:  # cdv
+                c = a // 2**y
+        ip += 1
+    return a, b, c, output
+
+
+def _day17_thread2(p, r):
+    print(p, r)
+    opcodes = [p[x] for x in range(0,len(p),2)]
+    operands = [p[x] for x in range(1,len(p),2)]
+    #print(opcodes)
+    for i in r:
+        a = i
+        b = 0
+        c = 0
+        ip = 0
+        output = []
+        while 0 <= ip < len(opcodes):
+            #print("next",ip, opcodes[ip])
+            if opcodes[ip] == 3:
+                if a:
+                    ip = operands[ip]
+                else:
+                    ip += 1
+            elif 3 in opcodes[ip:]:
+                jmp_loc = opcodes[ip:].index(3)
+                a, b, c, more_output = _comp_segment(a,b,c,tuple(opcodes[ip:jmp_loc+ip]), tuple(operands[ip:jmp_loc+ip]))
+                output.extend(more_output)
+                ip += jmp_loc
+                #print(ip, output)
+                #_= input()
+            else:
+                a,b,c, more_output =_comp_segment(a,b,c,tuple(opcodes[ip:]), tuple(operands[:]))
+                output.extend(more_output)
+                ip+=len(opcodes[ip:])
+            if output != p[:len(output)]:
+                break
+        if output == p:
+            print(i)
+        #print(output)
+
+
+def _day17_thread(p, r):
+    print(p, r)
+    for i in r:
+        a = i
+        b = 0
+        c = 0
+        output = []
+        program = p
+        ip = 0
+        while 0 <= ip < len(program):
+            x, y = program[ip : ip + 2]
+            if x in [0, 2, 5, 6, 7]:
+                match y:
+                    case 4:
+                        y = a
+                    case 5:
+                        y = b
+                    case 6:
+                        y = c
+            match x:
+                case 0:  # adv
+                    a = a // 2**y
+                case 1:  # bxl
+                    b ^= y
+                case 2:  # bst
+                    b = y % 8
+                case 3:  # jnz
+                    if a:
+                        ip = y - 2
+                case 4:  # bxc
+                    b = c ^ b
+                case 5:  # out
+                    output.append(y % 8)
+                case 6:  # bdv
+                    b = a // 2**y
+                case 7:  # cdv
+                    c = a // 2**y
+            ip += 2
+            if output != program[:len(output)]:
+                break
+        if output == program:
+            print("yes",i)
+
+
+def day17(example=False, override=False, start=0,nmax=8):
+    """Day 17."""
+    day: int | str
+    day = ("Register A: 2024\n"
+           "Register B: 0\n"
+           "Register C: 0\n"
+           "\n"
+           "Program: 0,3,5,4,3,0")
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, "\n", lambda x: x.split(":")[-1], override=override)
+    c = comp(*map(int, p[:3]), p[4])
+    c.decode()
+    p2 = 0
+    from concurrent import futures
+    threads = 12
+    with futures.ProcessPoolExecutor(max_workers=threads) as executor:
+        running = []
+        for thread in range(threads):
+            #r = range(2024, 2025)
+            r = range(start+thread, 10**nmax+thread+start, threads)
+            f = executor.submit(_day17_thread2, list(map(int, p[4].split(","))), r)
+            running.append(f)
+        futures.wait(running, return_when=futures.ALL_COMPLETED)
+
+
+    # while not c.match:
+    #     p2 += 1
+    #     if p2 % 1000:
+    #         print(p2)
+    #     c.reinit(p2)
+    #     c.run()
+    #     # _ = input()
+    # return c
+    # print(p2)
+    # print(",".join(map(str, c.output)))
+
