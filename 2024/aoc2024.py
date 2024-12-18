@@ -1963,7 +1963,7 @@ class comp():
         # print(self.output)
 
 
-@functools.lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=2**21)
 def _comp_segment(a, b, c, opcodes, operands):
     """
     Process the segment.
@@ -2101,7 +2101,7 @@ def day17(example=False, override=False, start=0,nmax=8):
     c.decode()
     p2 = 0
     from concurrent import futures
-    threads = 12
+    threads = 16
     with futures.ProcessPoolExecutor(max_workers=threads) as executor:
         running = []
         for thread in range(threads):
@@ -2123,3 +2123,35 @@ def day17(example=False, override=False, start=0,nmax=8):
     # print(p2)
     # print(",".join(map(str, c.output)))
 
+
+
+def day18(example=False, override=False):
+    """Day 18."""
+    """Day 17."""
+    day: int | str
+    day = ("5,4\n4,2\n4,5\n3,0\n2,1\n6,3\n2,4\n1,5\n0,6\n3,3\n2,6\n5,1\n1,2\n5,5\n2,5\n"
+           "6,5\n1,4\n0,4\n6,4\n1,1\n6,1\n1,0\n0,5\n1,6\n2,0")
+    size = 7
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+        size = 71
+    p = get_input(day, "\n", lambda x: Coordinate(tuple(map(int, x.split(",")))), override=override)
+    g = nx.Graph()
+    for y in range(size):
+        for x in range(size):
+            g.add_node(Coordinate((x,y)))
+    for node in g.nodes:
+        for d in "news":
+            n = node + move_dict[d]
+            if n[0] in range(size) and n[1] in range(size):
+                g.add_edge(n, node)
+    print(g)
+    # for i in range(1024):
+    for i, x in enumerate(p):
+        g.remove_node(p[i])
+        try:
+            nx.shortest_path_length(g, source=(0, 0), target=(size - 1, size - 1))
+        except:
+            print(i,x)
+            break
+    #print(g)
