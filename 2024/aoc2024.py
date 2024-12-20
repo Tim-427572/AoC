@@ -16,7 +16,7 @@ import inspect
 import itertools
 # import math
 import pickle
-# import random
+import random
 import re
 import socket
 # import statistics
@@ -2143,3 +2143,296 @@ def day18(example=False, override=False):
         if not nx.has_path(graph, source=(0, 0), target=(grid_size - 1, grid_size - 1)):
             print(f"Part 2: {x[0]},{x[1]}")
             break
+
+
+def day19(example=False, override=False):
+    """Day 19."""
+    day: int | str
+    day = """r, wr, b, g, bwu, rb, gb, br
+
+brwrr
+bggr
+gbbr
+rrbgbr
+ubwu
+bwurrg
+brgr
+bbrgwb
+"""
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, "\n", None, override=override)
+    p1 = p2 = 0
+    towels = p[0].split(", ")
+    towels.sort(key=len, reverse=True)
+    # print(towels)
+    print(len(p[2:]))
+    for orig in p[2:]:
+        l = copy.deepcopy(orig)
+        towels.sort(key=len, reverse=True)
+        for t in towels:
+            l = l.replace(t,"!")
+        if all(c == "!" for c in l):
+            p1 += 1
+        else:
+            for i in range(1000):
+                l = copy.deepcopy(orig)
+                random.shuffle(towels)
+                for t in towels:
+                    l = l.replace(t, "!")
+                if all(c == "!" for c in l):
+                    print(orig, l)
+                    p1 += 1
+                    break
+    print(p1)
+    print(p2)
+
+
+def day19_2(example=False, override=False):
+    """Day 19."""
+    day: int | str
+    day = """r, wr, b, g, bwu, rb, gb, br
+
+brwrr
+bggr
+gbbr
+rrbgbr
+ubwu
+bwurrg
+brgr
+bbrgwb
+"""
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, "\n", None, override=override)
+    p2 = 0
+    towels = p[0].split(", ")
+    towels.sort(key=len, reverse=True)
+    # print(towels)
+    loop = 200
+    print(len(p[2:]))
+    for orig in p[2:]:
+        ways = set()
+        x = loop
+        while x:
+            this_way = []
+            l = copy.deepcopy(orig)
+            random.shuffle(towels)
+            for t in towels:
+                if t in l:
+                    this_way.append((t, l.count(t)))
+                l = l.replace(t, "!")
+            if all(c == "!" for c in l):
+                this_way = tuple(sorted(this_way))
+                if this_way not in ways:
+                    x = loop
+                    ways.add(tuple(sorted(this_way)))
+            x -= 1
+        print(orig, len(ways))
+        p2 += len(ways)
+    print(p2)
+
+
+def day20(example=False, override=False):
+    """Day 20."""
+    day: int | str
+    day = """###############
+#...#...#.....#
+#.#.#.#.#.###.#
+#S#...#.#.#...#
+#######.#.#.###
+#######.#.#...#
+#######.#.###.#
+###..E#...#...#
+###.#######.###
+#...###...#...#
+#.#####.#.###.#
+#.#...#.#.#...#
+#.#.#.#.#.#.###
+#...#...#...###
+###############
+"""
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    # p = get_input(day, "\n", None, override=override)
+    a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
+    print_np(a)
+    p1 = p2 = 0
+    g = nx.Graph()
+    print(range(a[0,:].size))
+    print(range(a[:,0].size))
+    for y, x in itertools.product(range(a[0,:].size), range(a[:, 0].size)):
+        g.add_node(Coordinate((y, x)))
+    for node in g.nodes:
+        for direction in "news":
+            neighbor = node + move_dict[direction]
+            if neighbor[0] in range(a[0,:].size) and neighbor[1] in range(a[:, 0].size):
+                g.add_edge(neighbor, node)
+    print(g)
+    source = Coordinate(np.argwhere(a=="S")[0])
+    target = Coordinate(np.argwhere(a=="E")[0])
+    for n in np.argwhere(a=="#"):
+        g.remove_node(Coordinate(n))
+    print(g)
+    orig = nx.shortest_path_length(g, source=source, target=target)
+    d = {}
+    for y, x in itertools.product(range(1,a[0,:].size-1), range(1,a[:,0].size-1)):
+        node = Coordinate((y,x))
+        if a[node] == "#":
+            g.add_node(node)
+            for direction in "news":
+                neighbor = node + move_dict[direction]
+                g.add_edge(neighbor, node)
+            this_cheat = nx.shortest_path_length(g, source=source, target=target)
+            saved = orig - this_cheat
+            if saved > 0:
+                if saved in d:
+                    d[saved] += 1
+                else:
+                    d[saved] = 1
+            g.remove_node(node)
+        #_=input()
+    print(d)
+    for k,v in d.items():
+        if k >= 100:
+            p1 += v
+    print(p1)
+
+
+def _day20_thread(g,a,checked,spaces,source,target,orig,to_save):
+    p1 = 0
+    #print(spaces)
+    found = set()
+    for space in spaces:
+        window = 20
+        min_y = max(0, space[0]-window)
+        max_y = min(space[0]+window+1, a[0,:].size)
+        min_x = max(0, space[1]-window)
+        max_x = min(space[1]+window+1, a[:,0].size)
+        #print(min_y, max_y, min_x, max_x)
+        in_range = [Coordinate((y+min_y,x+min_x)) for y,x in np.argwhere(a[min_y:max_y,min_x:max_x] == ".")]
+        #print_np(a[min_y:max_y,min_x:max_x])
+        #print(space, len(in_range), len(checked))
+        #_=input()
+        for two in in_range:
+            if (space, two) in checked or (two, space) in checked:
+                #print("in")
+                continue
+            checked.add((space,two))
+            man = sum(space.manhattan_dist(two))
+            if 1 < man <= 20:
+                g.add_edge(space, two)
+                this_cheat = nx.shortest_path_length(g, source=source, target=target) + man - 1
+                if orig - this_cheat >= to_save:
+                    found.add((space,two))
+                    found.add((two,space))
+                g.remove_edge(space, two)
+    return found
+
+
+def day20_2(example=False, to_save=50, override=False):
+    """Day 20."""
+    day: int | str
+    day = """###############
+#...#...#.....#
+#.#.#.#.#.###.#
+#S#...#.#.#...#
+#######.#.#.###
+#######.#.#...#
+#######.#.###.#
+###..E#...#...#
+###.#######.###
+#...###...#...#
+#.#####.#.###.#
+#.#...#.#.#...#
+#.#.#.#.#.#.###
+#...#...#...###
+###############
+"""
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    # p = get_input(day, "\n", None, override=override)
+    a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
+    #print_np(a)
+    p1 = p2 = 0
+    g = nx.Graph()
+    #print(range(a[0,:].size))
+    #print(range(a[:,0].size))
+    for y, x in itertools.product(range(a[0,:].size), range(a[:, 0].size)):
+        g.add_node(Coordinate((y, x)))
+    for node in g.nodes:
+        for direction in "news":
+            neighbor = node + move_dict[direction]
+            if neighbor[0] in range(a[0,:].size) and neighbor[1] in range(a[:, 0].size):
+                g.add_edge(neighbor, node)
+    source = Coordinate(np.argwhere(a=="S")[0])
+    target = Coordinate(np.argwhere(a=="E")[0])
+    a[source]="."
+    a[target]="."
+    for n in np.argwhere(a=="#"):
+        g.remove_node(Coordinate(n))
+    orig = nx.shortest_path_length(g, source=source, target=target)
+    print(orig,g)
+    d = {}
+    spaces = [Coordinate(p) for p in np.argwhere(a==".")]
+    #print(spaces)
+    checked = set()
+    results = []
+    found = set()
+    from concurrent import futures  # noqa: PLC0415
+    threads = 18
+    with futures.ProcessPoolExecutor(max_workers=threads) as executor:
+        running = []
+        for thread in range(threads):
+            s = [spaces[x] for x in range(threads - thread, len(spaces)-thread, threads)]
+            t = copy.deepcopy(g)
+            f = executor.submit(_day20_thread, copy.deepcopy(g), a, checked, s, source, target, orig, to_save)
+            running.append(f)
+        futures.wait(running, return_when=futures.ALL_COMPLETED)
+        for _ in futures.as_completed(running):
+            found = found.union(_.result())
+    print(len(found)//2)
+
+    #t = copy.deepcopy(g)
+    #_day20_thread(t,a,checked,spaces[:10],source,target,orig,to_save,results)
+    #t = copy.deepcopy(g)
+    #_day20_thread(t,a,checked,spaces[10:],source,target,orig,to_save,results)
+
+
+
+#       #print(space)
+#       min_y = max(0, space[0]-window)
+#       max_y = min(space[0]+window+1, a[0,:].size)
+#       min_x = max(0, space[1]-window)
+#       max_x = min(space[1]+window+1, a[:,0].size)
+#       #print(min_y, max_y, min_x, max_x)
+#       in_range = [Coordinate((y+min_y,x+min_x)) for y,x in np.argwhere(a[min_y:max_y,min_x:max_x] == ".")]
+#       print_np(a[min_y:max_y,min_x:max_x])
+#       print(space, len(in_range), len(checked))
+#       #_=input()
+#       for two in in_range:
+#           if (space, two) in checked or (two, space) in checked:
+#               #print("in")
+#               continue
+#           checked.add((space,two))
+#           man = sum(space.manhattan_dist(two))
+#           if 1 < man <= 20:
+#               g.add_edge(space, two)
+#               #this_cheat = nx.astar_path_length(g, source=source, target=target) + man - 1
+#               this_cheat = nx.shortest_path_length(g, source=source, target=target) + man - 1
+#               saved = orig - this_cheat
+#               if saved >= to_save:
+#                   #print(saved)
+#                   if saved in d:
+#                       d[saved] += 1
+#                   else:
+#                       d[saved] = 1
+#                   #_=input()
+#               if saved >= to_save:
+#                   p1+=1
+#               g.remove_edge(space, two)
+#   for k,v in d.items():
+#       print(v, "that save ", k)
+#   #    p1 += v
+#   print(p1)
+
