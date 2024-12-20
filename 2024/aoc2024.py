@@ -2148,17 +2148,16 @@ def day18(example=False, override=False):
 def day19(example=False, override=False):
     """Day 19."""
     day: int | str
-    day = """r, wr, b, g, bwu, rb, gb, br
-
-brwrr
-bggr
-gbbr
-rrbgbr
-ubwu
-bwurrg
-brgr
-bbrgwb
-"""
+    day = ("r, wr, b, g, bwu, rb, gb, br\n"
+           "\n"
+           "brwrr\n"
+           "bggr\n"
+           "gbbr\n"
+           "rrbgbr\n"
+           "ubwu\n"
+           "bwurrg\n"
+           "brgr\n"
+           "bbrgwb")
     if not example:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     p = get_input(day, "\n", None, override=override)
@@ -2191,17 +2190,16 @@ bbrgwb
 def day19_2(example=False, override=False):
     """Day 19."""
     day: int | str
-    day = """r, wr, b, g, bwu, rb, gb, br
-
-brwrr
-bggr
-gbbr
-rrbgbr
-ubwu
-bwurrg
-brgr
-bbrgwb
-"""
+    day = ("r, wr, b, g, bwu, rb, gb, br\n"
+           "\n"
+           "brwrr\n"
+           "bggr\n"
+           "gbbr\n"
+           "rrbgbr\n"
+           "ubwu\n"
+           "bwurrg\n"
+           "brgr\n"
+           "bbrgwb")
     if not example:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     p = get_input(day, "\n", None, override=override)
@@ -2236,22 +2234,21 @@ bbrgwb
 def day20(example=False, override=False):
     """Day 20."""
     day: int | str
-    day = """###############
-#...#...#.....#
-#.#.#.#.#.###.#
-#S#...#.#.#...#
-#######.#.#.###
-#######.#.#...#
-#######.#.###.#
-###..E#...#...#
-###.#######.###
-#...###...#...#
-#.#####.#.###.#
-#.#...#.#.#...#
-#.#.#.#.#.#.###
-#...#...#...###
-###############
-"""
+    day = ("###############\n"
+           "#...#...#.....#\n"
+           "#.#.#.#.#.###.#\n"
+           "#S#...#.#.#...#\n"
+           "#######.#.#.###\n"
+           "#######.#.#...#\n"
+           "#######.#.###.#\n"
+           "###..E#...#...#\n"
+           "###.#######.###\n"
+           "#...###...#...#\n"
+           "#.#####.#.###.#\n"
+           "#.#...#.#.#...#\n"
+           "#.#.#.#.#.#.###\n"
+           "#...#...#...###\n"
+           "###############")
     if not example:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     # p = get_input(day, "\n", None, override=override)
@@ -2333,22 +2330,21 @@ def _day20_thread(g,a,checked,spaces,source,target,orig,to_save):
 def day20_2(example=False, to_save=50, override=False):
     """Day 20."""
     day: int | str
-    day = """###############
-#...#...#.....#
-#.#.#.#.#.###.#
-#S#...#.#.#...#
-#######.#.#.###
-#######.#.#...#
-#######.#.###.#
-###..E#...#...#
-###.#######.###
-#...###...#...#
-#.#####.#.###.#
-#.#...#.#.#...#
-#.#.#.#.#.#.###
-#...#...#...###
-###############
-"""
+    day = ("###############\n"
+           "#...#...#.....#\n"
+           "#.#.#.#.#.###.#\n"
+           "#S#...#.#.#...#\n"
+           "#######.#.#.###\n"
+           "#######.#.#...#\n"
+           "#######.#.###.#\n"
+           "###..E#...#...#\n"
+           "###.#######.###\n"
+           "#...###...#...#\n"
+           "#.#####.#.###.#\n"
+           "#.#...#.#.#...#\n"
+           "#.#.#.#.#.#.###\n"
+           "#...#...#...###\n"
+           "###############")
     if not example:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     # p = get_input(day, "\n", None, override=override)
@@ -2393,46 +2389,66 @@ def day20_2(example=False, to_save=50, override=False):
             found = found.union(_.result())
     print(len(found)//2)
 
-    #t = copy.deepcopy(g)
-    #_day20_thread(t,a,checked,spaces[:10],source,target,orig,to_save,results)
-    #t = copy.deepcopy(g)
-    #_day20_thread(t,a,checked,spaces[10:],source,target,orig,to_save,results)
 
-
-
-#       #print(space)
-#       min_y = max(0, space[0]-window)
-#       max_y = min(space[0]+window+1, a[0,:].size)
-#       min_x = max(0, space[1]-window)
-#       max_x = min(space[1]+window+1, a[:,0].size)
-#       #print(min_y, max_y, min_x, max_x)
-#       in_range = [Coordinate((y+min_y,x+min_x)) for y,x in np.argwhere(a[min_y:max_y,min_x:max_x] == ".")]
-#       print_np(a[min_y:max_y,min_x:max_x])
-#       print(space, len(in_range), len(checked))
-#       #_=input()
-#       for two in in_range:
-#           if (space, two) in checked or (two, space) in checked:
-#               #print("in")
-#               continue
-#           checked.add((space,two))
-#           man = sum(space.manhattan_dist(two))
-#           if 1 < man <= 20:
-#               g.add_edge(space, two)
-#               #this_cheat = nx.astar_path_length(g, source=source, target=target) + man - 1
-#               this_cheat = nx.shortest_path_length(g, source=source, target=target) + man - 1
-#               saved = orig - this_cheat
-#               if saved >= to_save:
-#                   #print(saved)
-#                   if saved in d:
-#                       d[saved] += 1
-#                   else:
-#                       d[saved] = 1
-#                   #_=input()
-#               if saved >= to_save:
-#                   p1+=1
-#               g.remove_edge(space, two)
-#   for k,v in d.items():
-#       print(v, "that save ", k)
-#   #    p1 += v
-#   print(p1)
-
+def day20_rework(example=False, override=False):
+    """Day 20."""
+    day: int | str
+    day = ("###############\n"
+           "#...#...#.....#\n"
+           "#.#.#.#.#.###.#\n"
+           "#S#...#.#.#...#\n"
+           "#######.#.#.###\n"
+           "#######.#.#...#\n"
+           "#######.#.###.#\n"
+           "###..E#...#...#\n"
+           "###.#######.###\n"
+           "#...###...#...#\n"
+           "#.#####.#.###.#\n"
+           "#.#...#.#.#...#\n"
+           "#.#.#.#.#.#.###\n"
+           "#...#...#...###\n"
+           "###############")
+    at_least = 50
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+        at_least = 100
+    # p = get_input(day, "\n", None, override=override)
+    a = get_np_input(day, "\n", splitter=list, dtype=str, override=override)
+    print(f"Numpy array is ({a[0, :].size},{a[:, 0].size})")
+    p1 = p2 = 0
+    g = nx.Graph()
+    for y, x in itertools.product(range(a[:, 0].size), range(a[0, :].size)):
+        g.add_node(Coordinate((y, x)))
+    for node in g.nodes:
+        for direction in "news":
+            neighbor = node + move_dict[direction]
+            if (0, 0) <= neighbor < (a[:, 0].size, a[0, :].size):
+                g.add_edge(neighbor, node)
+    source = Coordinate(np.argwhere(a == "S")[0])
+    target = Coordinate(np.argwhere(a == "E")[0])
+    a[source] = "."
+    a[target] = "."
+    for n in np.argwhere(a == "#"):
+        g.remove_node(Coordinate(n))
+    print(g)
+    spaces = map(Coordinate, np.argwhere(a == "."))
+    space_pairs = [(one, two) for one, two in itertools.combinations(spaces, 2) if 1 < sum(one.manhattan_dist(two)) <= 20]
+    print(f"Pairs to check is {len(list(space_pairs))}")
+    return None
+    orig_time = nx.shortest_path_length(g, source=source, target=target)
+    d = defaultdict(int)
+    left = len(space_pairs)
+    for one, two in space_pairs:
+        if left % 100 == 0:
+            print(left)
+        g.add_edge(one, two)
+        saved_time = orig_time - (nx.shortest_path_length(g, source=source, target=target) + sum(one.manhattan_dist(two)) - 1)
+        if saved_time > 0:
+            d[saved_time] += 1
+        g.remove_edge(one, two)
+        left -= 1
+    for k in sorted(d.keys()):
+        print(f"{d[k]} cheats that save {k}")
+        if k >= at_least:
+            p1 += d[k]
+    print(p1)
