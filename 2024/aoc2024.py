@@ -19,6 +19,7 @@ import pickle
 import random
 import re
 import socket
+import sortedcontainers
 # import statistics
 # import sys
 # import time
@@ -2206,29 +2207,21 @@ def day19_2(example=False, override=False):
     p2 = 0
     towels = p[0].split(", ")
     towels.sort(key=len, reverse=True)
+    towels = set(towels)
     # print(towels)
+    most_stripes = len(towels[0])
     loop = 200
     print(len(p[2:]))
-    for orig in p[2:]:
-        ways = set()
-        x = loop
-        while x:
-            this_way = []
-            l = copy.deepcopy(orig)
-            random.shuffle(towels)
-            for t in towels:
-                if t in l:
-                    this_way.append((t, l.count(t)))
-                l = l.replace(t, "!")
-            if all(c == "!" for c in l):
-                this_way = tuple(sorted(this_way))
-                if this_way not in ways:
-                    x = loop
-                    ways.add(tuple(sorted(this_way)))
-            x -= 1
-        print(orig, len(ways))
-        p2 += len(ways)
-    print(p2)
+    for arrangement in p[2:]:
+        visited = set()
+        queue = [p[2]]
+        while queue:
+            this_towel = queue.pop(0)
+            print(this_node)
+    for neighbor in graph[this_node]:
+        if neighbor not in visited:
+            visited.add(neighbor)
+            queue.append(neighbor)
 
 
 def day20(example=False, override=False):
@@ -2419,11 +2412,16 @@ def day20_rework(example=False, override=False):
     g = nx.Graph()
     for y, x in itertools.product(range(a[:, 0].size), range(a[0, :].size)):
         g.add_node(Coordinate((y, x)))
+    cheats = set()
     for node in g.nodes:
-        for direction in "news":
-            neighbor = node + move_dict[direction]
-            if (0, 0) <= neighbor < (a[:, 0].size, a[0, :].size):
-                g.add_edge(neighbor, node)
+        for distance in range(1,3):
+            for direction in "news":
+                neighbor = node + (move_dict[direction] * distance)
+                if (0, 0) <= neighbor < (a[:, 0].size, a[0, :].size):
+                    g.add_edge(neighbor, node, weight=distance)
+                    #if distance > 1:
+                    #    cheats.add(
+
     source = Coordinate(np.argwhere(a == "S")[0])
     target = Coordinate(np.argwhere(a == "E")[0])
     a[source] = "."
@@ -2452,3 +2450,144 @@ def day20_rework(example=False, override=False):
         if k >= at_least:
             p1 += d[k]
     print(p1)
+
+
+def numeric_decode(move):
+    seq = []
+    if move[1] < 0 and move[0] < 0:  # Move up before left
+        seq.extend(["^"]*abs(move[0]))
+        seq.extend(["<"]*abs(move[1]))
+    elif move[0] > 0 and move[1] > 0:  # Move right before down
+        seq.extend([">"]*abs(move[1]))
+        seq.extend(["v"]*abs(move[0]))
+    else:
+        seq.extend(decode(move))
+    seq.extend(["A"])
+    return seq
+
+def directional_decode(move):
+    seq = []
+    if move[1] < 0 and move[0] > 0:  # Move down before left
+        seq.extend(["v"]*abs(move[0]))
+        seq.extend(["<"]*abs(move[1]))
+    elif move[0] < 0 and move[1] > 0:  # Move right before up
+        seq.extend([">"]*abs(move[1]))
+        seq.extend(["^"]*abs(move[0]))
+    else:
+        seq.extend(decode(move))
+    seq.extend(["A"])
+    return seq
+
+def decode(move):
+    seq = []
+    v = "^" if move[0] < 0 else "v"
+    h = "<" if move[1] < 0 else ">"
+    seq.extend([v]*abs(move[0]))
+    seq.extend([h]*abs(move[1]))
+    return seq
+
+
+def day21(example=False, override=False):
+    """Day 21."""
+    day: int | str
+    day = """379A
+"""    
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, "\n", None, override=override)
+    keypad = {"7": Coordinate((0,0)), "8": Coordinate((0,1)), "9":   Coordinate((0,2)),
+              "4": Coordinate((1,0)), "5": Coordinate((1,1)), "6":   Coordinate((1,2)),
+              "1": Coordinate((2,0)), "2": Coordinate((2,1)), "3":   Coordinate((2,2)),
+                                      "0": Coordinate((3,1)), "A": Coordinate((3,2))}
+    directional = {             "^": Coordinate((0,1)), "A": Coordinate((0,2)),  # noqa: E201
+        "<": Coordinate((1,0)), "v": Coordinate((1,1)), ">": Coordinate((1,2))}
+    indirection = 2
+    p1= 0
+    for code in p:
+        sequences = []
+        cur_pos = Coordinate((3,2))
+        seq = []
+        for c in code:
+            move = keypad[c] - cur_pos
+            cur_pos = keypad[c]
+            seq.extend(directional_decode(move))
+            print(c," ","".join(seq))
+        print("".join(seq))
+        sequences.append(seq)
+        for _ in range(indirection):
+            cur_pos = Coordinate((0,2))
+            this_seq = []
+            for c in sequences[-1]:
+                this_seq.extend(directional_decode(directional[c] - cur_pos))
+                cur_pos = directional[c]
+            print("".join(this_seq))
+            sequences.append(this_seq)
+        print("".join(sequences[-1]))
+        print(code, " ", len(sequences[-1]), "*", int(code.strip("A")))
+        p1 += len(sequences[-1])*int(code.strip("A"))
+    print(p1)
+
+
+@functools.cache
+def _next_secret(num):
+    num ^= (num * 64)
+    num %= 16777216
+    num ^= (num // 32)
+    num %= 16777216
+    num ^= (num * 2048)
+    num %= 16777216
+    return num
+
+
+def day22(example=False, override=False):
+    """Day 22."""
+    day: int | str
+    day = "1\n2\n3\n2024"
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    puzzle = get_input(day, "\n", int, override=override)
+    p1 = 0
+    bananas = defaultdict(int)
+    for initial_secret in puzzle:
+        prev = initial_secret % 10
+        n = _next_secret(initial_secret)
+        changes = tuple()
+        first_seq = set()
+        for _ in range(1, 4):
+            changes += tuple([(n % 10) - prev])
+            prev = n % 10
+            n = _next_secret(n)
+        for _ in range(4, 2000):
+            this_banana = n % 10
+            changes += tuple([this_banana - prev])
+            prev = this_banana
+            if changes not in first_seq:
+                bananas[changes] += this_banana
+                first_seq.add(changes)
+            changes = changes[1:]
+            n = _next_secret(n)
+        p1 += n
+    print(f"Part 1: {p1}")
+    print(f"Part 2: {max(bananas.values())}")
+
+
+def day23(example=False, override=False):
+    """Day 23."""
+    day: int | str
+    day = ("kh-tc\nqp-kh\nde-cg\nka-co\nyn-aq\nqp-ub\ncg-tb\nvc-aq\ntb-ka\nwh-tc\nyn-cg\nkh-ub\n"
+           "ta-co\nde-co\ntc-td\ntb-wq\nwh-td\nta-ka\ntd-qp\naq-cg\nwq-ub\nub-vc\nde-ta\nwq-aq\n"
+           "wq-vc\nwh-yn\nka-de\nkh-ta\nco-tc\nwh-qp\ntb-vc\ntd-yn")
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    puzzle = get_input(day, "\n", None, override=override)
+    g = nx.Graph()
+    things = set()
+    for connection in puzzle:
+        g.add_edge(*connection.split("-"))
+    cliques = [clique for clique in nx.find_cliques(g) if len(clique) >= 3]
+    for clique in cliques:
+        for triangle in itertools.combinations(clique, 3):
+            if any(computer[0] == "t" for computer in triangle):
+                things.add(tuple(sorted(triangle)))
+    print(f"Part 1: {len(things)}")
+    print("Part 2:", ",".join(sorted(sorted(cliques, key=len)[-1])))
