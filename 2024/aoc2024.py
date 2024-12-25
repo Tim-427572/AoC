@@ -2591,3 +2591,258 @@ def day23(example=False, override=False):
                 things.add(tuple(sorted(triangle)))
     print(f"Part 1: {len(things)}")
     print("Part 2:", ",".join(sorted(sorted(cliques, key=len)[-1])))
+
+
+def day24(example=False, override=False):
+    """Day 24."""
+    day: int | str
+    day = """x00: 0
+x01: 1
+x02: 0
+x03: 1
+x04: 0
+x05: 1
+y00: 0
+y01: 0
+y02: 1
+y03: 1
+y04: 0
+y05: 1
+
+x00 AND y00 -> z05
+x01 AND y01 -> z02
+x02 AND y02 -> z01
+x03 AND y03 -> z03
+x04 AND y04 -> z04
+x05 AND y05 -> z00
+"""    
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, "\n", None, override=override)
+    p1 = p2 = 0
+    orig_d = dict()
+    zs = []
+    x = 0
+    y = 0
+    c_loc = p.index("") + 1
+    for i in p[:c_loc-1]:
+        name, value = i.split(": ")
+        orig_d[name] = int(value)
+        v = int(value) << int(name[1:])
+        if i[0] == "x":
+            x |= v
+        elif i[0] == "y":
+            y |= v
+    print(x, y, x+y)
+    final = x+y
+    for i in p[c_loc:]:
+        things = i.split()
+        #print(things)
+        for x in range(0,5,2):
+            if things[x][0] == "z":
+                zs.append(things[x])
+    #print(zs)
+    d = copy.deepcopy(orig_d)
+    counter = 0
+    while any(d.get(z) is None for z in zs):
+        for i in p[c_loc:]:
+            left, op, right, _, dest = i.split()
+            #print(left, d.get(left), op, right, d.get(right), dest)
+            if d.get(dest):
+                continue
+            if d.get(left, None) is not None and d.get(right, None) is not None:
+                if op == "OR":
+                    d[dest] = d[left] | d[right]
+                elif op == "AND":
+                    d[dest] = d[left] & d[right]
+                elif op == "XOR":
+                    d[dest] = d[left] ^ d[right]
+        counter += 1
+        #print(d)
+        #_=input()
+    ans = [str(d[z]) for z in sorted(zs, reverse=True)]
+    this_ans = int("".join(ans), 2)
+    print("".join(ans))
+    print(this_ans)
+    print(counter)
+
+
+def day24_2(example=False, override=False):
+    """Day 24."""
+    day: int | str
+    day = """x00: 0
+x01: 1
+x02: 0
+x03: 1
+x04: 0
+x05: 1
+y00: 0
+y01: 0
+y02: 1
+y03: 1
+y04: 0
+y05: 1
+
+x00 AND y00 -> z05
+x01 AND y01 -> z02
+x02 AND y02 -> z01
+x03 AND y03 -> z03
+x04 AND y04 -> z04
+x05 AND y05 -> z00
+"""    
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, "\n", None, override=override)
+    p1 = p2 = 0
+    orig_d = dict()
+    zs = []
+    x = 0
+    y = 0
+    c_loc = p.index("") + 1
+    for i in p[:c_loc-1]:
+        name, value = i.split(": ")
+        orig_d[name] = int(value)
+        v = int(value) << int(name[1:])
+        if i[0] == "x":
+            x |= v
+        elif i[0] == "y":
+            y |= v
+    print(x, y, x+y)
+    final = x+y
+    for i in p[c_loc:]:
+        things = i.split()
+        #print(things)
+        for x in range(0,5,2):
+            if things[x][0] == "z":
+                zs.append(things[x])
+    #print(zs)
+    dests = []
+    for i in p[c_loc:]:
+        dests.append(i.split()[-1])
+    for eight in itertools.combinations(dests, 8):
+        for one in itertools.combinations(eight, 2):
+            eight = set(eight).difference(one)
+            for two in itertools.combinations(eight, 2):
+                eight = set(eight).difference(two)
+                for three in itertools.combinations(eight, 2):
+                    eight = set(eight).difference(three)
+                    four = tuple(eight)
+                    trans = dict()
+                    g = set([tuple(sorted(one)), tuple(sorted(two)), tuple(sorted(three)), tuple(sorted(four))])
+                    h = set(one+two+three+four)
+                    #print(one, two, three, four)
+                    #print(g)
+                    #print(h)
+                    #_=input()
+                    if len(g) != 4 or len(h) != 8:
+                        continue
+                    for x in [one, two, three, four]:
+                        trans[x[0]]=x[1]
+                        trans[x[1]]=x[0]
+                    #print(one, two, three, four)
+                    #print(trans)
+                    d = copy.deepcopy(orig_d)
+                    counter = 0
+                    while any(d.get(z) is None for z in zs) and counter < 100:
+                        for i in p[c_loc:]:
+                            left, op, right, _, o_dest = i.split()
+                            dest = trans[o_dest] if o_dest in trans else o_dest
+                            #print(left, d.get(left), op, right, d.get(right), dest)
+                            if d.get(dest):
+                                continue
+                            if d.get(left, None) is not None and d.get(right, None) is not None:
+                                if op == "OR":
+                                    d[dest] = d[left] | d[right]
+                                elif op == "AND":
+                                    d[dest] = d[left] & d[right]
+                                elif op == "XOR":
+                                    d[dest] = d[left] ^ d[right]
+                        counter += 1
+                        #print(d)
+                        #_=input()
+                    ans = [str(d.get(z,0)) for z in sorted(zs, reverse=True)]
+                    this_ans = int("".join(ans), 2)
+                    #print(final, this_ans)
+                    if this_ans == final:
+                        print("".join(ans))
+                        print(",".join(sorted(trans.keys())), this_ans)
+                        print("found")
+                        print(sorted(trans.keys()))
+                        return
+            #if ",".join(sorted(trans.keys())) == "z00,z01,z02,z05":
+            #    _=input()
+            #print(i)
+            #print(d)
+            #_=input()
+
+    #print(len(p[c_loc:]))
+
+
+def day25(example=False, override=False):
+    """Day 25."""
+    day: int | str
+    day = ("#####\n"
+           ".####\n"
+           ".####\n"
+           ".####\n"
+           ".#.#.\n"
+           ".#...\n"
+           ".....\n"
+           "\n"
+           "#####\n"
+           "##.##\n"
+           ".#.##\n"
+           "...##\n"
+           "...#.\n"
+           "...#.\n"
+           ".....\n"
+           "\n"
+           ".....\n"
+           "#....\n"
+           "#....\n"
+           "#...#\n"
+           "#.#.#\n"
+           "#.###\n"
+           "#####\n"
+           "\n"
+           ".....\n"
+           ".....\n"
+           "#.#..\n"
+           "###..\n"
+           "###.#\n"
+           "###.#\n"
+           "#####\n"
+           "\n"
+           ".....\n"
+           ".....\n"
+           ".....\n"
+           "#....\n"
+           "#.#..\n"
+           "#.#.#\n"
+           "#####")
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, "\n", None, override=override)
+    p1 = 0
+    locks = []
+    keys = []
+    this_thing = []
+    for l in p:
+        if l == "":
+            if all(x == 1 for x in this_thing[0]):
+                locks.append(np.array(this_thing, dtype=int))
+            else:
+                keys.append(np.array(this_thing, dtype=int))
+            this_thing = []
+        else:
+            this_thing.append(list(map(lambda x: 1 if x == "#" else 0, list(l))))
+    if all(x == 1 for x in this_thing[0]):
+        locks.append(np.array(this_thing, dtype=int))
+    else:
+        keys.append(np.array(this_thing, dtype=int))
+    for l in locks:
+        for k in keys:
+            t = l + k
+            if not np.any(t == 2):
+                p1 += 1
+    print(p1)
