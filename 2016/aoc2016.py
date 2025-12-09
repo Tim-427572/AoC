@@ -15,9 +15,9 @@ import pathlib
 import re
 import socket
 import sys
-from collections import defaultdict
 # from functools import lru_cache
 from argparse import ArgumentParser
+from collections import defaultdict
 from os import path
 from string import ascii_lowercase
 
