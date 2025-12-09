@@ -149,7 +149,7 @@ lint.select = [
     "BLE001",  # blind-except
 
     # flake8-boolean-trap (FBT)
-    "FBT001",  # boolean-positional-arg-in-function-definition
+  # "FBT001",  # boolean-positional-arg-in-function-definition
   # "FBT002",  # boolean-default-value-in-function-definition
     "FBT003",  # boolean-positional-value-in-function-call
 

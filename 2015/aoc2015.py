@@ -8,26 +8,25 @@ Copy the value from the "session" cookie into a text file called "session.txt"
 """  # noqa: CPY001
 
 import collections
-import heapq
 import hashlib
+import heapq
 import inspect
 import itertools
 import json
 import logging
-import numpy as np
 import pathlib
 import pickle
-import re
-import sys
 import random
-import requests
+import re
 import socket
-
+import sys
 from argparse import ArgumentParser
 from concurrent import futures
 from functools import reduce
 from os import path
 
+import numpy as np
+import requests
 
 # The Value from the session cookie used to make the webaccess.
 # You could hardcode this with your value or set it at the interactive prompt.
@@ -1150,13 +1149,13 @@ class State(object):  # noqa: D101, UP004
         return tuple(remaining_effects), hp, mana, boss_hp, armor
 
     def boss_turn(self):  # noqa: D102
-        self.effects, self.hp, self.mana, self.boss_hp, armor = (self.process_effects(self.effects, self.hp, self.mana, self.boss_hp))
+        self.effects, self.hp, self.mana, self.boss_hp, armor = (self.process_effects(self.hp, self.mana, self.boss_hp))
         if self.boss_hp > 0:
             self.hp -= max(1, self.boss_damage - armor)
 
     def transitions(self):  # noqa: D102
         # Plater first
-        effects, hp, mana, boss_hp, __ = self.process_effects(self.effects, self.hp - int(self.hard), self.mana, self.boss_hp)
+        effects, hp, mana, boss_hp, __ = self.process_effects(self.hp - int(self.hard), self.mana, self.boss_hp)
         for spell in spells:
             if spell.cost > mana or any(spell is s for t, s in effects):
                 continue  # Skip if not enough mana or in effect.
@@ -1287,8 +1286,8 @@ def day24(**kwargs):  # noqa: D103
     # Driver code
     val = [60, 100, 120]
     wt = [10, 20, 30]
-    t = 50
-    n = 1
+    t = 20
+    n = 2
     log.info(_knapsack(t, wt, val, n))
 
 
@@ -1308,9 +1307,9 @@ def day25(**kwargs):  # noqa: D103
             x += 1
         cur_val = (cur_val * mul) % div
         if y % 100 == 0 and x == 1:
-            log.info(y, x, cur_val)
+            log.info("%s %s %s", y, x, cur_val)
         if y == 2947 and x == 3029:
-            log.info(y, x, cur_val)
+            log.info("%s %s %s", y, x, cur_val)
             break
 
 
