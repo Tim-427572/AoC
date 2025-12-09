@@ -1,0 +1,4 @@
+np==1.0.2
+numpy==2.3.5
+Requests==2.32.5
+skimage==0.0

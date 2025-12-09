@@ -1,0 +1,4 @@
+networkx==3.4.2
+numpy==2.3.5
+Requests==2.32.5
+sortedcontainers==2.4.0

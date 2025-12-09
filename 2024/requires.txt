@@ -1,6 +1,0 @@
-networkx
-numpy
-pyglet
-requests
-# functools
-# cpmpy
