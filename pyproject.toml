@@ -12,238 +12,22 @@ preview = true
 # Decided not to inherit from the base for now, but can use this with extend-select and extend-ignore if needed
 # extend = "../pyproject.toml"
 lint.select = [
-    # Pyflakes (F)
-    "F401",  # unused-import
-    "F402",  # import-shadowed-by-loop-var
-    "F403",  # undefined-local-with-import-star
-    "F404",  # late-future-import
-    "F405",  # undefined-local-with-import-star-usage
-    "F406",  # undefined-local-with-nested-import-star-usage
-    "F407",  # future-feature-not-defined
-    "F501",  # percent-format-invalid-format
-    "F502",  # percent-format-expected-mapping
-    "F503",  # percent-format-expected-sequence
-    "F504",  # percent-format-extra-named-arguments
-    "F505",  # percent-format-missing-argument
-    "F506",  # percent-format-mixed-positional-and-named
-    "F507",  # percent-format-positional-count-mismatch
-    "F508",  # percent-format-star-requires-sequence
-    "F509",  # percent-format-unsupported-format-character
-    "F521",  # string-dot-format-invalid-format
-    "F522",  # string-dot-format-extra-named-arguments
-    "F523",  # string-dot-format-extra-positional-arguments
-    "F524",  # string-dot-format-missing-arguments
-    "F525",  # string-dot-format-mixing-automatic
-    "F541",  # f-string-missing-placeholders
-    "F601",  # multi-value-repeated-key-literal
-    "F602",  # multi-value-repeated-key-variable
-    "F621",  # expressions-in-star-assignment
-    "F622",  # multiple-starred-expressions
-    "F631",  # assert-tuple
-    "F632",  # is-literal
-    "F633",  # invalid-print-syntax
-    "F634",  # if-tuple
-    "F701",  # break-outside-loop
-    "F702",  # continue-outside-loop
-    "F704",  # yield-outside-function
-    "F706",  # return-outside-function
-    "F707",  # default-except-not-last
-    "F722",  # forward-annotation-syntax-error
-    "F811",  # redefined-while-unused
-    "F821",  # undefined-name
-    "F822",  # undefined-export
-    "F823",  # undefined-local
-    "F841",  # unused-variable
-    "F842",  # unused-annotation
-    "F901",  # raise-not-implemented
 
-    # pycodestyle Error (E)
-    "E101",  # mixed-spaces-and-tabs
-    "E111",  # indentation-with-invalid-multiple
-    "E112",  # no-indented-block
-    "E113",  # unexpected-indentation
-    "E114",  # indentation-with-invalid-multiple-comment
-    "E115",  # no-indented-block-comment
-    "E116",  # unexpected-indentation-comment
-    "E117",  # over-indented
-    "E201",  # whitespace-after-open-bracket
-    "E202",  # whitespace-before-close-bracket
-    "E203",  # whitespace-before-punctuation
-    "E211",  # whitespace-before-parameters
-    "E221",  # multiple-spaces-before-operator
-    "E222",  # multiple-spaces-after-operator
-    "E223",  # tab-before-operator
-    "E224",  # tab-after-operator
-    "E225",  # missing-whitespace-around-operator
-    "E226",  # missing-whitespace-around-arithmetic-operator
-    "E227",  # missing-whitespace-around-bitwise-or-shift-operator
-    "E228",  # missing-whitespace-around-modulo-operator
-    "E231",  # missing-whitespace
-    "E241",  # multiple-spaces-after-comma  # ruff 0.0.281
-    "E242",  # tab-after-comma  # ruff 0.0.281
-    "E251",  # unexpected-spaces-around-keyword-parameter-equals
-    "E252",  # missing-whitespace-around-parameter-equals
-    "E261",  # too-few-spaces-before-inline-comment
-    "E262",  # no-space-after-inline-comment
-    "E265",  # no-space-after-block-comment
-    "E266",  # multiple-leading-hashes-for-block-comment
-    "E271",  # multiple-spaces-after-keyword
-    "E272",  # multiple-spaces-before-keyword
-    "E273",  # tab-after-keyword
-    "E274",  # tab-before-keyword
-    "E275",  # missing-whitespace-after-keyword
-  # "E301",  # blank-line-between-methods	Expected {BLANK_LINES_NESTED_LEVEL:?} blank line, found 0	🧪 🛠️
-    "E302",  # blank-lines-top-level
-    "E303",  # too-many-blank-lines
-    "E304",  # blank-line-after-decorator
-    "E305",  # blank-lines-after-function-or-class
-    "E306",  # blank-lines-before-nested-definition
-    "E401",  # multiple-imports-on-one-line
-    "E402",  # module-import-not-at-top-of-file
-    "E401",  # multiple-imports-on-one-line
-    "E402",  # module-import-not-at-top-of-file
-    "E501",  # line-too-long
-    "E502",  # redundant-backslash
-    "E701",  # multiple-statements-on-one-line-colon
-    "E702",  # multiple-statements-on-one-line-semicolon
-    "E703",  # useless-semicolon
-    "E711",  # none-comparison
-    "E712",  # true-false-comparison
-    "E713",  # not-in-test
-    "E714",  # not-is-test
-    "E721",  # type-comparison
-    "E722",  # bare-except
-    "E731",  # lambda-assignment
-    "E741",  # ambiguous-variable-name
-    "E742",  # ambiguous-class-name
-    "E743",  # ambiguous-function-name
-    "E902",  # io-error
-  # "E999",  # syntax-error
+    # Airflow (AIR)
+    "AIR001",  # airflow-variable-name-task-id-mismatch
+    "AIR002",  # DAG or @dag should have an explicit schedule argument
+    "AIR301",  # airflow3-removal - {deprecated} is removed in Airflow 3.0	
+    "AIR302",  # airflow3-moved-to-provider - {deprecated} is moved into {provider} provider in Airflow 3.0;	
+    "AIR311",  # airflow3-suggested-update - {deprecated} is removed in Airflow 3.0; It still works in Airflow 3.0 but is expected to be removed in a future version.	
+    "AIR312",  # airflow3-suggested-to-move-to-provider - {deprecated} is deprecated and moved into {provider} provider in Airflow 3.0; It still works in Airflow 3.0 but is expected to be removed in a future version.
 
-    # pycodestyle Warning (W)
-    "W191",  # tab-indentation
-    "W291",  # trailing-whitespace
-    "W292",  # missing-newline-at-end-of-file
-    "W293",  # blank-line-with-whitespace
-    "W391",  # too-many-newlines-at-end-of-file
-    "W505",  # doc-line-too-long
-    "W605",  # invalid-escape-sequence
+    # eradicate (ERA)
+  # "ERA001",  # commented-out-code
 
-    # mccabe (C90)
-  # "C901",  # complex-structure
-
-    # isort (I)
-  #  "I001",  # unsorted-imports
-    "I002",  # missing-required-import
-
-    # pep8-naming (N)
-    "N801",  # invalid-class-name
-    "N802",  # invalid-function-name
-    "N803",  # invalid-argument-name
-    "N804",  # invalid-first-argument-name-for-class-method
-    "N805",  # invalid-first-argument-name-for-method
-    "N806",  # non-lowercase-variable-in-function
-    "N807",  # dunder-function-name
-    "N811",  # constant-imported-as-non-constant
-    "N812",  # lowercase-imported-as-non-lowercase
-    "N813",  # camelcase-imported-as-lowercase
-    "N814",  # camelcase-imported-as-constant
-    "N815",  # mixed-case-variable-in-class-scope
-    "N816",  # mixed-case-variable-in-global-scope
-    "N817",  # camelcase-imported-as-acronym
-    "N818",  # error-suffix-on-exception-name
-    "N999",  # invalid-module-name
-
-    # pydocstyle (D)
-    "D100",  # undocumented-public-module
-    "D101",  # undocumented-public-class
-    "D102",  # undocumented-public-method
-    "D103",  # undocumented-public-function
-  # "D104",  # undocumented-public-package
-    "D105",  # undocumented-magic-method
-    "D106",  # undocumented-public-nested-class
-    "D107",  # undocumented-public-init
-    "D200",  # fits-on-one-line
-    "D201",  # no-blank-line-before-function
-    "D202",  # no-blank-line-after-function
-  # "D203",  # one-blank-line-before-class (using D211 instead)
-  # "D204",  # one-blank-line-after-class
-    "D205",  # blank-line-after-summary
-    "D206",  # indent-with-spaces
-    "D207",  # under-indentation
-    "D208",  # over-indentation
-    "D209",  # new-line-after-last-paragraph
-    "D210",  # surrounding-whitespace
-    "D211",  # blank-line-before-class
-  # "D212",  # multi-line-summary-first-line (using D213 instead)
-    "D213",  # multi-line-summary-second-line
-    "D214",  # section-not-over-indented
-    "D215",  # section-underline-not-over-indented
-    "D300",  # triple-single-quotes
-    "D301",  # escape-sequence-in-docstring
-    "D400",  # ends-in-period
-    "D401",  # non-imperative-mood
-    "D402",  # no-signature
-    "D403",  # first-line-capitalized
-    "D404",  # docstring-starts-with-this
-    "D405",  # capitalize-section-name
-    "D406",  # new-line-after-section-name
-  # "D407",  # dashed-underline-after-section  # Google style doesn't require this
-    "D408",  # section-underline-after-name
-    "D409",  # section-underline-matches-section-length
-    "D410",  # no-blank-line-after-section
-    "D411",  # no-blank-line-before-section
-    "D412",  # blank-lines-between-header-and-content
-  # "D413",  # blank-line-after-last-section
-    "D414",  # empty-docstring-section
-    "D415",  # ends-in-punctuation
-    "D416",  # section-name-ends-in-colon
-    "D417",  # undocumented-param
-    "D418",  # overload-with-docstring
-    "D419",  # empty-docstring
-
-    # pyupgrade (UP)
-    "UP001",  # useless-metaclass-type
-    "UP003",  # type-of-primitive
-    "UP004",  # useless-object-inheritance
-    "UP005",  # deprecated-unittest-alias
-    "UP006",  # non-pep585-annotation
-    "UP007",  # non-pep604-annotation
-    "UP008",  # super-call-with-parameters
-    "UP009",  # utf8-encoding-declaration
-    "UP010",  # unnecessary-future-import
-    "UP011",  # lru-cache-without-parameters
-    "UP012",  # unnecessary-encode-utf8
-    "UP013",  # convert-typed-dict-functional-to-class
-    "UP014",  # convert-named-tuple-functional-to-class
-    "UP015",  # redundant-open-modes
-    "UP017",  # datetime-timezone-utc
-    "UP018",  # native-literals
-    "UP019",  # typing-text-str-alias
-    "UP020",  # open-alias
-    "UP021",  # replace-universal-newlines
-    "UP022",  # replace-stdout-stderr
-    "UP023",  # deprecated-c-element-tree
-    "UP024",  # os-error-alias
-    "UP025",  # unicode-kind-prefix
-    "UP026",  # deprecated-mock-import
-  # "UP027",  # unpacked-list-comprehension
-    "UP028",  # yield-in-for-loop
-    "UP029",  # unnecessary-builtin-import
-    "UP030",  # format-literals
-    "UP031",  # printf-string-formatting
-    "UP032",  # f-string
-    "UP033",  # lru-cache-with-maxsize-none
-    "UP034",  # extraneous-parentheses
-    "UP035",  # deprecated-import
-    "UP036",  # outdated-version-block
-    "UP037",  # quoted-annotation
-    "UP038",  # non-pep604-isinstance
-    "UP039",  # unnecessary-class-parentheses  # ruff 0.0.273
-    "UP040",  # non-pep695-type-alias
-    "UP041",  # timeout-error-alias  # ruff 0.1.4
-    "UP042",  # replace-str-enum
-    "UP043",  # Unnecessary default type arguments
+    # FastAPI (FAST)
+    "FAST001", # fast-api-redundant-response-model
+    "FAST002", # fast-api-non-annotated-dependency
+    "FAST003", # fast-api-unused-path-parameter
 
     # flake8-2020 (YTT)
     "YTT101",  # sys-version-slice3
@@ -278,11 +62,14 @@ lint.select = [
     "ASYNC115",  # async-zero-sleep
     "ASYNC116",  # long-sleep-not-forever
     "ASYNC210",  # blocking-http-call-in-async-function
+  # "ASYNC212",  # Blocking httpx method {name}.{call}() in async context, use httpx.AsyncClient
     "ASYNC220",  # create-subprocess-in-async-function
     "ASYNC221",  # run-process-in-async-function
     "ASYNC222",  # wait-for-process-in-async-function
     "ASYNC230",  # blocking-open-call-in-async-function
-    "ASYNC251",  # blocking-sleep-in-async-function
+  # "ASYNC240",  # Async functions should not use {path_library} methods, use trio.Path or anyio.path
+  # "ASYNC250",  # Blocking call to input() in async context
+    "ASYNC251",  # sync functions should not call time.sleep
 
     # flake8-bandit (S)
     "S101",  # assert
@@ -316,7 +103,7 @@ lint.select = [
     "S317",  # suspicious-xml-sax-usage
     "S318",  # suspicious-xml-mini-dom-usage
     "S319",  # suspicious-xml-pull-dom-usage
-    "S320",  # suspicious-xmle-tree-usage
+  # "S320",  # suspicious-xmle-tree-usage - removed in 0.12.0
     "S321",  # suspicious-ftp-lib-usage
     "S323",  # suspicious-unverified-context-usage
     "S324",  # hashlib-insecure-hash-function
@@ -356,13 +143,14 @@ lint.select = [
     "S612",  # logging-config-insecure-listen
     "S701",  # jinja2-autoescape-false
     "S702",  # mako-templates  # ruff 0.1.5
+    "S704",  # unsafe-markup-use
 
     # flake8-blind-except (BLE)
     "BLE001",  # blind-except
 
     # flake8-boolean-trap (FBT)
     "FBT001",  # boolean-positional-arg-in-function-definition
- #  "FBT002",  # boolean-default-value-in-function-definition
+  # "FBT002",  # boolean-default-value-in-function-definition
     "FBT003",  # boolean-positional-value-in-function-call
 
     # flake8-bugbear (B)
@@ -400,9 +188,14 @@ lint.select = [
     "B033",  # duplicate-value
     "B034",  # re-sub-positional-args  # ruff 0.0.278
     "B035",  # static-key-dict-comprehension
+    "B039",  # mutable-contextvar-default - Do not use mutable data structures for ContextVar defaults
+    "B901",  # return-in-generator - Using yield and return {value} in a generator function can lead to confusing behavior
+    "B903",  # class-as-data-structure - Class could be dataclass or namedtuple
     "B904",  # raise-without-from-inside-except
     "B905",  # zip-without-explicit-strict
     "B909",  # loop-iterator-mutation
+    "B911",  # batched-without-explicit-strict - itertools.batched() without an explicit strict parameter	
+    "B912",  # map-without-explicit-strict - map() without an explicit strict= parameter
 
     # flake8-builtins (A)
     "A001",  # builtin-variable-shadowing
@@ -416,9 +209,6 @@ lint.select = [
     "COM812",  # missing-trailing-comma
     "COM818",  # trailing-comma-on-bare-tuple
     "COM819",  # prohibited-trailing-comma
-
-    # flake8-copyright (CPY)
-  # "CPY001",  # missing-copyright-notice
 
     # flake8-comprehensions (C4)
     "C400",  # unnecessary-generator-list
@@ -440,6 +230,9 @@ lint.select = [
     "C418",  # unnecessary-literal-within-dict-call
     "C419",  # unnecessary-comprehension-any-all
     "C420",  # unnecessary-dict-comprehension-for-iterable
+
+    # flake8-copyright (CPY)
+    "CPY001",  # missing-copyright-notice
 
     # flake8-datetimez (DTZ)
   # "DTZ001",  # call-datetime-without-tzinfo
@@ -470,15 +263,26 @@ lint.select = [
     "EM103",  # dot-format-in-exception
 
     # flake8-executable (EXE)
-    "EXE001",  # shebang-not-executable
-    "EXE002",  # shebang-missing-executable-file
-    "EXE003",  # shebang-missing-python
+    # "EXE001",  # shebang-not-executable
+    # "EXE002",  # shebang-missing-executable-file
+    # "EXE003",  # shebang-missing-python
     "EXE004",  # shebang-leading-whitespace
     "EXE005",  # shebang-not-first-line
+
+    # flake8-fixme (FIX)
+  # "FIX001",  # line-contains-fixme
+  # "FIX002",  # line-contains-todo
+  # "FIX003",  # line-contains-xxx
+  # "FIX004",  # line-contains-hack
 
     # flake8-future-annotations (FA)
     "FA100",  # future-rewritable-type-annotation
     "FA102",  # future-required-type-annotation
+
+    # flake8-gettext (INT)
+    "INT001",  # f-string-in-get-text-func-call
+    "INT002",  # format-in-get-text-func-call
+    "INT003",  # printf-in-get-text-func-call
 
     # flake8-implicit-str-concat (ISC)
     "ISC001",  # single-line-implicit-string-concatenation
@@ -493,14 +297,17 @@ lint.select = [
     # flake8-logging (LOG)
     "LOG001",  # direct-logger-instantiation
     "LOG002",  # invalid-get-logger-argument
+    "LOG004",  # log-exception-outside-except-handler - .exception() call outside exception handlers
   # "LOG007",  # exception-without-exc-info
     "LOG009",  # undocumented-warn
+    "LOG014",  # exc-info-outside-except-handler - exc_info= outside exception handlers
+    "LOG015",  # root-logger-call - {}() call on root logger
 
     # flake8-logging-format (G)
     "G001",  # logging-string-format
     "G002",  # logging-percent-format
     "G003",  # logging-string-concat
-    "G004",  # logging-f-string
+  # "G004",  # logging-f-string
     "G010",  # logging-warn
     "G101",  # logging-extra-attr-clash
     "G201",  # logging-exc-info
@@ -520,7 +327,7 @@ lint.select = [
     "PIE810",  # multiple-starts-ends-with
 
     # flake8-print (T20)
-  # "T201",  # print
+    "T201",  # print
     "T203",  # p-print
 
     # flake8-pyi (PYI)
@@ -569,9 +376,12 @@ lint.select = [
     "PYI052",  # unannotated-assignment-in-stub
     "PYI053",  # string-or-bytes-too-long
     "PYI054",  # numeric-literal-too-long
+    "PYI055",  # unnecessary-type-union - Multiple type members in a union. Combine them into one, e.g., type[{union_str}].
     "PYI056",  # unsupported-method-call-on-all  # ruff 0.0.281
+    "PYI057",  # byte-string-usage - Do not use {origin}.ByteString, which has unclear semantics and is deprecated
     "PYI058",  # generator-return-from-iter-method
     "PYI059",  # generic-not-last-base-class
+    "PYI061",  # redundant-none-literal - Use None rather than Literal[None]
     "PYI062",  # duplicate-literal-member
     "PYI063",  # pre-pep570-positional-argument
     "PYI064",  # redundant-final-literal
@@ -605,6 +415,10 @@ lint.select = [
     "PT025",  # pytest-erroneous-use-fixtures-on-fixture
     "PT026",  # pytest-use-fixtures-without-parameters
     "PT027",  # pytest-unittest-raises-assertion  # ruff 0.0.285
+  # "PT028",  # pytest-parameter-with-default-argument - Test function parameter {} has default argument - tjburbac want the ability to name functions test.
+    "PT029",  # pytest-warns-without-warning - Set the expected warning in pytest.warns()
+    "PT030",  # pytest-warns-too-broad - pytest.warns({warning}) is too broad, set the match parameter or use a more specific warning	
+    "PT031",  # pytest-warns-with-multiple-statements
 
     # flake8-quotes (Q)
     "Q000",  # bad-quotes-inline-string
@@ -628,11 +442,6 @@ lint.select = [
 
     # flake8-self (SLF)
     "SLF001",  # private-member-access
-
-    # flake8-slots (SLOT)
-    "SLOT000",  # no-slots-in-str-subclass  # ruff 0.0.273
-    "SLOT001",  # no-slots-in-tuple-subclass # ruff 0.0.273
-    "SLOT002",  # no-slots-in-namedtuple-subclass  # ruff 0.0.273
 
     # flake8-simplify (SIM)
     "SIM101",  # duplicate-isinstance-call
@@ -662,26 +471,39 @@ lint.select = [
     "SIM223",  # expr-and-false
     "SIM300",  # yoda-conditions
     "SIM401",  # if-else-block-instead-of-dict-get
+    "SIM905",  # split-static-string - Consider using a list literal instead of str.{}
     "SIM910",  # dict-get-with-none-default
     "SIM911",  # zip-dict-keys-and-values
+
+    # flake8-slots (SLOT)
+    "SLOT000",  # no-slots-in-str-subclass  # ruff 0.0.273
+    "SLOT001",  # no-slots-in-tuple-subclass # ruff 0.0.273
+    "SLOT002",  # no-slots-in-namedtuple-subclass  # ruff 0.0.273
 
     # flake8-tidy-imports (TID)
     "TID251",  # banned-api
     "TID252",  # relative-imports
     "TID253",  # banned-module-level-imports  # ruff 0.0.285
 
-    # flake8-type-checking (TCH)
-    "TCH001",  # typing-only-first-party-import
-    "TCH002",  # typing-only-third-party-import
-    "TCH003",  # typing-only-standard-library-import
-    "TCH004",  # runtime-import-in-type-checking-block
-    "TCH005",  # empty-type-checking-block
-    "TCH010",  # runtime-string-union
+    # flake8-todos (TD)
+    "TD001",  # invalid-todo-tag
+    "TD002",  # missing-todo-author
+  # "TD003",  # missing-todo-link
+    "TD004",  # missing-todo-colon
+    "TD005",  # missing-todo-description
+    "TD006",  # invalid-todo-capitalization
+    "TD007",  # missing-space-after-todo-colon
 
-    # flake8-gettext (INT)
-    "INT001",  # f-string-in-get-text-func-call
-    "INT002",  # format-in-get-text-func-call
-    "INT003",  # printf-in-get-text-func-call
+    # flake8-type-checking (TC)
+    "TC001",  # typing-only-first-party-import - Move application import {} into a type-checking block
+    "TC002",  # typing-only-third-party-import - Move third-party import {} into a type-checking block
+    "TC003",  # typing-only-standard-library-import - Move standard library import {} into a type-checking block
+    "TC004",  # runtime-import-in-type-checking-block - Move import {qualified_name} out of type-checking block. Import is used for more than type hinting.
+    "TC005",  # empty-type-checking-block - Found empty type-checking block
+    "TC006",  # runtime-cast-value - Add quotes to type expression in typing.cast()
+    "TC007",  # unquoted-type-alias - Add quotes to type alias
+    "TC008",  # quoted-type-alias - Remove quotes from type alias
+    "TC010",  # runtime-string-union - Invalid string member in X | Y-style union type
 
     # flake8-unused-arguments (ARG)
     "ARG001",  # unused-function-argument
@@ -723,24 +545,25 @@ lint.select = [
     "PTH205",  # os-path-getctime  # ruff 0.0.279
     "PTH206",  # os-sep-split  # ruff 0.0.281
     "PTH207",  # glob  # ruff 0.0.281
+    "PTH208",  # os-listdir  - Use pathlib.Path.iterdir() instead.
+    "PTH210",  # invalid-pathlib-with-suffix - Invalid suffix passed to .with_suffix()
+    "PTH211",  # os-symlink - os.symlink should be replaced by Path.symlink_to
 
-    # flake8-todos (TD)
-    "TD001",  # invalid-todo-tag
-    "TD002",  # missing-todo-author
-  # "TD003",  # missing-todo-link
-    "TD004",  # missing-todo-colon
-    "TD005",  # missing-todo-description
-    "TD006",  # invalid-todo-capitalization
-    "TD007",  # missing-space-after-todo-colon
+    # flynt (FLY)
+    "FLY002",  # static-join-to-f-string
 
-    # flake8-fixme (FIX)
-  # "FIX001",  # line-contains-fixme
-  # "FIX002",  # line-contains-todo
-  # "FIX003",  # line-contains-xxx
-  # "FIX004",  # line-contains-hack
+    # isort (I)
+  #  "I001",  # unsorted-imports
+    "I002",  # missing-required-import
 
-    # eradicate (ERA)
-  # "ERA001",  # commented-out-code
+    # mccabe (C90)
+  # "C901",  # complex-structure
+
+    # NumPy-specific rules (NPY)
+    "NPY001",  # numpy-deprecated-type-alias
+    "NPY002",  # numpy-legacy-random
+    "NPY003",  # numpy-deprecated-function  # ruff 0.0.276
+    "NPY201",  # numpy2-deprecation  # ruff 0.1.4
 
     # pandas-vet (PD)
     "PD002",  # pandas-use-of-inplace-argument
@@ -755,7 +578,206 @@ lint.select = [
     "PD013",  # pandas-use-of-dot-stack
     "PD015",  # pandas-use-of-pd-merge
     "PD101",  # pandas-nunique-constant-series-check  # ruff 0.0.279
-    "PD901",  # pandas-df-variable-name
+  # "PD901",  # pandas-df-variable-name - removed in 0.13.0
+
+    # pep8-naming (N)
+    "N801",  # invalid-class-name
+    "N802",  # invalid-function-name
+    "N803",  # invalid-argument-name
+    "N804",  # invalid-first-argument-name-for-class-method
+    "N805",  # invalid-first-argument-name-for-method
+    "N806",  # non-lowercase-variable-in-function
+    "N807",  # dunder-function-name
+    "N811",  # constant-imported-as-non-constant
+    "N812",  # lowercase-imported-as-non-lowercase
+    "N813",  # camelcase-imported-as-lowercase
+    "N814",  # camelcase-imported-as-constant
+    "N815",  # mixed-case-variable-in-class-scope
+    "N816",  # mixed-case-variable-in-global-scope
+    "N817",  # camelcase-imported-as-acronym
+    "N818",  # error-suffix-on-exception-name
+    "N999",  # invalid-module-name
+
+    # Perflint (PERF)
+    "PERF101",  # unnecessary-list-cast  # ruff 0.0.276
+    "PERF102",  # incorrect-dict-iterator  # ruff 0.0.273
+  # "PERF203",  # try-except-in-loop  # ruff 0.0.276
+    "PERF401",  # manual-list-comprehension  # ruff 0.0.276
+    "PERF402",  # manual-list-copy  # ruff 0.0.276
+    "PERF403",  # manual-dict-comprehension  # ruff 0.0.290
+
+    # pycodestyle Error (E)
+    "E101",  # mixed-spaces-and-tabs
+    "E111",  # indentation-with-invalid-multiple
+    "E112",  # no-indented-block
+    "E113",  # unexpected-indentation
+    "E114",  # indentation-with-invalid-multiple-comment
+    "E115",  # no-indented-block-comment
+    "E116",  # unexpected-indentation-comment
+    "E117",  # over-indented
+    "E201",  # whitespace-after-open-bracket
+    "E202",  # whitespace-before-close-bracket
+    "E203",  # whitespace-before-punctuation
+    "E204",  # whitespace-after-decorator
+    "E211",  # whitespace-before-parameters
+    "E221",  # multiple-spaces-before-operator
+    "E222",  # multiple-spaces-after-operator
+    "E223",  # tab-before-operator
+    "E224",  # tab-after-operator
+    "E225",  # missing-whitespace-around-operator
+    "E226",  # missing-whitespace-around-arithmetic-operator
+    "E227",  # missing-whitespace-around-bitwise-or-shift-operator
+    "E228",  # missing-whitespace-around-modulo-operator
+    "E231",  # missing-whitespace
+    "E241",  # multiple-spaces-after-comma  # ruff 0.0.281
+    "E242",  # tab-after-comma  # ruff 0.0.281
+    "E251",  # unexpected-spaces-around-keyword-parameter-equals
+    "E252",  # missing-whitespace-around-parameter-equals
+    "E261",  # too-few-spaces-before-inline-comment
+    "E262",  # no-space-after-inline-comment
+    "E265",  # no-space-after-block-comment
+    "E266",  # multiple-leading-hashes-for-block-comment
+    "E271",  # multiple-spaces-after-keyword
+    "E272",  # multiple-spaces-before-keyword
+    "E273",  # tab-after-keyword
+    "E274",  # tab-before-keyword
+    "E275",  # missing-whitespace-after-keyword
+    "E301",  # blank-line-between-methods	Expected {BLANK_LINES_NESTED_LEVEL:?} blank line, found 0	🧪 🛠️
+    "E302",  # blank-lines-top-level
+    "E303",  # too-many-blank-lines
+    "E304",  # blank-line-after-decorator
+    "E305",  # blank-lines-after-function-or-class
+    "E306",  # blank-lines-before-nested-definition
+    "E401",  # multiple-imports-on-one-line
+    "E402",  # module-import-not-at-top-of-file
+    "E501",  # line-too-long
+    "E502",  # redundant-backslash
+    "E701",  # multiple-statements-on-one-line-colon
+    "E702",  # multiple-statements-on-one-line-semicolon
+    "E703",  # useless-semicolon
+    "E711",  # none-comparison
+    "E712",  # true-false-comparison
+    "E713",  # not-in-test
+    "E714",  # not-is-test
+    "E721",  # type-comparison
+    "E722",  # bare-except
+    "E731",  # lambda-assignment
+    "E741",  # ambiguous-variable-name
+    "E742",  # ambiguous-class-name
+    "E743",  # ambiguous-function-name
+    "E902",  # io-error
+  # "E999",  # syntax-error
+
+    # pycodestyle Warning (W)
+    "W191",  # tab-indentation
+    "W291",  # trailing-whitespace
+    "W292",  # missing-newline-at-end-of-file
+    "W293",  # blank-line-with-whitespace
+    "W391",  # too-many-newlines-at-end-of-file
+    "W505",  # doc-line-too-long
+    "W605",  # invalid-escape-sequence
+
+    # pydoclint (DOC)
+  # "DOC102",   # docstring-extraneous-parameter - Documented parameter {id} is not in the function's signature
+  # "DOC201",   # docstring-missing-returns
+  # "DOC202",   # docstring-extraneous-returns
+  # "DOC402",   # docstring-missing-yields
+  # "DOC403",   # docstring-extraneous-yields
+  # "DOC501",   # docstring-missing-exception
+  # "DOC502",   # docstring-extraneous-exception
+
+    # pydocstyle (D)
+    "D100",  # undocumented-public-module
+    "D101",  # undocumented-public-class
+    "D102",  # undocumented-public-method
+    "D103",  # undocumented-public-function
+  # "D104",  # undocumented-public-package
+    "D105",  # undocumented-magic-method
+    "D106",  # undocumented-public-nested-class
+    "D107",  # undocumented-public-init
+    "D200",  # fits-on-one-line
+    "D201",  # no-blank-line-before-function
+    "D202",  # no-blank-line-after-function
+  # "D203",  # one-blank-line-before-class (using D211 instead)
+    "D204",  # one-blank-line-after-class
+    "D205",  # blank-line-after-summary
+    "D206",  # indent-with-spaces
+    "D207",  # under-indentation
+    "D208",  # over-indentation
+    "D209",  # new-line-after-last-paragraph
+    "D210",  # surrounding-whitespace
+    "D211",  # blank-line-before-class
+  # "D212",  # multi-line-summary-first-line (using D213 instead)
+    "D213",  # multi-line-summary-second-line
+    "D214",  # section-not-over-indented
+    "D215",  # section-underline-not-over-indented
+    "D300",  # triple-single-quotes
+    "D301",  # escape-sequence-in-docstring
+  # "D400",  # ends-in-period
+  # "D401",  # non-imperative-mood
+    "D402",  # no-signature
+    "D403",  # first-line-capitalized
+    "D404",  # docstring-starts-with-this
+    "D405",  # capitalize-section-name
+    "D406",  # new-line-after-section-name
+  # "D407",  # dashed-underline-after-section  # Google style doesn't require this
+    "D408",  # section-underline-after-name
+    "D409",  # section-underline-matches-section-length
+    "D410",  # no-blank-line-after-section
+    "D411",  # no-blank-line-before-section
+    "D412",  # blank-lines-between-header-and-content
+  # "D413",  # blank-line-after-last-section
+    "D414",  # empty-docstring-section
+    "D415",  # ends-in-punctuation
+    "D416",  # section-name-ends-in-colon
+    "D417",  # undocumented-param
+    "D418",  # overload-with-docstring
+    "D419",  # empty-docstring
+
+    # Pyflakes (F)
+    "F401",  # unused-import
+    "F402",  # import-shadowed-by-loop-var
+    "F403",  # undefined-local-with-import-star
+    "F404",  # late-future-import
+    "F405",  # undefined-local-with-import-star-usage
+    "F406",  # undefined-local-with-nested-import-star-usage
+    "F407",  # future-feature-not-defined
+    "F501",  # percent-format-invalid-format
+    "F502",  # percent-format-expected-mapping
+    "F503",  # percent-format-expected-sequence
+    "F504",  # percent-format-extra-named-arguments
+    "F505",  # percent-format-missing-argument
+    "F506",  # percent-format-mixed-positional-and-named
+    "F507",  # percent-format-positional-count-mismatch
+    "F508",  # percent-format-star-requires-sequence
+    "F509",  # percent-format-unsupported-format-character
+    "F521",  # string-dot-format-invalid-format
+    "F522",  # string-dot-format-extra-named-arguments
+    "F523",  # string-dot-format-extra-positional-arguments
+    "F524",  # string-dot-format-missing-arguments
+    "F525",  # string-dot-format-mixing-automatic
+    "F541",  # f-string-missing-placeholders
+    "F601",  # multi-value-repeated-key-literal
+    "F602",  # multi-value-repeated-key-variable
+    "F621",  # expressions-in-star-assignment
+    "F622",  # multiple-starred-expressions
+    "F631",  # assert-tuple
+    "F632",  # is-literal
+    "F633",  # invalid-print-syntax
+    "F634",  # if-tuple
+    "F701",  # break-outside-loop
+    "F702",  # continue-outside-loop
+    "F704",  # yield-outside-function
+    "F706",  # return-outside-function
+    "F707",  # default-except-not-last
+    "F722",  # forward-annotation-syntax-error
+    "F811",  # redefined-while-unused
+    "F821",  # undefined-name
+    "F822",  # undefined-export
+    "F823",  # undefined-local
+    "F841",  # unused-variable
+    "F842",  # unused-annotation
+    "F901",  # raise-not-implemented
 
     # pygrep-hooks (PGH)
   # "PGH001",  # eval remapped to S307
@@ -836,6 +858,7 @@ lint.select = [
   # "PLR0917",  # too-many-positional
   # "PLR1702",  # too-many-nested-blocks
     "PLR1704",  # redefined-argument-from-local  # ruff 0.1.6
+    "PLR1708",  # stop-iteration-return - Explicit raise StopIteration in generator
     "PLR1711",  # useless-return
     "PLR1714",  # repeated-equality-comparison-target  # ruff 0.0.279
     "PLR1716",  # boolean-chained-comparison
@@ -878,41 +901,54 @@ lint.select = [
     "PLW3201",  # bad-dunder-method-name  # ruff 0.0.285
     "PLW3301",  # nested-min-max
 
-    # tryceratops (TRY)
-  # "TRY002",  # raise-vanilla-class
-    "TRY003",  # raise-vanilla-args
-    "TRY004",  # type-check-without-type-error
-    "TRY201",  # verbose-raise
-    "TRY203",  # useless-try-except
-    "TRY300",  # try-consider-else
-    "TRY301",  # raise-within-try
-    "TRY400",  # error-instead-of-exception
-    "TRY401",  # verbose-log-message
-
-    # flynt (FLY)
-    "FLY002",  # static-join-to-f-string
-
-    # NumPy-specific rules (NPY)
-    "NPY001",  # numpy-deprecated-type-alias
-    "NPY002",  # numpy-legacy-random
-    "NPY003",  # numpy-deprecated-function  # ruff 0.0.276
-    "NPY201",  # numpy2-deprecation  # ruff 0.1.4
-
-    # FastAPI (FAST)
-    "FAST001", # fast-api-redundant-response-model
-    "FAST002", # fast-api-non-annotated-dependency
-    "FAST003", # fast-api-unused-path-parameter
-
-    # Airflow (AIR)
-    "AIR001",  # airflow-variable-name-task-id-mismatch
-
-    # Perflint (PERF)
-    "PERF101",  # unnecessary-list-cast  # ruff 0.0.276
-    "PERF102",  # incorrect-dict-iterator  # ruff 0.0.273
-  # "PERF203",  # try-except-in-loop  # ruff 0.0.276
-    "PERF401",  # manual-list-comprehension  # ruff 0.0.276
-    "PERF402",  # manual-list-copy  # ruff 0.0.276
-    "PERF403",  # manual-dict-comprehension  # ruff 0.0.290
+    # pyupgrade (UP)
+    "UP001",  # useless-metaclass-type
+    "UP003",  # type-of-primitive
+    "UP004",  # useless-object-inheritance
+    "UP005",  # deprecated-unittest-alias
+    "UP006",  # non-pep585-annotation
+    "UP007",  # non-pep604-annotation
+    "UP008",  # super-call-with-parameters
+    "UP009",  # utf8-encoding-declaration
+    "UP010",  # unnecessary-future-import
+    "UP011",  # lru-cache-without-parameters
+    "UP012",  # unnecessary-encode-utf8
+    "UP013",  # convert-typed-dict-functional-to-class
+    "UP014",  # convert-named-tuple-functional-to-class
+    "UP015",  # redundant-open-modes
+    "UP017",  # datetime-timezone-utc
+    "UP018",  # native-literals
+    "UP019",  # typing-text-str-alias
+    "UP020",  # open-alias
+    "UP021",  # replace-universal-newlines
+    "UP022",  # replace-stdout-stderr
+    "UP023",  # deprecated-c-element-tree
+    "UP024",  # os-error-alias
+    "UP025",  # unicode-kind-prefix
+    "UP026",  # deprecated-mock-import
+  # "UP027",  # unpacked-list-comprehension
+    "UP028",  # yield-in-for-loop
+    "UP029",  # unnecessary-builtin-import
+    "UP030",  # format-literals
+    "UP031",  # printf-string-formatting
+    "UP032",  # f-string
+    "UP033",  # lru-cache-with-maxsize-none
+    "UP034",  # extraneous-parentheses
+    "UP035",  # deprecated-import
+    "UP036",  # outdated-version-block
+    "UP037",  # quoted-annotation
+  # "UP038",  # non-pep604-isinstance - removed in 0.13.0
+    "UP039",  # unnecessary-class-parentheses  # ruff 0.0.273
+    "UP040",  # non-pep695-type-alias
+    "UP041",  # timeout-error-alias  # ruff 0.1.4
+    "UP042",  # replace-str-enum
+    "UP043",  # Unnecessary default type arguments
+    "UP044",  # non-pep646-unpack - Use * for unpacking
+    "UP045",  # non-pep604-annotation-optional - Use X | None for type annotations
+    "UP046",  # non-pep695-generic-class - Generic class {name} uses Generic subclass instead of type parameters
+    "UP047",  # non-pep695-generic-function - Generic function {name} should use type parameters
+    "UP049",  # private-type-parameter - Generic {} uses private type parameters
+    "UP050",  # useless-class-metaclass-type - Class {name} uses metaclass=type, which is redundant
 
     # refurb (FURB)
     "FURB101",  # read-whole-file  # ruff 0.1.2
@@ -922,6 +958,7 @@ lint.select = [
     "FURB113",  # repeated-append  # ruff 0.0.287
     "FURB116",  # f-string-number-format
     "FURB118",  # reimplemented-operator
+    "FURB122",  # for-loop-writes - Use of {}.write in a for loop
     "FURB129",  # readlines-in-for
     "FURB131",  # delete-full-slice  # ruff 0.0.287
     "FURB132",  # check-and-remove-from-set  # ruff 0.0.287
@@ -935,6 +972,7 @@ lint.select = [
     "FURB156",  # hardcoded-string-charset
     "FURB157",  # verbose-decimal-constructor
     "FURB161",  # bit-count
+    "FURB162",  # fromisoformat-replace-z - Unnecessary timezone replacement with zero offset
     "FURB163",  # redundant-log-base
     "FURB164",  # unnecessary-from-float
     "FURB166",  # int-on-sliced-str
@@ -947,15 +985,8 @@ lint.select = [
     "FURB181",  # hashlib-digest-hex
     "FURB187",  # list-reverse-copy
     "FURB188",  # slice-to-remove-prefix-or-suffix
+    "FURB189",  # subclass-builtin - Subclassing {subclass} can be error prone, use collections.{replacement} instead
     "FURB192",  # sorted-min-max
-
-    # pydoclint (DOC)
-  # "DOC201",   # docstring-missing-returns
-  # "DOC202",   # docstring-extraneous-returns
-  # "DOC402",   # docstring-missing-yields
-  # "DOC403",   # docstring-extraneous-yields
-  # "DOC501",   # docstring-missing-exception
-  # "DOC502",   # docstring-extraneous-exception
 
     # Ruff-specific rules (RUF)
     "RUF001",  # ambiguous-unicode-character-string
@@ -988,9 +1019,47 @@ lint.select = [
     "RUF032",  # decimal-from-float-literal
     "RUF033",  # post-init-default
     "RUF034",  # useless-if-else    
+    "RUF036",  # none-not-at-end-of-union - None not at the end of the type annotation.
+    "RUF037",  # unnecessary-empty-iterable-within-deque-call - Unnecessary empty iterable within a deque call
+    "RUF038",  # redundant-bool-literal - Literal[True, False, ...] can be replaced with Literal[...] | bool
+    "RUF039",  # unraw-re-pattern - First argument to {call} is not raw string
+    "RUF040",  # invalid-assert-message-literal-argument - Non-string literal used as assert message
+    "RUF041",  # unnecessary-nested-literal - Unnecessary nested Literal
+    "RUF043",  # pytest-raises-ambiguous-pattern - Pattern passed to match= contains metacharacters but is neither escaped nor raw
+    "RUF045",  # implicit-class-var-in-dataclass - Assignment without annotation found in dataclass body
+    "RUF046",  # unnecessary-cast-to-int - Value being cast to int is already an integer
+    "RUF047",  # needless-else - Empty else clause
+    "RUF048",  # map-int-version-parsing - __version__ may contain non-integral-like elements
+    "RUF049",  # dataclass-enum - An enum class should not be decorated with @dataclass
+    "RUF051",  # if-key-in-dict-del - Use pop instead of key in dict followed by del dict[key]
+    "RUF052",  # used-dummy-variable - Local dummy variable {} is accessed
+    "RUF053",  # class-with-mixed-type-vars - Class with type parameter list inherits from Generic
+    "RUF054",  # indented-form-feed - Indented form feed
+    "RUF055",  # unnecessary-regular-expression - Plain string pattern passed to re function
+    "RUF056",  # falsy-dict-get-fallback - Avoid providing a falsy fallback to dict.get() in boolean test positions. The default fallback None is already falsy.
+    "RUF057",  # unnecessary-round - Value being rounded is already an integer
+    "RUF058",  # starmap-zip - itertools.starmap called on zip iterable
+    "RUF059",  # unused-unpacked-variable - Unpacked variable {name} is never used
+    "RUF060",  # in-empty-collection - Unnecessary membership test on empty collection
+    "RUF061",  # legacy-form-pytest-raises - Use context-manager form of pytest.{}()
+    "RUF063",  # access-annotations-from-class-dict - Use {suggestion} instead of __dict__ access
+    "RUF064",  # non-octal-permissions - Non-octal mode
+    "RUF065",  # logging-eager-conversion - Unnecessary oct() conversion when formatting with %s. Use %#o instead of
   # "RUF100",  # unused-noqa
     "RUF101",  # redirected-noqa
+    "RUF102",  # invalid-rule-code - Invalid rule code in # noqa: {}
     "RUF200",  # invalid-pyproject-toml
+
+    # tryceratops (TRY)
+    "TRY002",  # raise-vanilla-class
+    "TRY003",  # raise-vanilla-args
+    "TRY004",  # type-check-without-type-error
+    "TRY201",  # verbose-raise
+    "TRY203",  # useless-try-except
+    "TRY300",  # try-consider-else
+    "TRY301",  # raise-within-try
+    "TRY400",  # error-instead-of-exception
+    "TRY401",  # verbose-log-message
     ]
 lint.ignore = []
 

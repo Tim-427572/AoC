@@ -25,7 +25,7 @@ import sortedcontainers
 # import time
 from os import path
 
-import cpmpy as cp
+# import cpmpy as cp
 import networkx as nx
 import numpy as np
 # import pyglet
@@ -2081,7 +2081,42 @@ def _day17_thread(p, r):
             print("yes", i)
 
 
-def day17(example=False, override=False, start=0, nmax=8):
+@functools.lru_cache(maxsize=2**21)
+def _day17_output(ip, program, a, b, c):
+    while 0 <= ip < len(program):
+        x, y = program[ip : ip + 2]
+        if x in {0, 2, 5, 6, 7}:
+            match y:
+                case 4:
+                    y = a
+                case 5:
+                    y = b
+                case 6:
+                    y = c
+        match x:
+            case 0:  # adv
+                a //= 2**y
+            case 1:  # bxl
+                b ^= y
+            case 2:  # bst
+                b = y % 8
+            case 3:  # jnz
+                if a:
+                    ip = y - 2
+            case 4:  # bxc
+                b = c ^ b
+            case 5:  # out
+                ip += 2
+                return y % 8, ip, a, b, c
+            case 6:  # bdv
+                b = a // 2**y
+            case 7:  # cdv
+                c = a // 2**y
+        ip += 2
+    return None, ip, a, b, c
+
+
+def day17(example=False, override=False, start=0, size=4):
     """Day 17."""
     day: int | str
     day = ("Register A: 2024\n"
@@ -2092,8 +2127,69 @@ def day17(example=False, override=False, start=0, nmax=8):
     if not example:
         day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
     p = get_input(day, "\n", lambda x: x.split(":")[-1], override=override)
+    ip = b = c = 0
+    a = start
+    program = list(map(int, p[4].split(",")))
+    output = []
+    while True:
+        # print(ip, a, b, c)
+        if start % 1000 == 0 and False:
+            print(start)
+        out, ip, a, b, c = _day17_output(ip, tuple(program), a, b, c)
+        if out is not None:
+            output.append(out)
+        if out is None and output == program:
+            break
+        if (out is None and output != program) or (output[-1] != program[len(output) - 1]):  # reset
+            if len(output) > size:
+                print(start, output, program, out)
+            # print(output)
+            start += 1
+            a = start
+            ip = b = c = 0
+            output = []
+            # _ = input()
+    print(start, output)
+
+
+def day17_1(example=False, override=False):
+    """Day 17."""
+    day: int | str
+    day = ("Register A: 729\n"
+           "Register B: 0\n"
+           "Register C: 0\n"
+           "\n"
+           "Program: 0,1,5,4,3,0")
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, "\n", lambda x: x.split(":")[-1], override=override)
+    ip = 0
+    a, b, c = map(int, p[:3])
+    program = list(map(int, p[4].split(",")))
+    output = []
+    while True:
+        out, ip, a, b, c = _day17_output(ip, program, a, b, c)
+        if out is None:
+            break
+        output.append(out)
+    print(output)
+
+
+def day17_old(example=False, override=False, start=0, nmax=8):
+    """Day 17."""
+    day: int | str
+    day = ("Register A: 729\n"
+           "Register B: 0\n"
+           "Register C: 0\n"
+           "\n"
+           "Program: 0,1,5,4,3,0")
+    if not example:
+        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day, "\n", lambda x: x.split(":")[-1], override=override)
+    print(p)
     c = Comp(*map(int, p[:3]), p[4])
     c.decode()
+    # p2 = 0
     from concurrent import futures  # noqa: PLC0415
     threads = 16
     with futures.ProcessPoolExecutor(max_workers=threads) as executor:
@@ -2104,7 +2200,7 @@ def day17(example=False, override=False, start=0, nmax=8):
             f = executor.submit(_day17_thread2, list(map(int, p[4].split(","))), r)
             running.append(f)
         futures.wait(running, return_when=futures.ALL_COMPLETED)
-    # while not c.match:
+    # #while not c.match:
     #     p2 += 1
     #     if p2 % 1000:
     #         print(p2)
