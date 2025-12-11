@@ -730,42 +730,51 @@ def day10(example=False, override=False, **kwargs):
     p1 = p2 = 0
     for machine in p:
         log.debug(machine)
-        patterns = []
         result = Coordinate(map(int, re.search(r"\{([0-9,]*)\}", machine).group(1).split(",")))
         log.debug(result)
         buttons = [_button_to_coord(x, len(result)) for x in re.findall(r"\(([0-9,]*)\)", machine)]
         log.debug(buttons)
         seq_dict = {}
+        min_presses = None
         for button in buttons:
-            seq_dict[button] = 0
+            seq_dict[button] = max(result[i] * button[i] for i in range(len(result)))
+        log.debug(f"seq_dict: {seq_dict}")
         # load the buttons in each being pushed as many times as the max in the desired joltage.
-        for button in buttons:
-            temp = copy.deepcopy(seq_dict)
-            temp[button] = max(result)
-            patterns.append(temp)
+        patterns = {frozenset(seq_dict.items())}
+        for p in patterns:
+            log.debug(p)
         # Start a kind of BFS looking for the shortest sequence but walking backwards.
-        while True:
-            new = []
-            # log.debug(patterns)
-            for seq in patterns:
+        while patterns:
+            new = set()
+            for froz_seq in patterns:
                 temp = Coordinate([0] * len(result))
+                seq = dict(froz_seq)
                 for k, v in seq.items():
                     temp += k * v
                 log.debug(f"{result} == {temp} for {seq}")
                 if result == temp:
-                    log.info(f"Solution {result} at {sum(seq.values())} from {seq}")
-                    p2 += sum(seq.values())
-                    break
+                    # log.info(f"Solution {result} at {sum(seq.values())} from {seq}")
+                    min_presses = min(min_presses, sum(seq.values())) if min_presses is not None else sum(seq.values())
+                    # _ = input()
+                    # p2 += sum(seq.values())
+                    # break
+                if any(x < 0 for x in temp - result):  # Too few button presses.
+                    continue
                 for button in buttons:
                     new_seq = copy.deepcopy(seq)
                     new_seq[button] -= 1
+                    if new_seq[button] < 0:  # Too far, abort this sequence.
+                        continue
+                    new_seq = frozenset(new_seq.items())
                     if new_seq not in patterns and new_seq not in new:
-                        new.append(new_seq)
+                        new.add(new_seq)
             else:
                 patterns = copy.deepcopy(new)
-                _ = input()
+                # _ = input()
                 continue
             break
+        log.info(f"Solution {result} at {min_presses}")
+        p2 += min_presses
 
     log.info(f"Part 1: {p1}")
     log.info(f"Part 2: {p2}")
@@ -785,6 +794,52 @@ def day(example=False, override=False, **kwargs):
     # for x in p:
     #     p1 += x
     log.info(f"Part 1: {p1}")
+    log.info(f"Part 2: {p2}")
+
+
+def day11(example=False, override=False, **kwargs):
+    """???."""
+    _ = kwargs
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    if example:
+        day = """svr: aaa bbb
+aaa: fft
+fft: ccc
+bbb: tty
+tty: ccc
+ccc: ddd eee
+ddd: hub
+hub: fff
+eee: dac
+dac: fff
+fff: ggg hhh
+ggg: out
+hhh: out"""
+    p = get_input(day=day, seperator="\n", cast=None, override=override)
+    # p = get_np_input(day=day, seperator="\n", cast=None, splitter=list, dtype=str, override=override)
+    log.debug(p)
+    p1 = p2 = 0
+    g = nx.DiGraph()
+    for x in p:
+        dev, outputs = x.split(":")
+        for out in outputs.split():
+            g.add_edge(dev, out)
+    log.debug(g)
+    import igraph as ig
+    h = ig.Graph.from_networkx(g, vertex_attr_hashable="name")
+    # for p in nx.all_simple_paths(g, "svr", "out"):
+    #     if "dac" in p and "fft" in p:
+    #         log.debug(p)
+    #         p2 += 1
+    # log.info(f"Part 1: {len(list(nx.all_simple_paths(g, "svr", "out")))}")
+    log.info(f"svr->fft: {nx.has_path(g, 'svr', 'fft')}")
+    log.info(f"fft->dac: {nx.has_path(g, 'fft', 'dac')}")
+    log.info(f"dac->out: {nx.has_path(g, 'dac', 'out')}")
+    # log.info(list(h.vs))
+    h.get_all_simple_paths(h.vs.find("svr"), to="fft")
+    # log.info(f"svr->dac: {nx.has_path(g, 'svr', 'dac')}")
+    # log.info(f"dac->fft: {nx.has_path(g, 'dac', 'fft')}")
+    # log.info(f"fft->out: {nx.has_path(g, 'fft', 'out')}")
     log.info(f"Part 2: {p2}")
 
 
