@@ -7,7 +7,6 @@ Using a web browser inspect the cookies when logged into the Advent of Code webs
 Copy the value from the "session" cookie into a text file called "session.txt"
 """  # noqa: CPY001
 
-import collections
 import copy
 # import cpmpy as cp
 # import curses  # pip install windows-curses
@@ -23,7 +22,6 @@ import re
 import requests  # type: ignore[import-untyped]
 import socket
 import sys
-import time  # noqa: F401
 
 from argparse import ArgumentParser
 from collections import defaultdict
@@ -45,7 +43,7 @@ log = logging.getLogger()
 # log.propagate = False
 
 
-def _check_internet(host="8.8.8.8", port=53, timeout=2):
+def _check_internet(host="8.8.8.8", port=853, timeout=2):
     """
     Attempt to check for the firewall by connecting to Google's DNS.
 
@@ -667,6 +665,113 @@ def day9(example=False, override=False, **kwargs):
     return
 
 
+def _button_to_int(s):
+    """Take the puzzle comma seperated list and turn it into an int."""
+    t = [1 << int(x) for x in s.split(",")]
+    return np.bitwise_or.reduce(t)
+
+
+def day10_1(example=False, override=False, **kwargs):
+    """There are three lights!!!"""
+    _ = kwargs
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    if example:
+        day = ("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}\n"
+               "[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}\n"
+               "[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}")
+    p = get_input(day=day, seperator="\n", cast=None, override=override)
+    p1 = 0
+    for machine in p:
+        log.debug(machine)
+        patterns = set()
+        result = int(re.sub(r".|#", lambda x: {".": "0", "#": "1"}[x.group(0)], re.search(r"\[([.#]*)\]", machine).group(1))[::-1], 2)
+        buttons = [_button_to_int(x) for x in re.findall(r"\(([0-9,]*)\)", machine)]
+        # load the buttons in as a starting point
+        for button in buttons:  # noqa: FURB142
+            patterns.add(frozenset({button}))
+        # Start a kind of BFS looking for the shortest sequence
+        while True:
+            new = set()
+            for seq in patterns:
+                log.debug(f"{result} == {np.bitwise_xor.reduce(list(seq))} {seq}")
+                if result == np.bitwise_xor.reduce(list(seq)):
+                    log.info(f"Solution {result} from {list(seq)}")
+                    p1 += len(seq)
+                    break
+                for button in buttons:
+                    new_seq = frozenset([*seq, button])
+                    if new_seq not in patterns:
+                        new.add(new_seq)
+            else:
+                patterns = new
+                # _ = input()
+                continue
+            break
+    log.info(f"Part 1: {p1}")
+
+
+def _button_to_coord(s, dimension):
+    """Take the puzzle data and turn it into a Coordinate object."""
+    t = [0] * dimension
+    for i in s.split(","):
+        t[int(i)] = 1
+    return Coordinate(t)
+
+
+def day10(example=False, override=False, **kwargs):
+    """There are three lights!!!"""
+    _ = kwargs
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    if example:
+        day = ("[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}\n"
+               "[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}\n"
+               "[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}")
+    p = get_input(day=day, seperator="\n", cast=None, override=override)
+    p1 = p2 = 0
+    for machine in p:
+        log.debug(machine)
+        patterns = []
+        result = Coordinate(map(int, re.search(r"\{([0-9,]*)\}", machine).group(1).split(",")))
+        log.debug(result)
+        buttons = [_button_to_coord(x, len(result)) for x in re.findall(r"\(([0-9,]*)\)", machine)]
+        log.debug(buttons)
+        seq_dict = {}
+        for button in buttons:
+            seq_dict[button] = 0
+        # load the buttons in each being pushed as many times as the max in the desired joltage.
+        for button in buttons:
+            temp = copy.deepcopy(seq_dict)
+            temp[button] = max(result)
+            patterns.append(temp)
+        # Start a kind of BFS looking for the shortest sequence but walking backwards.
+        while True:
+            new = []
+            # log.debug(patterns)
+            for seq in patterns:
+                temp = Coordinate([0] * len(result))
+                for k, v in seq.items():
+                    temp += k * v
+                log.debug(f"{result} == {temp} for {seq}")
+                if result == temp:
+                    log.info(f"Solution {result} at {sum(seq.values())} from {seq}")
+                    p2 += sum(seq.values())
+                    break
+                for button in buttons:
+                    new_seq = copy.deepcopy(seq)
+                    new_seq[button] -= 1
+                    if new_seq not in patterns and new_seq not in new:
+                        new.append(new_seq)
+            else:
+                patterns = copy.deepcopy(new)
+                _ = input()
+                continue
+            break
+
+    log.info(f"Part 1: {p1}")
+    log.info(f"Part 2: {p2}")
+    return
+
+
 # Template
 def day(example=False, override=False, **kwargs):
     """???."""
@@ -692,8 +797,12 @@ def main(argv=None):
                            help="Run the code against the puzzle example.")
     argparser.add_argument("--override", dest="override", action="store_true", default=False,
                            help="Override the stored puzzle input data.")
+    argparser.add_argument("--debug", dest="debug", action="store_true", default=False,
+                           help="Set debug logging level.")
     args, unknown = argparser.parse_known_args(argv)
     kwargs = {x.removeprefix("--").split("=")[0]: x.split("=")[1] for x in unknown}
+    if args.debug:
+        log.setLevel(logging.DEBUG)
     if hasattr(sys.modules[__name__], f"day{args.day}"):
         day = getattr(sys.modules[__name__], f"day{args.day}")
         day(**vars(args), **kwargs)

@@ -15,11 +15,11 @@ import itertools
 import collections
 import networkx as nx
 import numpy as np
-import pyglet
+# import pyglet
 import requests
 import functools
 import heapq
-# import cpmpy
+import cpmpy
 
 # Advent of Code
 # Never did spend the time to work out how to get oAuth to work so this code expects you to
