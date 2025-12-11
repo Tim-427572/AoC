@@ -768,9 +768,8 @@ def day10(example=False, override=False, **kwargs):
                     new_seq = frozenset(new_seq.items())
                     if new_seq not in patterns and new_seq not in new:
                         new.add(new_seq)
-            else:
+            else:  # noqa:  PLW0120
                 patterns = copy.deepcopy(new)
-                # _ = input()
                 continue
             break
         log.info(f"Solution {result} at {min_presses}")
@@ -778,6 +777,40 @@ def day10(example=False, override=False, **kwargs):
 
     log.info(f"Part 1: {p1}")
     log.info(f"Part 2: {p2}")
+
+
+def day11(start="you", example=False, override=False, **kwargs):
+    """Server rack madness!"""
+    _ = kwargs
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    if example and start == "you":
+        day = ("aaa: you hhh\nyou: bbb ccc\nbbb: ddd eee\nccc: ddd eee fff\nddd: ggg\n"
+               "eee: out\nfff: out\nggg: out\nhhh: ccc fff iii\niii: out")
+    if example and start == "svr":
+        day = ("svr: aaa bbb\naaa: fft\nfft: ccc\nbbb: tty\ntty: ccc\nccc: ddd eee\n"
+               "ddd: hub\nhub: fff\neee: dac\ndac: fff\nfff: ggg hhh\nggg: out\nhhh: out")
+    p = get_input(day=day, seperator="\n", cast=None, override=override)
+    g = nx.DiGraph()
+    for x in p:
+        dev, outputs = x.split(":")
+        for out in outputs.split():
+            g.add_edge(dev, out)
+    log.debug(g)
+    topological_g = nx.topological_sort(g)
+    path_dict = defaultdict(int)
+    path_dict[start] = 1
+    for node in topological_g:
+        log.debug(f"Working on {node}")
+        if node in {"fft", "dac"} and start == "svr":
+            temp = path_dict[node]
+            path_dict.clear()
+            path_dict[node] = temp
+        for _, edge in g.out_edges(node):
+            log.debug(f"Processing edge {edge}")
+            path_dict[edge] += path_dict[node]
+            log.debug("%s %s", path_dict[node], path_dict[edge])
+        log.debug("%s %s", node, path_dict)
+    log.info(f"There are {path_dict['out']} paths from '{start}' to 'out'")
 
 
 # Template
@@ -794,52 +827,6 @@ def day(example=False, override=False, **kwargs):
     # for x in p:
     #     p1 += x
     log.info(f"Part 1: {p1}")
-    log.info(f"Part 2: {p2}")
-
-
-def day11(example=False, override=False, **kwargs):
-    """???."""
-    _ = kwargs
-    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
-    if example:
-        day = """svr: aaa bbb
-aaa: fft
-fft: ccc
-bbb: tty
-tty: ccc
-ccc: ddd eee
-ddd: hub
-hub: fff
-eee: dac
-dac: fff
-fff: ggg hhh
-ggg: out
-hhh: out"""
-    p = get_input(day=day, seperator="\n", cast=None, override=override)
-    # p = get_np_input(day=day, seperator="\n", cast=None, splitter=list, dtype=str, override=override)
-    log.debug(p)
-    p1 = p2 = 0
-    g = nx.DiGraph()
-    for x in p:
-        dev, outputs = x.split(":")
-        for out in outputs.split():
-            g.add_edge(dev, out)
-    log.debug(g)
-    import igraph as ig
-    h = ig.Graph.from_networkx(g, vertex_attr_hashable="name")
-    # for p in nx.all_simple_paths(g, "svr", "out"):
-    #     if "dac" in p and "fft" in p:
-    #         log.debug(p)
-    #         p2 += 1
-    # log.info(f"Part 1: {len(list(nx.all_simple_paths(g, "svr", "out")))}")
-    log.info(f"svr->fft: {nx.has_path(g, 'svr', 'fft')}")
-    log.info(f"fft->dac: {nx.has_path(g, 'fft', 'dac')}")
-    log.info(f"dac->out: {nx.has_path(g, 'dac', 'out')}")
-    # log.info(list(h.vs))
-    h.get_all_simple_paths(h.vs.find("svr"), to="fft")
-    # log.info(f"svr->dac: {nx.has_path(g, 'svr', 'dac')}")
-    # log.info(f"dac->fft: {nx.has_path(g, 'dac', 'fft')}")
-    # log.info(f"fft->out: {nx.has_path(g, 'fft', 'out')}")
     log.info(f"Part 2: {p2}")
 
 
