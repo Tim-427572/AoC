@@ -40,7 +40,7 @@ log = logging.getLogger()
 # log.propagate = False
 
 
-def _check_internet(host="8.8.8.8", port=53, timeout=2):
+def _check_internet(host="8.8.8.8", port=853, timeout=2):
     """
     Attempt to check for the firewall by connecting to Google's DNS.
 
@@ -501,15 +501,18 @@ def day6(example=False, override=False, **kwargs):
     log.info(f"Part 2 the message was {result2}")
 
 
-def day7(example=False):
+def day7(example=False, override=False, **kwargs):
     """IPv7."""
-    day = 7 if not example else ("abba[mnop]qrst\n"
-                                 "abcd[bddb]xyyx\n"
-                                 "aaaa[qwer]tyui\n"
-                                 "ioxxoj[asdfgh]zxcvbn\n")
-    puzzle = get_input(day, "\n", None)
-    inside_re = re.compile("\[(.*?)\]")
-    outside_re = re.compile("([^[\]]+)(?:$|\[)")
+    _ = kwargs
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    if example:
+        day = ("abba[mnop]qrst\n"
+               "abcd[bddb]xyyx\n"
+               "aaaa[qwer]tyui\n"
+               "ioxxoj[asdfgh]zxcvbn\n")
+    puzzle = get_input(day=day, seperator="\n", cast=None, override=override)
+    inside_re = re.compile(r"\[(.*?)\]")
+    outside_re = re.compile(r"([^[\]]+)(?:$|\[)")
     p1_count = 0
     for ip in puzzle:
         hypernet_abba = False
@@ -520,7 +523,7 @@ def day7(example=False):
                     inside[1] == inside[2]):
                     hypernet_abba = True
                     break
-                inside = inside[1:]
+                inside = inside[1:]  # noqa: PLW2901
             if hypernet_abba:
                 break
         abba = False
@@ -532,26 +535,12 @@ def day7(example=False):
                         outside[1] == outside[2]):
                         abba = True
                         break
-                    outside = outside[1:]
+                    outside = outside[1:]  # noqa: PLW2901
                 if abba:
                     break
         if abba and not hypernet_abba:
             p1_count += 1
-        #print(ip, abba, hypernet_abba, p1_count)
-    print(p1_count)
-
-
-def _day7_p2(example=False):
-    """
-    IPv7
-    """
-    day = 7 if not example else ("aba[bab]xyz\n"
-                                 "xyx[xyx]xyx\n"
-                                 "aaa[kek]eke\n"
-                                 "zazbz[bzb]cdb\n")
-    puzzle = get_input(day, "\n", None)
-    inside_re = re.compile("\[(.*?)\]")
-    outside_re = re.compile("([^[\]]+)(?:$|\[)")
+        log.debug("%s %s %s %d", ip, abba, hypernet_abba, p1_count)
     p2_count = 0
     for ip in puzzle:
         for outside in outside_re.findall(ip):
@@ -563,38 +552,32 @@ def _day7_p2(example=False):
                     for inside in inside_re.findall(ip):
                         if aba in inside:
                             ssl = True
-                            outside = ""
-                outside = outside[1:]
+                            outside = ""  # noqa: PLW2901
+                outside = outside[1:]  # noqa: PLW2901
             if ssl:
                 break
         if ssl:
             p2_count += 1
-        #print(ip, ssl, p2_count)
-    print(p2_count)
-
-def print_np(array):
-    """
-    Dumb helper function to print numpy arrays.
-    """
-    for row in array:
-        print("".join(row))
+    log.info(f"Part 1: {p1_count}")
+    log.info(f"Part 2: {p2_count}")
 
 
-def day8(example=False, reload=False):
+def day8(example=False, override=False, **kwargs):
+    """2FA."""
+    _ = kwargs
+    day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
     if example:
         day = ("rect 3x2\n"
                "rotate column x=1 by 1\n"
                "rotate row y=0 by 4\n"
                "rotate column x=1 by 1\n")
-    else:
-        day = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))
-    instructions = get_input(day, "\n", None, reload)
-    screen = np.full((6,50), " ", dtype=np.str)
+    instructions = get_input(day=day, seperator="\n", cast=None, override=override)
+    screen = np.full((6, 50), " ", dtype=str)
     for instruction in instructions:
         if "rect" in instruction:
             rows = int(instruction.split("x")[1])
             cols = int(instruction.split("x")[0].split()[1])
-            screen[:rows,:cols] = "#"
+            screen[:rows, :cols] = "#"
         elif "column" in instruction:
             col = int(instruction.split("=")[1].split()[0])
             amount = int(instruction.split("by")[1].strip())
@@ -604,10 +587,74 @@ def day8(example=False, reload=False):
             amount = int(instruction.split("by")[1].strip())
             screen[row] = np.roll(screen[row], amount)
         else:
-            raise Exception(instruction)
-    print(f"Part 1, {np.count_nonzero(screen=='#')} pixels are lit")
-    print("Part 2 the code is:")
+            raise Exception(instruction)  # noqa: TRY002
+    log.info(f"Part 1, {np.count_nonzero(screen == '#')} pixels are lit")
+    log.info("Part 2 the code is:")
     print_np(screen)
+
+
+def day9(part=1, example=False, override=False, **kwargs):
+    """Decompression!"""
+    # Ok, part 2 is kind of slow but it gets the correct answer so....
+    _ = kwargs
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    if example:
+        day = ("ADVENT\nA(1x5)BC\n(3x3)XYZ\nA(2x2)BCD(2x2)EFG\n(6x1)(1x3)A\nX(8x2)(3x3)ABCY\n"
+               "(27x12)(20x12)(13x14)(7x10)(1x12)A\n(25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN")
+    p = get_input(day=day, seperator="\n", cast=None, override=override)
+    p1 = 0
+    marker_re = re.compile(r"\([0-9]*x[0-9]*\)")
+    for x in p:
+        compressed = x
+        t = 0
+        while True:
+            found = marker_re.search(compressed)
+            if found:
+                t += len(compressed[:found.start()])
+                marker = compressed[found.start() + 1:found.end() - 1]
+                chars, reps = map(int, marker.split("x"))
+                decompressed = compressed[found.end():found.end() + chars] * reps
+                if part == 1:
+                    t += len(decompressed)
+                    compressed = compressed[found.end() + chars:]
+                else:
+                    compressed = decompressed + compressed[found.end() + chars:]
+            else:  # No more markers.
+                t += len(compressed)
+                break
+        p1 += t
+        log.debug("%s %d -> %d", x, t, p1)
+    log.info(f"The decompressed length is : {p1}")
+
+
+def day12(c=0, example=False, override=False, **kwargs):
+    """More assembly code."""
+    _ = kwargs
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    if example:
+        day = "cpy 41 a\ninc a\ninc a\ndec a\njnz a 2\ndec a"
+    assembunny = get_input(day=day, seperator="\n", cast=None, override=override)
+    ip = 0
+    registers = {"a": 0, "b": 0, "c": int(c)}
+    while ip < len(assembunny):
+        op = assembunny[ip][:3]
+        match op:
+            case "cpy":
+                value, reg = assembunny[ip][4:].split(" ")
+                value = registers[value] if value.isalpha() else int(value)
+                registers[reg] = int(value)
+            case "inc":
+                registers[assembunny[ip][4]] += 1
+            case "dec":
+                registers[assembunny[ip][4]] -= 1
+            case "jnz":
+                x, value = assembunny[ip][4:].split(" ")
+                x = registers[x] if x.isalpha() else int(x)
+                if x != 0:
+                    ip += int(value)
+                    continue
+        ip += 1
+    log.info(f"Register a is: {registers['a']}")
 
 
 # Template
@@ -635,8 +682,12 @@ def main(argv=None):
                            help="Run the code against the puzzle example.")
     argparser.add_argument("--override", dest="override", action="store_true", default=False,
                            help="Override the stored puzzle input data.")
+    argparser.add_argument("--debug", dest="debug", action="store_true", default=False,
+                           help="Set the debug logging level.")
     args, unknown = argparser.parse_known_args(argv)
     kwargs = {x.removeprefix("--").split("=")[0]: x.split("=")[1] for x in unknown}
+    if args.debug:
+        log.setLevel(logging.DEBUG)
     if hasattr(sys.modules[__name__], f"day{args.day}"):
         day = getattr(sys.modules[__name__], f"day{args.day}")
         day(**vars(args), **kwargs)

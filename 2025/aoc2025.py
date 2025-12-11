@@ -769,7 +769,6 @@ def day10(example=False, override=False, **kwargs):
 
     log.info(f"Part 1: {p1}")
     log.info(f"Part 2: {p2}")
-    return
 
 
 # Template
