@@ -7,6 +7,7 @@ Using a web browser inspect the cookies when logged into the Advent of Code webs
 Copy the value from the "session" cookie into a text file called "session.txt"
 """  # noqa: CPY001
 
+import functools
 import hashlib
 import inspect
 import logging
@@ -655,6 +656,50 @@ def day12(c=0, example=False, override=False, **kwargs):
                     continue
         ip += 1
     log.info(f"Register a is: {registers['a']}")
+
+
+def _rep3_check(s):
+    """Return the character if there is a repeating set of 3."""
+    for idx in range(len(s) - 2):
+        if s[idx] == s[idx + 1] == s[idx + 2]:  # and (idx + 4 == len(s) or s[idx + 4] != s[idx]):
+            return s[idx]
+    return None
+
+
+@functools.cache
+def _hashit(salt, loops):
+    """Do the puzzle hash operation."""
+    h = hashlib.md5(bytes(salt, "utf-8")).hexdigest()  # noqa: S324
+    for _ in range(loops):
+        h = hashlib.md5(bytes(h, "utf-8")).hexdigest()  # noqa: S324
+    return h
+
+
+def day14(loops=0, example=False, **kwargs):
+    """Onte-time pad."""
+    _ = kwargs
+    salt = "abc" if example else "qzyelonm"
+    key_count = 0
+    index = -1
+    while key_count < 64:
+        index += 1
+        h = _hashit(f"{salt}{index}", int(loops))
+        c = _rep3_check(h)
+        # log.debug("%s %s", h, c)
+        if c is not None:
+            for i in range(1000):
+                t = _hashit(f"{salt}{index + i + 1}", int(loops))
+                # if index + i > 814 and index + i < 900:
+                #     log.debug("%s %s", i, t)
+                #     log.debug(f"{salt}{index + i + 1}")
+                if c * 5 in t:
+                    key_count += 1
+                    log.debug("%s index: %d triple: %s keys: %d", h, index, c, key_count)
+                    log.debug("%s %s", t, index + i + 1)
+                    break
+        # log.debug("index %d, key count %d", index, key_count)
+        # _ = input()
+    log.info(f"Index {index} is the 64th key.")
 
 
 # Template
