@@ -773,6 +773,36 @@ def day11(start="you", example=False, override=False, **kwargs):
     log.info(f"There are {path_dict['out']} paths from '{start}' to 'out'")
 
 
+def day12(example=False, override=False, **kwargs):
+    """Packages?"""
+    _ = kwargs
+    _ = example
+    day: int | str = int(inspect.currentframe().f_code.co_name.split("_")[0].strip("day"))  # type: ignore[union-attr]
+    p = get_input(day=day, seperator="\n", cast=None, override=override)
+    p1 = 0
+    shape_sizes = []
+    shape_blocks = 0
+    area_data = []
+    for x in p:
+        if not x:
+            shape_sizes.append(shape_blocks)
+            shape_blocks = 0
+        elif "x" in x:
+            area, counts = x.split(": ")
+            area = np.prod(list(map(int, area.split("x"))))
+            counts = list(map(int, counts.split()))
+            area_data.append((area, counts))
+        else:
+            shape_blocks += x.count("#")
+    for area, counts in area_data:
+        required_area = np.sum(np.multiply.outer(np.array(shape_sizes), np.array(counts)).diagonal())
+        if required_area > area:  # Can't fit!
+            continue
+        # Just blindly assume they can fit somehow?
+        p1 += 1
+    log.info(f"Part 1: {p1}")
+
+
 # Template
 def day(example=False, override=False, **kwargs):
     """???."""
