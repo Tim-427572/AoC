@@ -20,6 +20,7 @@ import numpy as np
 import pathlib
 import re
 import requests  # type: ignore[import-untyped]
+import scipy
 import socket
 import sys
 
@@ -727,55 +728,14 @@ def day10(example=False, override=False, **kwargs):
                "[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}\n"
                "[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}")
     p = get_input(day=day, seperator="\n", cast=None, override=override)
-    p1 = p2 = 0
+    p2 = 0
     for machine in p:
-        log.debug(machine)
         result = Coordinate(map(int, re.search(r"\{([0-9,]*)\}", machine).group(1).split(",")))
-        log.debug(result)
         buttons = [_button_to_coord(x, len(result)) for x in re.findall(r"\(([0-9,]*)\)", machine)]
-        log.debug(buttons)
-        seq_dict = {}
-        min_presses = None
-        for button in buttons:
-            seq_dict[button] = max(result[i] * button[i] for i in range(len(result)))
-        log.debug(f"seq_dict: {seq_dict}")
-        # load the buttons in each being pushed as many times as the max in the desired joltage.
-        patterns = {frozenset(seq_dict.items())}
-        for p in patterns:
-            log.debug(p)
-        # Start a kind of BFS looking for the shortest sequence but walking backwards.
-        while patterns:
-            new = set()
-            for froz_seq in patterns:
-                temp = Coordinate([0] * len(result))
-                seq = dict(froz_seq)
-                for k, v in seq.items():
-                    temp += k * v
-                log.debug(f"{result} == {temp} for {seq}")
-                if result == temp:
-                    # log.info(f"Solution {result} at {sum(seq.values())} from {seq}")
-                    min_presses = min(min_presses, sum(seq.values())) if min_presses is not None else sum(seq.values())
-                    # _ = input()
-                    # p2 += sum(seq.values())
-                    # break
-                if any(x < 0 for x in temp - result):  # Too few button presses.
-                    continue
-                for button in buttons:
-                    new_seq = copy.deepcopy(seq)
-                    new_seq[button] -= 1
-                    if new_seq[button] < 0:  # Too far, abort this sequence.
-                        continue
-                    new_seq = frozenset(new_seq.items())
-                    if new_seq not in patterns and new_seq not in new:
-                        new.add(new_seq)
-            else:  # noqa:  PLW0120
-                patterns = copy.deepcopy(new)
-                continue
-            break
-        log.info(f"Solution {result} at {min_presses}")
-        p2 += min_presses
-
-    log.info(f"Part 1: {p1}")
+        button_array = np.array(buttons)
+        result_array = np.array(result)
+        optomizer = [1] * len(buttons)
+        p2 += scipy.optimize.linprog(optomizer, A_eq=button_array.T, b_eq=result_array, integrality=optomizer).fun
     log.info(f"Part 2: {p2}")
 
 
